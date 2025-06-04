@@ -9,12 +9,13 @@ const langbase = new Langbase({
 
 const docNames = [
   "about.md",
-  "gear.md",
-  "stack.md",
   "milestones.md",
   "projects.md",
-  "recommendations.md",
   "resume.md",
+  "recommendations.md",
+  "stack.md",
+  "gear.md",
+  "skyline.md",
 ];
 
 async function main(docName: string) {
