@@ -9,7 +9,7 @@ features:
     title: Bambino
     details: Orient Bambino Small Seconds 38mm
   - icon: { src: ./landyachtz.png }
-    title: G&T
+    title: Gyn
     details: Landyachtz Dinghy Gin & Tonic Cruiser
   - icon: { dark: "./polygon-dark.png", light: "./polygon-light.png" }
     title: Zephyr
@@ -24,10 +24,10 @@ features:
     title: Hey, Google!
     details: Google Home Mini
   - icon: { src: ./xiaomi.svg }
-    title: Mbak
+    title: Eko
     details: Mi Robot Vacuum-Mop 2
   - icon: { src: ./ewelink.png }
-    title: Switchy
+    title: Flip
     details: eWeLink Sonoff Basic Switch
 ---
 

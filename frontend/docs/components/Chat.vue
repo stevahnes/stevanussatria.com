@@ -68,10 +68,9 @@ const isMobile = ref(false);
 const isCompactMode = ref(true); // Start in compact mode
 const hasStartedChat = ref(false); // Track if user has started chatting
 
-// --- Scroll behavior state ---
-const hasUserScrolledManually = ref(false);
-const isInitialPageLoad = ref(true);
-const hasCompletedInitialScroll = ref(false);
+// --- FIXED: Simplified scroll behavior state ---
+const hasFirstMessageBeenSent = ref(false); // Track if first message has been sent
+const shouldAutoExpandOnFirstMessage = ref(true); // Control auto-expansion behavior
 
 // --- DOM Refs ---
 const inputRef = ref<HTMLTextAreaElement | null>(null);
@@ -144,92 +143,34 @@ const updatePromptScrollButtons = (): void => {
   showRightScroll.value = el.scrollLeft + el.clientWidth < el.scrollWidth - 1;
 };
 
-// --- Track user scroll interactions ---
-const handleUserScroll = (): void => {
-  // Only set flag if we're past initial load and have completed any initial scroll
-  if (!isInitialPageLoad.value && hasCompletedInitialScroll.value) {
-    hasUserScrolledManually.value = true;
-  }
-};
-
-// --- Modified setFullHeightAndScroll function ---
-const setFullHeightAndScroll = async (
-  reason: "initial-load" | "first-message" | "returning" = "returning",
-): Promise<void> => {
+// --- FIXED: Only expand and scroll to viewport on first message or when restoring chat ---
+const setFullHeightAndScrollToViewport = async (): Promise<void> => {
   if (!isClient.value || !chatWindowRef.value) return;
 
   const viewportHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
   chatHeight.value = isMobile.value ? viewportHeight - 20 : viewportHeight;
   localStorage.setItem("chatHeight", chatHeight.value.toString());
 
-  // Determine if we should scroll based on the reason
-  const shouldScroll =
-    reason === "initial-load" || // ✅ Loading existing conversation
-    reason === "first-message" || // ✅ First message sent
-    reason === "returning"; // ✅ Returning to page with active chat
+  await nextTick();
 
-  if (shouldScroll) {
-    const scrollAction = () => {
-      if (!chatWindowRef.value) return;
-      const offsetTop = chatWindowRef.value.getBoundingClientRect().top + window.pageYOffset;
-      window.scrollTo({ top: offsetTop, behavior: reason === "initial-load" ? "auto" : "smooth" });
-      if (isMobile.value) setTimeout(scrollToBottom, 150);
+  // Scroll the chat window into viewport
+  const offsetTop = chatWindowRef.value.getBoundingClientRect().top + window.pageYOffset;
+  window.scrollTo({ top: offsetTop, behavior: "smooth" });
 
-      // Mark that we've completed initial scroll
-      if (reason === "initial-load" || reason === "returning") {
-        setTimeout(() => {
-          hasCompletedInitialScroll.value = true;
-          isInitialPageLoad.value = false;
-        }, 200);
-      }
-    };
-
-    if (isMobile.value) {
-      requestAnimationFrame(scrollAction);
-    } else {
-      await nextTick();
-      scrollAction();
-    }
-  } else {
-    // Just mark as completed if we're not scrolling but should be past initial load
-    if (reason === "initial-load" || reason === "returning") {
-      hasCompletedInitialScroll.value = true;
-      isInitialPageLoad.value = false;
-    }
+  if (isMobile.value) {
+    setTimeout(scrollToBottom, 150);
   }
 };
 
-// --- Expand chat window (first message) ---
+// --- FIXED: Expand chat window only on first message ---
 const expandChatWindow = async (): Promise<void> => {
+  if (!shouldAutoExpandOnFirstMessage.value) return;
+
   isCompactMode.value = false;
   hasStartedChat.value = true;
+  hasFirstMessageBeenSent.value = true;
 
-  await nextTick();
-
-  const viewportHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
-  chatHeight.value = isMobile.value ? viewportHeight - 20 : viewportHeight;
-  localStorage.setItem("chatHeight", chatHeight.value.toString());
-
-  // This is first message expansion - should always scroll
-  const scrollAction = () => {
-    if (!chatWindowRef.value) return;
-    const offsetTop = chatWindowRef.value.getBoundingClientRect().top + window.pageYOffset;
-    window.scrollTo({ top: offsetTop, behavior: "smooth" });
-    if (isMobile.value) setTimeout(scrollToBottom, 150);
-
-    // Mark initial interactions as complete
-    setTimeout(() => {
-      hasCompletedInitialScroll.value = true;
-      isInitialPageLoad.value = false;
-    }, 200);
-  };
-
-  if (isMobile.value) {
-    requestAnimationFrame(scrollAction);
-  } else {
-    await nextTick();
-    scrollAction();
-  }
+  await setFullHeightAndScrollToViewport();
 };
 
 // --- Storage Functions ---
@@ -305,22 +246,22 @@ const handleKeyDown = (e: KeyboardEvent): void => {
   }
 };
 
-// 🚫 NO auto-scroll on window resize
+// --- FIXED: Simplified window resize - no auto-scroll ---
 const handleWindowResize = (): void => {
   isMobile.value = checkIfMobile();
+  // Only update dimensions if chat is expanded, but NO auto-scroll
   if (hasStartedChat.value && !isCompactMode.value) {
-    // Only update height, NO auto-scroll on resize
     chatHeight.value = window.innerHeight;
     localStorage.setItem("chatHeight", chatHeight.value.toString());
   }
   updatePromptScrollButtons();
 };
 
-// 🚫 NO auto-scroll on tab focus/blur
+// --- FIXED: No auto-scroll on visibility change ---
 const handleVisibilityChange = (): void => {
+  // Only update mobile dimensions, NO auto-scroll
   if (document.hidden || !hasStartedChat.value || !isMobile.value || isCompactMode.value) return;
 
-  // Update height but NO auto-scroll on visibility change
   requestAnimationFrame(() => {
     if (!chatWindowRef.value) return;
     const isLandscape = window.matchMedia("(orientation: landscape)").matches;
@@ -333,7 +274,7 @@ const handleVisibilityChange = (): void => {
   });
 };
 
-// 🚫 NO auto-scroll on cross-tab sync
+// --- FIXED: No auto-scroll on storage change ---
 const handleStorageChange = (event: StorageEvent): void => {
   if (!isClient.value) return;
 
@@ -350,7 +291,8 @@ const handleStorageChange = (event: StorageEvent): void => {
         messages.value = [];
         isCompactMode.value = true;
         hasStartedChat.value = false;
-        hasUserScrolledManually.value = false; // Reset scroll flag
+        hasFirstMessageBeenSent.value = false;
+        shouldAutoExpandOnFirstMessage.value = true;
         localStorage.removeItem("chatEnding");
       }
       break;
@@ -365,11 +307,13 @@ const handleStorageChange = (event: StorageEvent): void => {
             if (newMessages.length > 0) {
               isCompactMode.value = false;
               hasStartedChat.value = true;
-              // NO auto-scroll on cross-tab sync
+              hasFirstMessageBeenSent.value = true;
+              shouldAutoExpandOnFirstMessage.value = false; // Don't auto-expand on sync
             } else {
               isCompactMode.value = true;
               hasStartedChat.value = false;
-              hasUserScrolledManually.value = false; // Reset scroll flag
+              hasFirstMessageBeenSent.value = false;
+              shouldAutoExpandOnFirstMessage.value = true;
             }
           }
         } catch (error) {
@@ -380,7 +324,8 @@ const handleStorageChange = (event: StorageEvent): void => {
         messages.value = [];
         isCompactMode.value = true;
         hasStartedChat.value = false;
-        hasUserScrolledManually.value = false; // Reset scroll flag
+        hasFirstMessageBeenSent.value = false;
+        shouldAutoExpandOnFirstMessage.value = true;
       }
       break;
   }
@@ -400,18 +345,9 @@ const sendMessage = async (): Promise<void> => {
 
   messages.value.push(userMessage);
 
+  // FIXED: Only expand and scroll on actual first message
   if (isFirstMessage) {
     await expandChatWindow();
-    if (isMobile.value) {
-      window.addEventListener(
-        "resize",
-        function onResize() {
-          scrollToBottom();
-          window.removeEventListener("resize", onResize);
-        },
-        { once: true },
-      );
-    }
   }
 
   if (isClient.value) localStorage.setItem("hadChatInteraction", "true");
@@ -527,7 +463,8 @@ const submitFeedback = async (): Promise<void> => {
     messages.value = [];
     isCompactMode.value = true;
     hasStartedChat.value = false;
-    hasUserScrolledManually.value = false; // Reset scroll flag
+    hasFirstMessageBeenSent.value = false;
+    shouldAutoExpandOnFirstMessage.value = true;
   } catch (error) {
     console.error("Error ending chat:", error);
     messages.value.push({
@@ -556,7 +493,6 @@ const setSuggestion = (suggestion: string): void => {
 const cleanupEventListeners = (): void => {
   window.removeEventListener("resize", handleWindowResize);
   window.removeEventListener("storage", handleStorageChange);
-  window.removeEventListener("scroll", handleUserScroll);
   document.removeEventListener("visibilitychange", handleVisibilityChange);
   promptBarRef.value?.removeEventListener("scroll", updatePromptScrollButtons);
   if (inputRef.value) inputRef.value.removeEventListener("input", resizeTextarea);
@@ -579,11 +515,6 @@ onMounted(async () => {
   clientSideTheme.value = true;
   isMobile.value = checkIfMobile();
 
-  // Add scroll listener to detect manual scrolling (with delay to avoid initial scroll detection)
-  setTimeout(() => {
-    window.addEventListener("scroll", handleUserScroll, { passive: true });
-  }, 1000);
-
   threadId.value = localStorage.getItem("threadId");
   const storedMessages = localStorage.getItem("chatMessages");
 
@@ -592,21 +523,22 @@ onMounted(async () => {
       const parsedMessages = JSON.parse(storedMessages);
       messages.value = parsedMessages;
 
-      // If we have stored messages, we're not in compact mode
+      // If we have stored messages, restore the chat state
       if (parsedMessages.length > 0) {
         isCompactMode.value = false;
         hasStartedChat.value = true;
-        // ✅ This is "returning to page" - should scroll
-        setTimeout(() => setFullHeightAndScroll("returning"), 100);
+        hasFirstMessageBeenSent.value = true;
+        shouldAutoExpandOnFirstMessage.value = false; // Don't auto-expand when restoring
+
+        // FIXED: Only scroll to viewport when restoring existing chat
+        setTimeout(() => setFullHeightAndScrollToViewport(), 100);
       }
     } catch (error) {
       console.error("Error parsing stored messages:", error);
       messages.value = [];
-      isInitialPageLoad.value = false;
     }
   } else {
     messages.value = [];
-    isInitialPageLoad.value = false;
   }
 
   // Only load from backend if we have threadId but no stored messages
@@ -629,8 +561,11 @@ onMounted(async () => {
           if (hasUserMessages) {
             isCompactMode.value = false;
             hasStartedChat.value = true;
-            // ✅ This is "loading existing conversation" - should scroll
-            setTimeout(() => setFullHeightAndScroll("initial-load"), 100);
+            hasFirstMessageBeenSent.value = true;
+            shouldAutoExpandOnFirstMessage.value = false;
+
+            // FIXED: Only scroll to viewport when loading existing conversation
+            setTimeout(() => setFullHeightAndScrollToViewport(), 100);
           }
         } else {
           // Invalid response data - reset to fresh state
@@ -639,7 +574,8 @@ onMounted(async () => {
           messages.value = [];
           isCompactMode.value = true;
           hasStartedChat.value = false;
-          isInitialPageLoad.value = false;
+          hasFirstMessageBeenSent.value = false;
+          shouldAutoExpandOnFirstMessage.value = true;
         }
       } else {
         // API error or thread not found - reset to fresh state
@@ -648,7 +584,8 @@ onMounted(async () => {
         messages.value = [];
         isCompactMode.value = true;
         hasStartedChat.value = false;
-        isInitialPageLoad.value = false;
+        hasFirstMessageBeenSent.value = false;
+        shouldAutoExpandOnFirstMessage.value = true;
       }
     } catch (error) {
       console.error("Error fetching thread messages:", error);
@@ -658,7 +595,8 @@ onMounted(async () => {
       messages.value = [];
       isCompactMode.value = true;
       hasStartedChat.value = false;
-      isInitialPageLoad.value = false;
+      hasFirstMessageBeenSent.value = false;
+      shouldAutoExpandOnFirstMessage.value = true;
     } finally {
       isInitialLoading.value = false;
     }
@@ -672,14 +610,7 @@ onMounted(async () => {
   window.addEventListener("storage", handleStorageChange);
   document.addEventListener("visibilitychange", handleVisibilityChange);
 
-  // iOS Safari specific - but NO auto-scroll
-  if (isMobile.value && /iPhone|iPad|iPod/i.test(navigator.userAgent)) {
-    window.addEventListener("scroll", () => {
-      if (hasStartedChat.value) {
-        sessionStorage.setItem("chatScrollY", window.scrollY.toString());
-      }
-    });
-  }
+  // FIXED: Removed iOS-specific scroll listener that was causing issues
 
   if (!isCompactMode.value) scrollToBottom();
   inputRef.value?.focus();
