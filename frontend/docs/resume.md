@@ -118,11 +118,17 @@ API • Postman • Agile • Scrum • Product specification • Design thinkin
 
 **Product Strategy Executive Education** | March 2024 – May 2024
 
-### Singapore University of Technology and Design
+### Singapore University of Technology and Design (SUTD)
 
 **Bachelor of Engineering (Product Development)** | May 2013 – September 2016
 
 Summa Cum Laude, CGPA: 4.96/5.00
+
+### Catholic Junior College
+
+**GCE 'A' Level** | January 2011 – December 2012
+
+University Admission Score (UAS): 90/90, H3: Physics (Merit)
 
 ## Awards and Certifications
 
