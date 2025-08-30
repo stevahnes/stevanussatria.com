@@ -22,7 +22,7 @@ export function constructEducationContent(
   pageParameters: FormatParameters,
 ): void {
   cursor.setSize(standard.TEXT_FONT_SIZE);
-  educations.forEach(education => {
+  educations.forEach((education, index) => {
     updateFontAndSize(jsPDFInstance, standard.FONT_NAME, FontStyle.BOLD, cursor.getSize());
     cursor.setXCoordinate(standard.MARGIN);
     writeLeft(jsPDFInstance, toUpper(education.institution), cursor);
@@ -40,5 +40,8 @@ export function constructEducationContent(
       writeRight(jsPDFInstance, education.honorsAndGrade, cursor);
     }
     enterAndCheckMargin(jsPDFInstance, cursor, standard, pageParameters, DEFAULT_LINE_HEIGHT, 1);
+    if (index < educations.length - 1) {
+      enterAndCheckMargin(jsPDFInstance, cursor, standard, pageParameters, DEFAULT_LINE_HEIGHT, 1);
+    }
   });
 }
