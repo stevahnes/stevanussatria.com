@@ -75,7 +75,7 @@ API • Postman • Agile • Scrum • Product specification • Design thinkin
 - Led Workato Data Tables general availability launch as Lookup Tables' successor for all Workato users.
 - Stabilized legacy database by reducing maximum query execution time by 96% and freeing up 277GB of storage space.
 - Spearheaded migration of 90% of customers using code connectors to sandboxed execution.
-- Released native XSLT support adopted by 3 high-value customers of US$150K ARR and above.
+- Released native XSLT and XSD support adopted by enterprise customers contributing to over US$1 million in ARR.
 - Aligned Workday connector with OWASP Zero Trust API Access and reduced its deployment size by 480MB.
 - Led verification effort of Workato solutions for SuccessFactors and Google Cloud integrations with SAP and Google.
 
@@ -103,6 +103,14 @@ API • Postman • Agile • Scrum • Product specification • Design thinkin
 
 - Implemented new features of a mobile application for human resource management in plain JavaScript.
 - Designed various ways to improve application usability and reduce user input using InVision.
+
+### Singapore University of Technology and Design (SUTD)
+
+**Research Officer** | Singapore | October 2016 – Sep 2017
+
+- Published an IEEE paper on novel open-loop algorithm to control the locomotion and behavior of spherical rolling robots.
+- Implemented and fine-tuned a new dead-reckoning localization algorithm for VIRGO, a miniaturized spherical rolling robot developed for defense-related applications.
+- Incorporated a wireless First Person View (FPV) camera onto VIRGO without increasing its overall 60mm footprint.
 
 ## Education
 
