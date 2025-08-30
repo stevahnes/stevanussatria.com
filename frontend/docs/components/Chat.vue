@@ -450,6 +450,7 @@ const submitFeedback = async (): Promise<void> => {
     if (!response.ok) throw new Error("Failed to end chat");
     localStorage.removeItem("threadId");
     localStorage.removeItem("chatMessages");
+    console.log("Chat session ended successfully");
     threadId.value = null;
     messages.value.push({
       role: "assistant",
