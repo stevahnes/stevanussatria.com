@@ -600,6 +600,7 @@ const airports = computed<Airport[]>(() => {
 
     if (westwardDistance < eastwardDistance) {
       wrappedAirports.add(flight.destination);
+      wrappedAirports.add(flight.origin);
     }
   }
 
@@ -634,9 +635,18 @@ const airports = computed<Airport[]>(() => {
       const [minLng, maxLng] = [bounds[0][1], bounds[1][1]];
       if (airport.lng < minLng || airport.lng > maxLng) return false;
 
+      // FIXED: Don't exclude original airports just because they have wrapped versions
+      // Only exclude if the original is outside normal longitude bounds AND wrapped is in bounds
       if (wrappedAirports.has(airport.code)) {
         const wrappedLng = airport.lng < 0 ? airport.lng + 360 : airport.lng - 360;
-        if (wrappedLng >= minLng && wrappedLng <= maxLng) return false;
+        // Only exclude original if it's way outside normal range and wrapped version exists in bounds
+        if (
+          (airport.lng < -200 || airport.lng > 200) &&
+          wrappedLng >= minLng &&
+          wrappedLng <= maxLng
+        ) {
+          return false;
+        }
       }
     }
 
