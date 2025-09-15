@@ -287,6 +287,14 @@ const AIRPORT_COORDINATES: Record<string, Omit<Airport, "flightCount" | "display
     city: "Amsterdam",
     country: "Netherlands",
   },
+  GUM: {
+    code: "GUM",
+    lat: 13.4834,
+    lng: 144.796,
+    name: "Antonio B. Won Pat International Airport",
+    city: "Guam",
+    country: "USA",
+  },
   HNL: {
     code: "HNL",
     lat: 21.3099,
