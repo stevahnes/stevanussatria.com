@@ -385,7 +385,7 @@ const routeColor = computed<string>(() =>
   clientSideTheme.value && isDark.value ? "#60a5fa" : "#3b82f6",
 );
 
-// Optimized curve generation with memoization
+// Fixed curve generation that properly handles trans-Pacific routes
 const createCurvedPath = (from: [number, number], to: [number, number]): [number, number][] => {
   const [lat1, lng1] = from;
   const [lat2, lng2] = to;
@@ -394,30 +394,48 @@ const createCurvedPath = (from: [number, number], to: [number, number]): [number
   const westwardDistance = 360 - eastwardDistance;
   const shouldGoWestward = westwardDistance < eastwardDistance;
 
+  let adjustedLng1 = lng1;
   let adjustedLng2 = lng2;
+
   if (shouldGoWestward) {
-    adjustedLng2 = lng2 > lng1 ? lng2 - 360 : lng2 + 360;
+    // For westward routes, always wrap the more western coordinate eastward
+    // to avoid extreme negative values that can't be rendered
+    if (lng1 < lng2) {
+      // lng1 is more western (e.g., LAX -118 vs ICN +126)
+      // Wrap the western coordinate (lng1) eastward
+      adjustedLng1 = lng1 + 360;
+      // Keep lng2 as is
+    } else {
+      // lng2 is more western (e.g., SIN +103 vs SFO -122)
+      // Wrap the western coordinate (lng2) eastward
+      adjustedLng2 = lng2 + 360;
+      // Keep lng1 as is
+    }
   }
 
-  const distance = Math.sqrt(Math.pow(lat2 - lat1, 2) + Math.pow(adjustedLng2 - lng1, 2));
+  const distance = Math.sqrt(Math.pow(lat2 - lat1, 2) + Math.pow(adjustedLng2 - adjustedLng1, 2));
 
-  if (distance < 5) return [from, [lat2, adjustedLng2]];
+  if (distance < 5)
+    return [
+      [lat1, adjustedLng1],
+      [lat2, adjustedLng2],
+    ];
 
   const midLat = (lat1 + lat2) / 2;
-  const midLng = (lng1 + adjustedLng2) / 2;
+  const midLng = (adjustedLng1 + adjustedLng2) / 2;
   const curveFactor = Math.min(distance * 0.15, 20);
 
   let curveOffset = curveFactor;
-  if (Math.abs(adjustedLng2 - lng1) > Math.abs(lat2 - lat1)) {
+  if (Math.abs(adjustedLng2 - adjustedLng1) > Math.abs(lat2 - lat1)) {
     curveOffset = midLat > 0 ? curveFactor : -curveFactor;
   } else {
     curveOffset = curveFactor * 0.3;
   }
 
   const controlLat =
-    midLat + (Math.abs(adjustedLng2 - lng1) > Math.abs(lat2 - lat1) ? curveOffset : 0);
+    midLat + (Math.abs(adjustedLng2 - adjustedLng1) > Math.abs(lat2 - lat1) ? curveOffset : 0);
   const controlLng =
-    midLng + (Math.abs(adjustedLng2 - lng1) <= Math.abs(lat2 - lat1) ? curveOffset : 0);
+    midLng + (Math.abs(adjustedLng2 - adjustedLng1) <= Math.abs(lat2 - lat1) ? curveOffset : 0);
 
   const segments = Math.max(3, Math.min(Math.floor(distance / 10), 8));
   const points: [number, number][] = [];
@@ -429,12 +447,17 @@ const createCurvedPath = (from: [number, number], to: [number, number]): [number
     const mt2 = mt * mt;
 
     const lat = mt2 * lat1 + 2 * mt * t * controlLat + t2 * lat2;
-    const lng = mt2 * lng1 + 2 * mt * t * controlLng + t2 * adjustedLng2;
+    const lng = mt2 * adjustedLng1 + 2 * mt * t * controlLng + t2 * adjustedLng2;
 
     points.push([lat, lng]);
   }
 
-  return points.length > 2 ? points : [from, [lat2, adjustedLng2]];
+  return points.length > 2
+    ? points
+    : [
+        [lat1, adjustedLng1],
+        [lat2, adjustedLng2],
+      ];
 };
 
 // Memoized routes computation
