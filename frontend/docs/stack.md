@@ -106,6 +106,12 @@ features:
   - icon: { src: ./cove-ai.png, alt: Cove AI Platform }
     title: Cove AI
     details: Bring context to your content and sanity to your stack.
+  - icon: { src: ./lovable.png, alt: Lovable }
+    title: Lovable
+    details: Build apps so fast your idea’s still hot when it launches.
+  - icon: { dark: "./v0-dark.png", light: "./v0-light.png", alt: v0 }
+    title: v0
+    details: Ship a product—UI magic without the midnight Figma grind.
 ---
 
 <script setup lang="ts">
