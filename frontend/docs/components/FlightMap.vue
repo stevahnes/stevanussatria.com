@@ -515,12 +515,40 @@ const routes = computed<Route[]>(() => {
   }));
 });
 
-// Performance-optimized route filtering
+const performanceConfig = computed(() => ({
+  shouldShowAllRoutes: !isZooming.value && currentZoom.value >= 3,
+  shouldShowAllAirports: !isZooming.value && currentZoom.value >= 4,
+  maxRoutes: isZooming.value ? 20 : Infinity,
+  maxAirports: isZooming.value
+    ? 15
+    : currentZoom.value < 3
+      ? 20
+      : currentZoom.value < 4
+        ? 30
+        : Infinity,
+  minFlightCount: isZooming.value ? 2 : currentZoom.value < 3 ? 3 : currentZoom.value < 4 ? 1 : 0,
+}));
+
+// Replace the existing simplifiedRoutes computed property
 const simplifiedRoutes = computed<Route[]>(() => {
-  if (isZooming.value || currentZoom.value < 3) {
-    return routes.value.filter(route => route.count > 1).slice(0, 20);
+  const config = performanceConfig.value;
+
+  if (!config.shouldShowAllRoutes) {
+    return routes.value.filter(route => route.count > 1).slice(0, config.maxRoutes);
   }
   return routes.value;
+});
+
+// Replace the existing simplifiedAirports computed property
+const simplifiedAirports = computed<Airport[]>(() => {
+  const config = performanceConfig.value;
+
+  if (isZooming.value) {
+    return airports.value.filter(airport => airport.flightCount > 2).slice(0, 15);
+  }
+
+  const filtered = airports.value.filter(airport => airport.flightCount > config.minFlightCount);
+  return config.maxAirports === Infinity ? filtered : filtered.slice(0, config.maxAirports);
 });
 
 // Optimized airports computation with better filtering
@@ -664,57 +692,12 @@ const airports = computed<Airport[]>(() => {
   return [...filteredOriginalAirports, ...wrappedAirportData];
 });
 
-// Performance-optimized airport filtering
-const simplifiedAirports = computed<Airport[]>(() => {
-  if (isZooming.value) {
-    return airports.value.filter(airport => airport.flightCount > 2).slice(0, 15);
-  }
-
-  const filters = [
-    { minZoom: 0, maxZoom: 3, minFlights: 3, maxAirports: 20 },
-    { minZoom: 3, maxZoom: 4, minFlights: 1, maxAirports: 30 },
-    { minZoom: 4, maxZoom: Infinity, minFlights: 0, maxAirports: Infinity },
-  ];
-
-  const filter = filters.find(f => currentZoom.value >= f.minZoom && currentZoom.value < f.maxZoom);
-  if (!filter) return airports.value;
-
-  const filtered = airports.value.filter(airport => airport.flightCount > filter.minFlights);
-  return filter.maxAirports === Infinity ? filtered : filtered.slice(0, filter.maxAirports);
-});
-
 // Optimized zoom level calculation
 const zoomLevels = computed<ZoomLevels>(() => {
-  if (routes.value.length === 0) {
-    return { minZoom: 2, maxZoom: 18, initialZoom: 2 };
-  }
-
-  const allRouteCoordinates = routes.value.flatMap(route => route.coordinates);
-  if (allRouteCoordinates.length === 0) {
-    return { minZoom: 2, maxZoom: 18, initialZoom: 2 };
-  }
-
-  const lats = allRouteCoordinates.map(coord => coord[0]);
-  const lngs = allRouteCoordinates.map(coord => coord[1]);
-  const maxSpread = Math.max(
-    Math.max(...lats) - Math.min(...lats),
-    Math.max(...lngs) - Math.min(...lngs),
-  );
-
-  const zoomMap = [
-    { spread: 120, zoom: 3, minZoom: 2 },
-    { spread: 60, zoom: 3, minZoom: 2 },
-    { spread: 30, zoom: 4, minZoom: 3 },
-    { spread: 10, zoom: 5, minZoom: 4 },
-    { spread: 0, zoom: 6, minZoom: 5 },
-  ];
-
-  const config = zoomMap.find(z => maxSpread > z.spread) || zoomMap[zoomMap.length - 1];
-
   return {
-    minZoom: config.minZoom,
-    maxZoom: 18,
-    initialZoom: config.zoom,
+    minZoom: 3,
+    maxZoom: 8,
+    initialZoom: 4, // Fixed zoom level as requested
   };
 });
 
@@ -744,30 +727,35 @@ const checkMobile = (): void => {
   isMobile.value = window.innerWidth <= 768;
 };
 
-// Debounced zoom handler for better performance
-let zoomTimeout: ReturnType<typeof setTimeout>;
-const handleZoomEnd = (): void => {
-  clearTimeout(zoomTimeout);
-  zoomTimeout = setTimeout(() => {
-    isZooming.value = false;
-  }, 150);
+const createZoomDebouncer = (fn: () => void, delay: number) => {
+  let timeout: ReturnType<typeof setTimeout>;
+  return () => {
+    clearTimeout(timeout);
+    timeout = setTimeout(fn, delay);
+  };
 };
+
+// Then use it like this:
+const handleZoomEnd = createZoomDebouncer(() => {
+  isZooming.value = false;
+}, 150);
 
 const onMapReady = async (): Promise<void> => {
   isMapReady.value = true;
   await nextTick();
 
-  const bounds = mapBounds.value;
-  if (!bounds || !mapRef.value?.leafletObject) return;
+  if (!mapRef.value?.leafletObject) return;
 
   const map = mapRef.value.leafletObject as LeafletMap;
-  const { minZoom, maxZoom, initialZoom: calcInitialZoom } = zoomLevels.value;
+  const { minZoom, maxZoom, initialZoom: fixedInitialZoom } = zoomLevels.value;
 
   // Configure map
   map.setMinZoom(minZoom);
   map.setMaxZoom(maxZoom);
-  map.setMaxBounds(bounds);
-  initialZoom.value = calcInitialZoom;
+  initialZoom.value = fixedInitialZoom;
+
+  // Set to your desired center and zoom
+  map.setView([10, 103.9915], fixedInitialZoom, { animate: false });
 
   // Performance optimizations
   if (map.options) {
@@ -791,20 +779,8 @@ const onMapReady = async (): Promise<void> => {
     currentZoom.value = map.getZoom();
   });
 
-  // Fit bounds
-  map.fitBounds(bounds, {
-    padding: [20, 20],
-    animate: false,
-    maxZoom: calcInitialZoom,
-  });
-
-  // Set final zoom constraints
-  setTimeout(() => {
-    const fittedZoom = map.getZoom();
-    map.setMinZoom(Math.max(minZoom, fittedZoom - 1));
-    currentZoom.value = fittedZoom;
-    initialZoom.value = fittedZoom;
-  }, 100);
+  // Remove the fitBounds logic entirely since you want fixed positioning
+  currentZoom.value = fixedInitialZoom;
 };
 
 // --- Utility Functions ---
@@ -842,7 +818,7 @@ onMounted(async () => {
     <LMap
       ref="mapRef"
       :zoom="zoomLevels.initialZoom"
-      :center="[20, 0]"
+      :center="[10, 103.9915]"
       :options="{
         zoomControl: false,
         scrollWheelZoom: true,
