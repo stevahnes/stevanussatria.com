@@ -992,7 +992,7 @@ watch(
           <textarea
             ref="inputRef"
             v-model="userInput"
-            placeholder="AMA about Steve! 🎤"
+            placeholder="Ask something..."
             :class="[
               '!flex-1 !rounded-lg !p-2 !text-base !resize-none !min-h-[2.5rem] !max-h-[100px]',
               '!border-0 !outline-none !focus:ring-0 !overflow-y-auto',

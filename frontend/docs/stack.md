@@ -46,6 +46,18 @@ features:
   - icon: { src: ./git.svg, alt: Git Version Control }
     title: Git
     details: Track changes like a PM tracks scope creep.
+  - icon: { dark: "./chatgpt-dark.png", light: "./chatgpt-light.png", alt: ChatGPT AI Assistant }
+    title: ChatGPT
+    details: Your on-call assistant for specs, code, and clever replies.
+  - icon: { src: ./claude.png, alt: Claude AI Assistant }
+    title: Claude
+    details: Elegant answers with a sprinkle of empathy.
+  - icon: { src: ./lovable.png, alt: Lovable }
+    title: Lovable
+    details: Build apps so fast your idea’s still hot when it launches.
+  - icon: { dark: "./v0-dark.png", light: "./v0-light.png", alt: v0 }
+    title: v0
+    details: Ship a product UI magic without the midnight Figma grind.
   - icon: { src: ./travis-ci.svg, alt: Travis CI Continuous Integration }
     title: Travis CI
     details: Ship with confidence while your tests do the heavy lifting.
@@ -98,21 +110,9 @@ features:
   - icon: { src: ./miro.png, alt: Miro Collaboration Platform }
     title: Miro
     details: Post-it party meets infinite canvas energy.
-  - icon: { src: ./chatgpt.png, alt: ChatGPT AI Assistant }
-    title: ChatGPT
-    details: Your on-call assistant for specs, code, and clever replies.
-  - icon: { src: ./claude.png, alt: Claude AI Assistant }
-    title: Claude
-    details: Elegant answers with a sprinkle of empathy.
   - icon: { src: ./cove-ai.png, alt: Cove AI Platform }
     title: Cove AI
     details: Bring context to your content and sanity to your stack.
-  - icon: { src: ./lovable.png, alt: Lovable }
-    title: Lovable
-    details: Build apps so fast your idea’s still hot when it launches.
-  - icon: { dark: "./v0-dark.png", light: "./v0-light.png", alt: v0 }
-    title: v0
-    details: Ship a product UI magic without the midnight Figma grind.
 ---
 
 <script setup lang="ts">
