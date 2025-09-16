@@ -39,16 +39,16 @@ features:
     details: Orient Bambino Small Seconds 38mm
   - icon: { dark: "./bvlgari-dark.webp", light: "./bvlgari-light.webp" }
     title: Colosseo
-    details: Bvlgari B.zero1 Ring | Rose Gold & Ceramic
+    details: Bvlgari B.zero1 Ring
   - icon: { dark: "./gucci-dark.png", light: "./gucci-light.png" }
     title: Tribal
-    details: Gucci Interlocking Chain Bracelet | Silver
+    details: Gucci Interlocking Chain Bracelet
   - icon: { src: ./landyachtz.png }
     title: G&T
     details: Landyachtz Dinghy Gin & Tonic Cruiser
   - icon: { dark: "./polygon-dark.png", light: "./polygon-light.png" }
     title: Zephyr
-    details: 2014 Polygon Helios C4.0 | Shimano 105
+    details: 2014 Polygon Helios C4.0
   - icon: { src: ./aftershock.webp }
     title: Zoom
     details: Aftershock | 5600X | RTX3060
