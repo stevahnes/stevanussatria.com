@@ -25,14 +25,14 @@ features:
   - icon:
       src: /vibe-chef-wiz.png
       alt: Weekly Meal Inspiration and Planner
-    title: Vibe Chef Wiz (Private Repo)
+    title: VibeChef Wiz (Private Repo)
     details: A weekly meal-prep planner with embedded AI for recipes inspiration
     link: https://github.com/stevahnes/vibe-chef-wiz
     target: _blank
   - icon:
       src: /frontend-markdown-renderer.png
       alt: Simple Frontend Markdown Renderer
-    title: Frontend Markdown Renderer (Private Repo)
+    title: MarkView (Private Repo)
     details: A simple purely browser-based markdown renderer with MermaidJS support
     link: https://github.com/stevahnes/frontend-markdown-renderer
     target: _blank
