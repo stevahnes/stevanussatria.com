@@ -685,36 +685,10 @@ const simplifiedAirports = computed<Airport[]>(() => {
 
 // Optimized zoom level calculation
 const zoomLevels = computed<ZoomLevels>(() => {
-  if (routes.value.length === 0) {
-    return { minZoom: 2, maxZoom: 18, initialZoom: 2 };
-  }
-
-  const allRouteCoordinates = routes.value.flatMap(route => route.coordinates);
-  if (allRouteCoordinates.length === 0) {
-    return { minZoom: 2, maxZoom: 18, initialZoom: 2 };
-  }
-
-  const lats = allRouteCoordinates.map(coord => coord[0]);
-  const lngs = allRouteCoordinates.map(coord => coord[1]);
-  const maxSpread = Math.max(
-    Math.max(...lats) - Math.min(...lats),
-    Math.max(...lngs) - Math.min(...lngs),
-  );
-
-  const zoomMap = [
-    { spread: 120, zoom: 3, minZoom: 2 },
-    { spread: 60, zoom: 3, minZoom: 2 },
-    { spread: 30, zoom: 4, minZoom: 3 },
-    { spread: 10, zoom: 5, minZoom: 4 },
-    { spread: 0, zoom: 6, minZoom: 5 },
-  ];
-
-  const config = zoomMap.find(z => maxSpread > z.spread) || zoomMap[zoomMap.length - 1];
-
   return {
-    minZoom: config.minZoom,
-    maxZoom: 18,
-    initialZoom: config.zoom,
+    minZoom: 3,
+    maxZoom: 8,
+    initialZoom: 4, // Fixed zoom level as requested
   };
 });
 
@@ -757,17 +731,18 @@ const onMapReady = async (): Promise<void> => {
   isMapReady.value = true;
   await nextTick();
 
-  const bounds = mapBounds.value;
-  if (!bounds || !mapRef.value?.leafletObject) return;
+  if (!mapRef.value?.leafletObject) return;
 
   const map = mapRef.value.leafletObject as LeafletMap;
-  const { minZoom, maxZoom, initialZoom: calcInitialZoom } = zoomLevels.value;
+  const { minZoom, maxZoom, initialZoom: fixedInitialZoom } = zoomLevels.value;
 
   // Configure map
   map.setMinZoom(minZoom);
   map.setMaxZoom(maxZoom);
-  map.setMaxBounds(bounds);
-  initialZoom.value = calcInitialZoom;
+  initialZoom.value = fixedInitialZoom;
+
+  // Set to your desired center and zoom
+  map.setView([10, 103.9915], fixedInitialZoom, { animate: false });
 
   // Performance optimizations
   if (map.options) {
@@ -791,20 +766,8 @@ const onMapReady = async (): Promise<void> => {
     currentZoom.value = map.getZoom();
   });
 
-  // Fit bounds
-  map.fitBounds(bounds, {
-    padding: [20, 20],
-    animate: false,
-    maxZoom: calcInitialZoom,
-  });
-
-  // Set final zoom constraints
-  setTimeout(() => {
-    const fittedZoom = map.getZoom();
-    map.setMinZoom(Math.max(minZoom, fittedZoom - 1));
-    currentZoom.value = fittedZoom;
-    initialZoom.value = fittedZoom;
-  }, 100);
+  // Remove the fitBounds logic entirely since you want fixed positioning
+  currentZoom.value = fixedInitialZoom;
 };
 
 // --- Utility Functions ---
@@ -842,7 +805,7 @@ onMounted(async () => {
     <LMap
       ref="mapRef"
       :zoom="zoomLevels.initialZoom"
-      :center="[20, 0]"
+      :center="[10, 103.9915]"
       :options="{
         zoomControl: false,
         scrollWheelZoom: true,
