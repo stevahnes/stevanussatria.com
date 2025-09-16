@@ -128,7 +128,5 @@ University Admission Score (UAS): 90/90, H3: Physics (Merit)
 ## Awards and Certifications
 
 - Value Star Award - "We Serve" (Marketplace Product Manager) | May 2022
-- Advanced Certified Scrum Product Owner® | January 2021
-- Software Product Management Specialization by the University of Alberta (Coursera) | December 2020
 - IES Gold Medal (Top Cohort Graduate) & Keppel Award of Excellence (Senior & Junior Years) | September 2016
 - ASEAN Undergraduate Scholarship & Tay Chen Hui Memorial Award (Top Science Student) | July 2013
