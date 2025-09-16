@@ -112,7 +112,7 @@ features:
     details: Build apps so fast your idea’s still hot when it launches.
   - icon: { dark: "./v0-dark.png", light: "./v0-light.png", alt: v0 }
     title: v0
-    details: Ship a product—UI magic without the midnight Figma grind.
+    details: Ship a product UI magic without the midnight Figma grind.
 ---
 
 <script setup lang="ts">
