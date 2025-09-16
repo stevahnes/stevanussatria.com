@@ -1,43 +1,17 @@
 <script lang="ts" setup>
 import { ref, onMounted, onUnmounted, computed, watch, nextTick } from "vue";
 import { marked } from "marked";
-import { useData } from "vitepress";
+import { useData, useRoute } from "vitepress";
 
-// --- Enhanced Types ---
+// --- Types ---
 interface ChatMessage {
   role: "user" | "assistant" | "system";
   content: string;
   timestamp?: number;
 }
 
-type Role = "user" | "assistant" | "system";
-
-interface Message {
-  role: Role;
-  content: string;
-  timestamp?: number;
-}
-
-interface ChatRequest {
-  stream: boolean;
-  rawResponse: boolean;
-  messages: { role: string; content: string }[];
-  threadId?: string;
-}
-
 // --- Constants ---
-const WITTY_MESSAGES = [
-  "Oh my, looks like something is wrong with Advocado 🥑. You can [read about Steve here](/about) or try again later!",
-  "Oops! Advocado seems to have taken a little nap 😴. While you wait, why not [learn about Steve](/about)? Or try again in a moment!",
-  "Looks like Advocado is having a bad hair day! 🌪️ Try again soon, or [check out Steve's profile](/about)!",
-  "Advocado is feeling a bit under the weather today 🤒. Please try again later, or [read about Steve](/about)!",
-  "Advocado is currently doing some avocado yoga to recover 🧘‍♂️. [Browse Steve's info](/about) or try again in a bit!",
-  "Looks like Advocado spilled its guacamole! 🥑💦 While we clean up, [learn about Steve](/about) or try again later!",
-  "Advocado is currently on a quick coffee break ☕. [Read Steve's story](/about) or try again in a moment!",
-  "Looks like Advocado is having a moment... 🤔 Try again soon, or [discover more about Steve](/about)!",
-  "Advocado is practicing its avocado meditation 🧘‍♀️. Please try again later, or [explore Steve's background](/about)!",
-  "Looks like Advocado is doing some emergency guac maintenance! 🛠️ [Check out Steve's profile](/about) or try again in a bit!",
-] satisfies string[];
+const API_BASE = "https://advocado-agent.vercel.app";
 
 const PROMPT_SUGGESTIONS = [
   "Tell me about Steve's background",
@@ -47,31 +21,45 @@ const PROMPT_SUGGESTIONS = [
   "How can I contact Steve?",
 ] as const;
 
-const API_BASE = "https://advocado-agent.vercel.app";
-
 // --- State ---
 const messages = ref<ChatMessage[]>([]);
 const loading = ref(false);
 const isInitialLoading = ref(false);
-const clientSideTheme = ref(false);
 const isClient = ref(false);
 const isEndingChat = ref(false);
 const showFeedbackModal = ref(false);
 const feedback = ref<"good" | "bad" | null>(null);
 const threadId = ref<string | null>(null);
-const isChatOpen = ref(false);
 const userInput = ref("");
+const isMobile = ref(false);
+const chatMountPoint = ref(false);
 
-// --- New state for compact mode ---
-const isCompactMode = ref(true); // Start in compact mode
-const hasStartedChat = ref(false); // Track if user has started chatting
+// --- Display Mode ---
+const route = useRoute();
+const displayMode = computed(() => {
+  return route.path === "/" || route.path === "/index" ? "full" : "mini";
+});
+
+// --- Mini Chat Specific State ---
+const isMiniChatOpen = ref(false);
+const isCompactMode = ref(true);
+
+// --- Full Chat Specific State ---
+const chatHeight = ref(500);
+const isDragging = ref(false);
+const isFirstMessageSent = ref(false);
 
 // --- DOM Refs ---
 const inputRef = ref<HTMLTextAreaElement | null>(null);
 const chatContainerRef = ref<HTMLDivElement | null>(null);
+const chatWindowRef = ref<HTMLDivElement | null>(null);
+const promptBarRef = ref<HTMLDivElement | null>(null);
+const showLeftScroll = ref(false);
+const showRightScroll = ref(false);
 
-// --- Theme & Computed ---
+// --- Theme ---
 const { isDark } = useData();
+const clientSideTheme = ref(false);
 
 const cssVars = computed(() => ({
   "--scrollbar-thumb": clientSideTheme.value && isDark.value ? "#4a5568" : "#cbd5e0",
@@ -83,12 +71,10 @@ const cssVars = computed(() => ({
   "--blockquote-border-color": clientSideTheme.value && isDark.value ? "#4a5568" : "#cbd5e0",
 }));
 
+// --- Computed ---
 const hasOngoingThread = computed(() => !!threadId.value);
 
 // --- Utility Functions ---
-const getRandomWittyMessage = (): string =>
-  WITTY_MESSAGES[Math.floor(Math.random() * WITTY_MESSAGES.length)];
-
 const formatTime = (timestamp: number): string =>
   new Date(timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 
@@ -113,41 +99,111 @@ const scrollToBottom = async (): Promise<void> => {
 const resizeTextarea = (): void => {
   if (!inputRef.value) return;
   inputRef.value.style.height = "auto";
-  const newHeight = Math.min(inputRef.value.scrollHeight, 100);
+  const newHeight = Math.min(inputRef.value.scrollHeight, displayMode.value === "mini" ? 100 : 200);
   inputRef.value.style.height = `${newHeight}px`;
 };
 
-// --- Expand chat to full mode ---
+const checkIfMobile = (): boolean => {
+  if (typeof window === "undefined") return false;
+  return (
+    window.innerWidth < 768 ||
+    window.matchMedia("(pointer: coarse)").matches ||
+    /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+  );
+};
+
+// --- Mini Chat Expand/Collapse Logic ---
 const expandToFullMode = async (): Promise<void> => {
   isCompactMode.value = false;
-  hasStartedChat.value = true;
-
+  localStorage.setItem("miniChatExpanded", "true");
   await nextTick();
   scrollToBottom();
 };
 
-// --- Storage Functions ---
-const isWittyMessage = (msg: ChatMessage, index: number): boolean => {
-  // Check if this is a witty error message (exact match)
-  if (msg.role === "assistant" && WITTY_MESSAGES.includes(msg.content as string)) {
-    return true;
-  }
+const toggleMiniChat = (): void => {
+  isMiniChatOpen.value = !isMiniChatOpen.value;
+  localStorage.setItem("miniChatOpen", isMiniChatOpen.value.toString());
 
-  // Check if this user message is followed by a witty response (exact match)
-  if (msg.role === "user" && index < messages.value.length - 1) {
-    const nextMessage = messages.value[index + 1];
-    return (
-      nextMessage.role === "assistant" && WITTY_MESSAGES.includes(nextMessage.content as string)
-    );
+  if (isMiniChatOpen.value) {
+    nextTick(() => {
+      inputRef.value?.focus();
+      if (!isCompactMode.value) scrollToBottom();
+    });
   }
-
-  return false;
 };
 
-const saveMessagesToStorage = (): void => {
-  if (!isClient.value) return;
-  const messagesToSave = messages.value.filter((msg, index) => !isWittyMessage(msg, index));
-  localStorage.setItem("chatMessages", JSON.stringify(messagesToSave));
+// --- Full Chat Height Management ---
+const setFullHeightAndScroll = async (): Promise<void> => {
+  if (!isClient.value || !chatWindowRef.value || displayMode.value !== "full") return;
+
+  const viewportHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+  chatHeight.value = isMobile.value ? viewportHeight - 20 : viewportHeight;
+  localStorage.setItem("chatHeight", chatHeight.value.toString());
+
+  if (isMobile.value) {
+    requestAnimationFrame(() => {
+      if (!chatWindowRef.value) return;
+      const offsetTop = chatWindowRef.value.getBoundingClientRect().top + window.pageYOffset;
+      window.scrollTo({ top: offsetTop, behavior: "smooth" });
+      setTimeout(scrollToBottom, 150);
+    });
+  } else {
+    await nextTick();
+    if (!chatWindowRef.value) return;
+    const offsetTop = chatWindowRef.value.getBoundingClientRect().top + window.pageYOffset;
+    window.scrollTo({ top: offsetTop, behavior: "smooth" });
+  }
+};
+
+// --- Resize Handlers for Full Chat ---
+const resizeState = ref({ startY: 0, startHeight: 0 });
+
+const startResize = (e: MouseEvent | TouchEvent): void => {
+  if (displayMode.value !== "full") return;
+  e.preventDefault();
+  isDragging.value = true;
+  const clientY = "touches" in e ? e.touches[0].clientY : e.clientY;
+  resizeState.value = { startY: clientY, startHeight: chatHeight.value };
+
+  if ("touches" in e) {
+    document.addEventListener("touchmove", handleTouchResize, { passive: false });
+    document.addEventListener("touchend", stopResize);
+  } else {
+    document.addEventListener("mousemove", handleMouseResize);
+    document.addEventListener("mouseup", stopResize);
+  }
+};
+
+const handleMouseResize = (e: MouseEvent): void => {
+  if (!isDragging.value) return;
+  const deltaY = e.clientY - resizeState.value.startY;
+  chatHeight.value = Math.max(200, resizeState.value.startHeight + deltaY);
+};
+
+const handleTouchResize = (e: TouchEvent): void => {
+  if (!isDragging.value) return;
+  e.preventDefault();
+  const deltaY = e.touches[0].clientY - resizeState.value.startY;
+  chatHeight.value = Math.max(200, resizeState.value.startHeight + deltaY);
+};
+
+const stopResize = (): void => {
+  isDragging.value = false;
+  document.removeEventListener("mousemove", handleMouseResize);
+  document.removeEventListener("mouseup", stopResize);
+  document.removeEventListener("touchmove", handleTouchResize);
+  document.removeEventListener("touchend", stopResize);
+  if (isClient.value) {
+    localStorage.setItem("chatHeight", chatHeight.value.toString());
+  }
+};
+
+// --- Prompt Bar Scroll ---
+const updatePromptScrollButtons = (): void => {
+  const el = promptBarRef.value;
+  if (!el) return;
+  showLeftScroll.value = el.scrollLeft > 0;
+  showRightScroll.value = el.scrollLeft + el.clientWidth < el.scrollWidth - 1;
 };
 
 // --- Event Handlers ---
@@ -158,93 +214,94 @@ const handleKeyDown = (e: KeyboardEvent): void => {
   }
 };
 
-const handleStorageChange = (event: StorageEvent): void => {
-  if (!isClient.value) return;
+// --- Fetch Messages from Backend ---
+const fetchThreadMessages = async (): Promise<void> => {
+  if (!threadId.value) return;
 
-  switch (event.key) {
-    case "miniChatOpen":
-      isChatOpen.value = event.newValue === "true";
-      break;
-    case "chatMessages":
-      try {
-        const newMessages = JSON.parse(event.newValue || "[]");
-        if (Array.isArray(newMessages)) {
-          const hasNewUserMessages = newMessages.some(
-            (msg: Message) =>
-              msg.role === "user" &&
-              !messages.value.some(
-                existingMsg =>
-                  existingMsg.role === msg.role &&
-                  existingMsg.content === msg.content &&
-                  existingMsg.timestamp === msg.timestamp,
-              ),
-          );
-          if (hasNewUserMessages) {
-            isChatOpen.value = true;
-            localStorage.setItem("miniChatOpen", "true");
-          }
-          messages.value = newMessages;
+  isInitialLoading.value = true;
+  try {
+    const response = await fetch(`${API_BASE}/thread/listMessages?threadId=${threadId.value}`);
 
-          // Sync compact mode state based on messages
-          if (newMessages.length > 0) {
-            isCompactMode.value = false;
-            hasStartedChat.value = true;
-          } else {
-            isCompactMode.value = true;
-            hasStartedChat.value = false;
-          }
+    if (response.ok) {
+      const messagesData = await response.json();
+      if (messagesData && Array.isArray(messagesData)) {
+        messages.value = messagesData.map((msg: any) => ({
+          role: msg.role,
+          content: msg.content || "",
+          timestamp: Date.now(),
+        }));
+
+        if (displayMode.value === "mini" && messagesData.length > 0) {
+          isCompactMode.value = false;
         }
-      } catch (error) {
-        console.error("Error parsing chat messages from storage:", error);
-        // On error, reset to safe state
-        messages.value = [];
-        isCompactMode.value = true;
-        hasStartedChat.value = false;
+        if (displayMode.value === "full" && messagesData.length > 1) {
+          isFirstMessageSent.value = true;
+        }
+      } else {
+        throw new Error("Invalid messages data");
       }
-      break;
-    case "hadChatInteraction":
-      if (event.newValue === "true") {
-        isChatOpen.value = true;
-        localStorage.setItem("miniChatOpen", "true");
-      }
-      break;
-    case "chatEnding":
-      if (event.newValue === "true" && showFeedbackModal.value) {
-        showFeedbackModal.value = false;
-        feedback.value = null;
-      }
-      break;
-    case "threadId":
-      threadId.value = event.newValue;
-      if (!event.newValue) {
-        messages.value = [];
-        isCompactMode.value = true;
-        hasStartedChat.value = false;
-        localStorage.removeItem("chatEnding");
-      }
-      break;
+    } else {
+      throw new Error("Failed to fetch messages");
+    }
+  } catch (error) {
+    console.error("Error fetching thread messages:", error);
+    // Clear invalid thread
+    localStorage.removeItem("threadId");
+    threadId.value = null;
+    messages.value = [
+      {
+        role: "assistant",
+        content: "Hi! What would you like to learn about Steve today?",
+        timestamp: Date.now(),
+      },
+    ];
+  } finally {
+    isInitialLoading.value = false;
+    await nextTick();
+    if (displayMode.value === "mini" && isMiniChatOpen.value && !isCompactMode.value) {
+      scrollToBottom();
+    } else if (displayMode.value === "full") {
+      scrollToBottom();
+    }
   }
 };
 
-// --- API Functions ---
+// --- Message Handling ---
 const sendMessage = async (): Promise<void> => {
   if (!userInput.value.trim()) return;
 
-  const isFirstMessage = messages.value.length === 0;
+  const isFirstMessage =
+    messages.value.length <= 1 &&
+    messages.value[0]?.role === "assistant" &&
+    messages.value[0]?.content.includes("Hi! What would you like to learn about Steve today?");
 
-  const userMessage: ChatMessage = {
+  messages.value.push({
     role: "user",
     content: userInput.value,
     timestamp: Date.now(),
-  };
+  });
 
-  messages.value.push(userMessage);
-
+  // Handle first message UI changes
   if (isFirstMessage) {
-    await expandToFullMode();
+    if (displayMode.value === "mini") {
+      await expandToFullMode();
+    } else if (displayMode.value === "full" && !isFirstMessageSent.value) {
+      isFirstMessageSent.value = true;
+      setTimeout(async () => {
+        await setFullHeightAndScroll();
+        if (isMobile.value) {
+          window.addEventListener(
+            "resize",
+            function onResize() {
+              scrollToBottom();
+              window.removeEventListener("resize", onResize);
+            },
+            { once: true },
+          );
+        }
+      }, 50);
+    }
   }
-
-  if (isClient.value) localStorage.setItem("hadChatInteraction", "true");
 
   let currentAssistantContent = "";
   let assistantMessageAdded = false;
@@ -254,7 +311,7 @@ const sendMessage = async (): Promise<void> => {
   userInput.value = "";
 
   try {
-    const requestBody: ChatRequest = {
+    const requestBody: any = {
       stream: true,
       rawResponse: true,
       messages: [{ role: "user", content: originalInput }],
@@ -281,7 +338,6 @@ const sendMessage = async (): Promise<void> => {
     const decoder = new TextDecoder("utf-8");
     let buffer = "";
 
-    // eslint-disable-next-line no-constant-condition
     while (true) {
       const { done, value } = await reader.read();
       if (done) break;
@@ -312,19 +368,13 @@ const sendMessage = async (): Promise<void> => {
     }
   } catch (error) {
     console.error("Error during streaming:", error);
-
     if (!assistantMessageAdded) {
       messages.value.push({
         role: "assistant",
-        content: getRandomWittyMessage(),
+        content: "Something went wrong. Please try again or [read about Steve here](/about).",
         timestamp: Date.now(),
       });
-    } else if (currentAssistantContent.trim() === "") {
-      messages.value[messages.value.length - 1].content = getRandomWittyMessage();
     }
-
-    messages.value = [...messages.value];
-    await scrollToBottom();
   } finally {
     loading.value = false;
     if (inputRef.value) inputRef.value.style.height = "auto";
@@ -334,11 +384,11 @@ const sendMessage = async (): Promise<void> => {
   }
 };
 
+// --- End Chat & Feedback ---
 const endChat = (): void => {
   if (isEndingChat.value || showFeedbackModal.value || !threadId.value) return;
   showFeedbackModal.value = true;
   feedback.value = null;
-  if (isClient.value) localStorage.setItem("chatEnding", "true");
 };
 
 const submitFeedback = async (): Promise<void> => {
@@ -354,12 +404,23 @@ const submitFeedback = async (): Promise<void> => {
 
     if (!response.ok) throw new Error("Failed to end chat");
 
+    // Clear session
     localStorage.removeItem("threadId");
-    localStorage.removeItem("chatMessages");
+    localStorage.removeItem("miniChatExpanded");
     threadId.value = null;
-    messages.value = [];
+
+    // Reset to initial state
+    messages.value = [
+      {
+        role: "assistant",
+        content: "Hi! What would you like to learn about Steve today?",
+        timestamp: Date.now(),
+      },
+    ];
+
+    // Reset UI states
     isCompactMode.value = true;
-    hasStartedChat.value = false;
+    isFirstMessageSent.value = false;
   } catch (error) {
     console.error("Error ending chat:", error);
     messages.value.push({
@@ -384,147 +445,442 @@ const setSuggestion = (suggestion: string): void => {
   inputRef.value?.focus();
 };
 
-const toggleChat = (): void => {
-  isChatOpen.value = !isChatOpen.value;
-  if (isClient.value) localStorage.setItem("miniChatOpen", isChatOpen.value.toString());
-  if (isChatOpen.value) {
-    nextTick(() => inputRef.value?.focus());
-  }
-};
-
-// --- Watchers ---
-watch(userInput, () => nextTick(resizeTextarea));
-watch(messages, saveMessagesToStorage, { deep: true });
-
-watch(isChatOpen, async newVal => {
-  if (newVal) {
-    await nextTick();
-    if (!isCompactMode.value) scrollToBottom();
-    nextTick(() => inputRef.value?.focus());
-  }
-});
-
-watch(
-  messages,
-  async () => {
-    if (!isClient.value) return;
-    saveMessagesToStorage();
-    if (isChatOpen.value && !isCompactMode.value) {
-      await nextTick();
-      scrollToBottom();
-    }
-  },
-  { deep: true },
-);
-
 // --- Lifecycle ---
 onMounted(async () => {
   isClient.value = true;
   clientSideTheme.value = true;
+  isMobile.value = checkIfMobile();
 
+  // Load threadId
   threadId.value = localStorage.getItem("threadId");
-  const storedMessages = localStorage.getItem("chatMessages");
 
-  if (storedMessages) {
-    try {
-      const parsedMessages = JSON.parse(storedMessages);
-      messages.value = parsedMessages;
+  // Initialize with default message
+  messages.value = [
+    {
+      role: "assistant",
+      content: "Hi! What would you like to learn about Steve today?",
+      timestamp: Date.now(),
+    },
+  ];
 
-      // If we have stored messages, we're not in compact mode
-      if (parsedMessages.length > 0) {
-        isCompactMode.value = false;
-        hasStartedChat.value = true;
-      }
-    } catch (error) {
-      console.error("Error parsing stored messages:", error);
-      messages.value = [];
-    }
-  } else {
-    messages.value = [];
+  // Fetch messages if thread exists
+  if (threadId.value) {
+    await fetchThreadMessages();
   }
 
-  // Initial chat state setup
-  const hadInteraction = localStorage.getItem("hadChatInteraction") === "true";
-  const lastMiniChatState = localStorage.getItem("miniChatOpen");
+  // Handle mini chat open state
+  if (displayMode.value === "mini") {
+    const lastMiniChatOpen = localStorage.getItem("miniChatOpen");
+    const lastMiniChatExpanded = localStorage.getItem("miniChatExpanded");
 
-  if (hadInteraction) {
-    isChatOpen.value = true;
-    localStorage.setItem("miniChatOpen", "true");
-    localStorage.removeItem("hadChatInteraction");
-  } else if (lastMiniChatState !== null) {
-    isChatOpen.value = lastMiniChatState === "true";
-  }
-
-  // Only load from backend if we have threadId but no stored messages
-  if (threadId.value && !storedMessages) {
-    isInitialLoading.value = true;
-    try {
-      const response = await fetch(`${API_BASE}/thread/listMessages?threadId=${threadId.value}`);
-
-      if (response.ok) {
-        const messagesData = await response.json();
-        if (messagesData && Array.isArray(messagesData)) {
-          messages.value = messagesData.map((msg: Message) => ({
-            role: msg.role,
-            content: msg.content || "",
-            timestamp: Date.now(),
-          }));
-          saveMessagesToStorage();
-
-          // If we have messages from backend, we're not in compact mode
-          if (messagesData.length > 0) {
-            isCompactMode.value = false;
-            hasStartedChat.value = true;
-          }
-        } else {
-          // Invalid response data - reset to fresh state
-          localStorage.removeItem("threadId");
-          threadId.value = null;
-          messages.value = [];
-          isCompactMode.value = true;
-          hasStartedChat.value = false;
-        }
+    if (threadId.value) {
+      // Thread exists - check saved states
+      if (lastMiniChatOpen !== null) {
+        // Respect user's last open/close state
+        isMiniChatOpen.value = lastMiniChatOpen === "true";
       } else {
-        // API error or thread not found - reset to fresh state
-        localStorage.removeItem("threadId");
-        threadId.value = null;
-        messages.value = [];
-        isCompactMode.value = true;
-        hasStartedChat.value = false;
+        // No saved state but thread exists - open by default
+        isMiniChatOpen.value = true;
+        localStorage.setItem("miniChatOpen", "true");
       }
-    } catch (error) {
-      console.error("Error fetching thread messages:", error);
-      // Network error - reset to fresh state
-      localStorage.removeItem("threadId");
-      threadId.value = null;
-      messages.value = [];
+
+      // Check if it should be expanded
+      if (lastMiniChatExpanded === "true" && messages.value.length > 1) {
+        isCompactMode.value = false;
+      }
+    } else {
+      // No thread - collapsed by default
+      isMiniChatOpen.value = false;
       isCompactMode.value = true;
-      hasStartedChat.value = false;
-    } finally {
-      isInitialLoading.value = false;
-      await nextTick();
-      if (isChatOpen.value && !isCompactMode.value) scrollToBottom();
     }
-  } else {
-    await nextTick();
-    if (isChatOpen.value && !isCompactMode.value) scrollToBottom();
   }
 
-  window.addEventListener("storage", handleStorageChange);
+  // Handle full chat height
+  if (displayMode.value === "full") {
+    if (threadId.value) {
+      const savedHeight = localStorage.getItem("chatHeight");
+      if (savedHeight) {
+        chatHeight.value = parseInt(savedHeight, 10);
+      }
+    } else {
+      chatHeight.value = 500;
+      localStorage.removeItem("chatHeight");
+    }
+    nextTick(() => {
+      chatMountPoint.value = !!document.getElementById("chat-container");
+    });
+  }
+
+  // Setup event listeners
+  window.addEventListener("resize", () => {
+    isMobile.value = checkIfMobile();
+    if (isFirstMessageSent.value && displayMode.value === "full") {
+      chatHeight.value = window.innerHeight;
+      localStorage.setItem("chatHeight", chatHeight.value.toString());
+    }
+    updatePromptScrollButtons();
+  });
+
+  await nextTick();
+  scrollToBottom();
+  inputRef.value?.focus();
+
+  if (displayMode.value === "full") {
+    updatePromptScrollButtons();
+    promptBarRef.value?.addEventListener("scroll", updatePromptScrollButtons);
+  }
 });
 
 onUnmounted(() => {
-  window.removeEventListener("storage", handleStorageChange);
+  promptBarRef.value?.removeEventListener("scroll", updatePromptScrollButtons);
 });
+
+// --- Watchers ---
+watch(userInput, () => nextTick(resizeTextarea));
+watch(messages, () => scrollToBottom(), { deep: true });
 </script>
 
 <template>
-  <div v-if="isClient" class="!fixed !bottom-4 !right-4 !z-50">
+  <!-- Full Chat Mode (Homepage) -->
+  <Teleport to="#chat-container" v-if="isClient && displayMode === 'full' && chatMountPoint">
+    <div
+      v-if="isClient && displayMode === 'full'"
+      ref="chatWindowRef"
+      :style="{ height: `${chatHeight}px`, ...cssVars }"
+      :class="[
+        '!relative !flex !w-full !flex-col !rounded-lg !p-4 !shadow-lg',
+        clientSideTheme && isDark
+          ? '!border !border-gray-700 !bg-gray-900'
+          : '!border !border-gray-200 !bg-gray-50',
+      ]"
+    >
+      <!-- Loading Overlay -->
+      <div v-if="isInitialLoading" class="chat-loading-overlay">
+        <div class="chat-loading-content">
+          <div
+            class="!h-8 !w-8 !border-4 !border-indigo-600 !border-t-transparent !rounded-full !animate-spin"
+          ></div>
+          <p :class="clientSideTheme && isDark ? '!text-gray-200' : '!text-gray-700'">
+            Loading conversation...
+          </p>
+        </div>
+      </div>
+
+      <!-- Header -->
+      <div
+        :class="[
+          '!mb-4 !pb-3 !flex !items-center !justify-between',
+          clientSideTheme && isDark ? '!border-b !border-gray-700' : '!border-b !border-gray-200',
+        ]"
+      >
+        <div class="!flex !items-center">
+          <div class="!h-3 !w-3 !rounded-full !bg-green-500 !mr-2"></div>
+          <h3
+            :class="
+              clientSideTheme && isDark
+                ? '!text-gray-100 !font-medium'
+                : '!text-gray-800 !font-medium'
+            "
+          >
+            Chat with Advocado 🥑
+          </h3>
+        </div>
+        <button
+          v-if="hasOngoingThread"
+          :disabled="isEndingChat || isInitialLoading"
+          :class="[
+            '!px-3 !py-1 !rounded-lg !text-sm !transition-colors',
+            '!bg-indigo-600 !hover:bg-indigo-700 !text-white',
+            (isEndingChat || isInitialLoading) && '!opacity-50 !cursor-not-allowed',
+          ]"
+          @click="endChat"
+        >
+          {{ isEndingChat ? "Ending..." : "End Chat" }}
+        </button>
+      </div>
+
+      <!-- Messages Area -->
+      <div ref="chatContainerRef" class="!flex-1 !overflow-auto !space-y-4 !flex !flex-col !px-1">
+        <div
+          v-for="(msg, index) in messages"
+          :key="index"
+          class="!flex !w-full !mb-3"
+          :class="[msg.role === 'user' ? '!justify-end' : '!justify-start']"
+        >
+          <div
+            v-if="msg.content.trim()"
+            :class="[
+              '!rounded-lg !px-4 !py-3 !max-w-[85%] !shadow-md',
+              msg.role === 'user'
+                ? '!bg-indigo-600 !text-white'
+                : clientSideTheme && isDark
+                  ? '!bg-gray-800 !text-gray-100 !border !border-gray-700'
+                  : '!bg-white !text-gray-800 !border !border-gray-200',
+            ]"
+          >
+            <div class="!flex !justify-between !items-center !mb-1">
+              <span
+                :class="[
+                  '!text-xs',
+                  msg.role === 'user'
+                    ? '!text-gray-200'
+                    : clientSideTheme && isDark
+                      ? '!text-gray-400'
+                      : '!text-gray-500',
+                ]"
+              >
+                {{ msg.role === "user" ? "You" : "Advocado" }}
+              </span>
+              <span
+                v-if="msg.timestamp"
+                :class="[
+                  '!text-xs !ml-4',
+                  msg.role === 'user'
+                    ? '!text-gray-200'
+                    : clientSideTheme && isDark
+                      ? '!text-gray-400'
+                      : '!text-gray-500',
+                ]"
+              >
+                {{ formatTime(msg.timestamp) }}
+              </span>
+            </div>
+            <div
+              class="!whitespace-pre-wrap markdown-content"
+              v-html="parseMarkdown(msg.content)"
+            ></div>
+          </div>
+        </div>
+
+        <!-- Loading Indicator -->
+        <div v-if="loading" class="!flex !justify-start !w-full">
+          <div
+            :class="[
+              '!rounded-lg !px-4 !py-3 !max-w-[85%] !shadow-md',
+              clientSideTheme && isDark
+                ? '!bg-gray-800 !text-gray-300 !border !border-gray-700'
+                : '!bg-white !text-gray-600 !border !border-gray-200',
+            ]"
+          >
+            <div class="!flex !justify-between !items-center !mb-1">
+              <span
+                :class="
+                  clientSideTheme && isDark ? '!text-xs !text-gray-400' : '!text-xs !text-gray-500'
+                "
+              >
+                Advocado
+              </span>
+              <span
+                :class="
+                  clientSideTheme && isDark
+                    ? '!text-xs !text-gray-400 !ml-4'
+                    : '!text-xs !text-gray-500 !ml-4'
+                "
+              >
+                {{ formatTime(Date.now()) }}
+              </span>
+            </div>
+            <div class="!flex !items-center">
+              <span
+                v-for="(_, i) in 3"
+                :key="i"
+                :class="[
+                  '!inline-block !h-2 !w-2 !rounded-full !animate-pulse',
+                  clientSideTheme && isDark ? '!bg-gray-400' : '!bg-gray-300',
+                ]"
+                :style="{
+                  marginLeft: i > 0 ? '0.25rem' : 0,
+                  marginRight: i < 2 ? '0.25rem' : 0,
+                  animationDelay: `${i * 0.2}s`,
+                }"
+              ></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Resize Handle -->
+      <div
+        class="!mb-6 !h-2 !w-full !cursor-ns-resize !flex !justify-center !items-center hover:!bg-gray-300 dark:hover:!bg-gray-700 !transition-colors !rounded-b-lg"
+        @mousedown="startResize"
+        @touchstart="startResize"
+      >
+        <div
+          :class="[
+            '!w-12 !h-1 !rounded-full',
+            clientSideTheme && isDark ? '!bg-gray-600' : '!bg-gray-300',
+          ]"
+        ></div>
+      </div>
+
+      <!-- Prompt Suggestions -->
+      <div class="!mb-0.5 !relative">
+        <div
+          ref="promptBarRef"
+          class="prompt-bar !flex !overflow-x-auto !space-x-2 !pb-1 !scroll-smooth !px-2"
+          @scroll="updatePromptScrollButtons"
+        >
+          <button
+            v-for="(suggestion, idx) in PROMPT_SUGGESTIONS"
+            :key="idx"
+            type="button"
+            :disabled="isInitialLoading"
+            :class="[
+              '!px-4 !py-2 !rounded-full !text-sm !font-medium !transition-colors !shadow',
+              '!border !whitespace-nowrap',
+              clientSideTheme && isDark
+                ? '!bg-gray-800 !text-gray-100 !border-gray-700 hover:!bg-gray-700'
+                : '!bg-white !text-gray-800 !border-gray-200 hover:!bg-gray-100',
+              isInitialLoading && '!opacity-50 !cursor-not-allowed',
+            ]"
+            @click="setSuggestion(suggestion)"
+          >
+            {{ suggestion }}
+          </button>
+        </div>
+      </div>
+
+      <!-- Input Form -->
+      <form
+        :class="[
+          '!mt-4 !flex !rounded-lg !overflow-hidden !shadow-md',
+          clientSideTheme && isDark
+            ? '!bg-gray-800 !border !border-gray-700'
+            : '!bg-gray-100 !border !border-gray-200',
+        ]"
+        @submit.prevent="sendMessage"
+      >
+        <textarea
+          ref="inputRef"
+          v-model="userInput"
+          placeholder="Ask something about Steve..."
+          :class="[
+            '!flex-1 !border-0 !p-3 !outline-none !focus:ring-0 !resize-none',
+            '!min-h-[42px] !max-h-[200px] !overflow-y-auto',
+            clientSideTheme && isDark
+              ? '!bg-gray-800 !text-gray-100 !placeholder-gray-500'
+              : '!bg-gray-100 !text-gray-800 !placeholder-gray-400',
+          ]"
+          :disabled="loading || isInitialLoading"
+          rows="1"
+          @keydown="handleKeyDown"
+        ></textarea>
+        <button
+          type="submit"
+          class="!bg-indigo-600 !hover:bg-indigo-700 !text-white !px-4 !transition-colors !flex !items-center !justify-center !min-w-[60px]"
+          :disabled="loading || isInitialLoading"
+        >
+          <svg
+            v-if="!loading"
+            xmlns="http://www.w3.org/2000/svg"
+            class="!h-5 !w-5"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
+            />
+          </svg>
+          <div
+            v-else
+            class="!h-5 !w-5 !border-2 !border-t-transparent !border-white !rounded-full !animate-spin"
+          ></div>
+        </button>
+      </form>
+
+      <!-- Feedback Modal -->
+      <div
+        v-if="showFeedbackModal"
+        class="!absolute !inset-0 !flex !items-center !justify-center !z-50"
+      >
+        <div
+          :class="[
+            '!absolute !inset-0',
+            clientSideTheme && isDark ? '!bg-black !bg-opacity-60' : '!bg-white !bg-opacity-60',
+          ]"
+        ></div>
+        <div
+          :class="[
+            '!relative !rounded-lg !p-6 !w-96 !shadow-xl',
+            clientSideTheme && isDark ? '!bg-gray-800 !text-white' : '!bg-white !text-gray-800',
+          ]"
+        >
+          <h3
+            :class="[
+              '!text-lg !font-medium !mb-4',
+              clientSideTheme && isDark ? '!text-white' : '!text-gray-900',
+            ]"
+          >
+            How was your chat experience?
+          </h3>
+          <div class="!flex !space-x-4 !mb-6">
+            <button
+              :class="[
+                '!flex-1 !py-2 !px-4 !rounded-lg !transition-colors',
+                feedback === 'good'
+                  ? '!bg-green-500 !text-white'
+                  : clientSideTheme && isDark
+                    ? '!bg-gray-700 !text-gray-300 !hover:bg-gray-600'
+                    : '!bg-gray-100 !text-gray-700 !hover:bg-gray-200',
+              ]"
+              @click="feedback = 'good'"
+            >
+              Good 👍
+            </button>
+            <button
+              :class="[
+                '!flex-1 !py-2 !px-4 !rounded-lg !transition-colors',
+                feedback === 'bad'
+                  ? '!bg-red-500 !text-white'
+                  : clientSideTheme && isDark
+                    ? '!bg-gray-700 !text-gray-300 !hover:bg-gray-600'
+                    : '!bg-gray-100 !text-gray-700 !hover:bg-gray-200',
+              ]"
+              @click="feedback = 'bad'"
+            >
+              Bad 👎
+            </button>
+          </div>
+          <div class="!flex !justify-end !space-x-3">
+            <button
+              :class="[
+                '!px-4 !py-2 !rounded-lg !transition-colors',
+                clientSideTheme && isDark
+                  ? '!bg-gray-700 !text-gray-300 !hover:bg-gray-600'
+                  : '!bg-gray-100 !text-gray-700 !hover:bg-gray-200',
+              ]"
+              @click="closeFeedbackModal"
+            >
+              Cancel
+            </button>
+            <button
+              :disabled="!feedback || isEndingChat"
+              :class="[
+                '!px-4 !py-2 !rounded-lg !transition-colors',
+                !feedback || isEndingChat
+                  ? '!bg-gray-400 !text-white !cursor-not-allowed'
+                  : '!bg-indigo-600 !text-white !hover:bg-indigo-700',
+              ]"
+              @click="submitFeedback"
+            >
+              {{ isEndingChat ? "Ending..." : "End Chat" }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </Teleport>
+  <!-- Mini Chat Mode (Other Pages) -->
+  <div v-else-if="isClient && displayMode === 'mini'" class="!fixed !bottom-4 !right-4 !z-50">
     <!-- Chat Toggle Button -->
     <button
-      v-if="!isChatOpen"
+      v-if="!isMiniChatOpen"
       class="!w-14 !h-14 !rounded-full !bg-indigo-600 !text-white !shadow-lg !flex !items-center !justify-center !transition-all hover:!bg-indigo-700"
-      @click="toggleChat"
+      @click="toggleMiniChat"
     >
       <img src="/advocado.webp" alt="Advocado" class="!w-8 !h-8 !rounded-full" />
     </button>
@@ -552,12 +908,12 @@ onUnmounted(() => {
             :class="clientSideTheme && isDark ? '!text-gray-200' : '!text-gray-700'"
             class="!text-base"
           >
-            Loading past conversations...
+            Loading conversation...
           </p>
         </div>
       </div>
 
-      <!-- Compact Mode - Initial State -->
+      <!-- Compact Mode -->
       <div v-if="isCompactMode" class="!relative !p-6 !pt-8">
         <!-- Close button -->
         <button
@@ -567,7 +923,7 @@ onUnmounted(() => {
               ? '!text-gray-400 hover:!text-gray-200 hover:!bg-gray-700'
               : '!text-gray-500 hover:!text-gray-700 hover:!bg-gray-100',
           ]"
-          @click="toggleChat"
+          @click="toggleMiniChat"
         >
           <svg class="!w-4 !h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
@@ -598,7 +954,7 @@ onUnmounted(() => {
               clientSideTheme && isDark ? '!text-gray-300' : '!text-gray-600',
             ]"
           >
-            Hi! What would you like to learn about Steve today?
+            {{ messages[0]?.content || "Hi! What would you like to learn about Steve today?" }}
           </p>
         </div>
 
@@ -611,11 +967,11 @@ onUnmounted(() => {
               type="button"
               :disabled="isInitialLoading"
               :class="[
-                '!w-full !px-4 !py-3 !rounded-xl !text-base !font-medium !transition-all !duration-200',
+                '!w-full !px-4 !py-3 !rounded-xl !text-base !font-medium !transition-all',
                 '!border !text-left !shadow-sm',
                 clientSideTheme && isDark
-                  ? '!bg-gray-800 !text-gray-200 !border-gray-600 hover:!bg-gray-700 hover:!border-gray-500'
-                  : '!bg-gray-50 !text-gray-700 !border-gray-200 hover:!bg-gray-100 hover:!border-gray-300',
+                  ? '!bg-gray-800 !text-gray-200 !border-gray-600 hover:!bg-gray-700'
+                  : '!bg-gray-50 !text-gray-700 !border-gray-200 hover:!bg-gray-100',
                 isInitialLoading && '!opacity-50 !cursor-not-allowed',
               ]"
               @click="setSuggestion(suggestion)"
@@ -632,12 +988,11 @@ onUnmounted(() => {
             v-model="userInput"
             placeholder="AMA about Steve! 🎤"
             :class="[
-              '!flex-1 !rounded-lg !p-2 !text-base !resize-none !min-h-[2.5rem] !max-h-[100px] !border-0 !outline-none !focus:ring-0 !focus:ring-offset-0',
-              '!overflow-y-auto',
+              '!flex-1 !rounded-lg !p-2 !text-base !resize-none !min-h-[2.5rem] !max-h-[100px]',
+              '!border-0 !outline-none !focus:ring-0 !overflow-y-auto',
               clientSideTheme && isDark
                 ? '!bg-gray-800 !text-gray-100 !placeholder-gray-400'
                 : '!bg-gray-100 !text-gray-800 !placeholder-gray-500',
-              '[&::placeholder]:!text-ellipsis [&::placeholder]:!overflow-hidden [&::placeholder]:!whitespace-nowrap',
             ]"
             :disabled="loading || isInitialLoading"
             rows="1"
@@ -646,7 +1001,7 @@ onUnmounted(() => {
           <button
             type="submit"
             :class="[
-              '!rounded-lg !px-3 !transition-all !duration-200 !flex !items-center !justify-center !min-w-[48px]',
+              '!rounded-lg !px-3 !transition-all !flex !items-center !justify-center !min-w-[48px]',
               userInput.trim() && !loading && !isInitialLoading
                 ? '!bg-indigo-600 hover:!bg-indigo-700 !text-white'
                 : clientSideTheme && isDark
@@ -678,7 +1033,7 @@ onUnmounted(() => {
         </form>
       </div>
 
-      <!-- Full Mode - After First Message -->
+      <!-- Expanded Mode -->
       <div v-else class="!flex !flex-col !h-full">
         <!-- Header -->
         <div
@@ -716,7 +1071,7 @@ onUnmounted(() => {
                 '!p-1 !rounded hover:!bg-gray-100 dark:hover:!bg-gray-800',
                 clientSideTheme && isDark ? '!text-gray-300' : '!text-gray-600',
               ]"
-              @click="toggleChat"
+              @click="toggleMiniChat"
             >
               <svg class="!w-4 !h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
@@ -776,12 +1131,10 @@ onUnmounted(() => {
                   {{ formatTime(msg.timestamp) }}
                 </span>
               </div>
-              <!-- eslint-disable vue/no-v-html -->
               <div
                 class="!whitespace-pre-wrap markdown-content"
                 v-html="parseMarkdown(msg.content)"
               ></div>
-              <!-- eslint-enable -->
             </div>
           </div>
 
@@ -847,12 +1200,11 @@ onUnmounted(() => {
               v-model="userInput"
               placeholder="AMA about Steve! 🎤"
               :class="[
-                '!flex-1 !rounded-lg !p-2 !text-base !resize-none !min-h-[2.5rem] !max-h-[100px] !border-0 !outline-none !focus:ring-0 !focus:ring-offset-0',
-                '!overflow-y-auto',
+                '!flex-1 !rounded-lg !p-2 !text-base !resize-none !min-h-[2.5rem] !max-h-[100px]',
+                '!border-0 !outline-none !focus:ring-0 !overflow-y-auto',
                 clientSideTheme && isDark
                   ? '!bg-gray-800 !text-gray-100 !placeholder-gray-400'
                   : '!bg-gray-100 !text-gray-800 !placeholder-gray-500',
-                '[&::placeholder]:!text-ellipsis [&::placeholder]:!overflow-hidden [&::placeholder]:!whitespace-nowrap',
               ]"
               :disabled="loading || isInitialLoading"
               rows="1"
@@ -861,7 +1213,7 @@ onUnmounted(() => {
             <button
               type="submit"
               :class="[
-                '!rounded-lg !px-3 !transition-all !duration-200 !flex !items-center !justify-center !min-w-[48px]',
+                '!rounded-lg !px-3 !transition-all !flex !items-center !justify-center !min-w-[48px]',
                 userInput.trim() && !loading && !isInitialLoading
                   ? '!bg-indigo-600 hover:!bg-indigo-700 !text-white'
                   : clientSideTheme && isDark
@@ -923,7 +1275,6 @@ onUnmounted(() => {
                     ? '!bg-gray-700 !text-gray-300 !hover:bg-gray-600'
                     : '!bg-gray-100 !text-gray-700 !hover:bg-gray-200',
               ]"
-              :disabled="isInitialLoading"
               @click="feedback = 'good'"
             >
               Good 👍
@@ -937,7 +1288,6 @@ onUnmounted(() => {
                     ? '!bg-gray-700 !text-gray-300 !hover:bg-gray-600'
                     : '!bg-gray-100 !text-gray-700 !hover:bg-gray-200',
               ]"
-              :disabled="isInitialLoading"
               @click="feedback = 'bad'"
             >
               Bad 👎
@@ -951,16 +1301,15 @@ onUnmounted(() => {
                   ? '!bg-gray-700 !text-gray-300 !hover:bg-gray-600'
                   : '!bg-gray-100 !text-gray-700 !hover:bg-gray-200',
               ]"
-              :disabled="isInitialLoading"
               @click="closeFeedbackModal"
             >
               Cancel
             </button>
             <button
-              :disabled="!feedback || isEndingChat || isInitialLoading"
+              :disabled="!feedback || isEndingChat"
               :class="[
                 '!px-3 !py-1 !rounded !text-base !transition-colors',
-                !feedback || isEndingChat || isInitialLoading
+                !feedback || isEndingChat
                   ? '!bg-gray-400 !text-white !cursor-not-allowed'
                   : '!bg-indigo-600 !text-white hover:!bg-indigo-700',
               ]"
@@ -976,13 +1325,14 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
+/* Include all the existing styles from both components */
 ::-webkit-scrollbar {
-  width: 4px;
+  width: 6px;
 }
 
 ::-webkit-scrollbar-thumb {
   background: var(--scrollbar-thumb);
-  border-radius: 2px;
+  border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
@@ -1089,5 +1439,38 @@ onUnmounted(() => {
   padding-left: 1rem !important;
   font-style: italic !important;
   margin: 0 !important;
+}
+
+/* Prompt bar scrollbar styles */
+@media (min-width: 640px) {
+  .prompt-bar::-webkit-scrollbar {
+    height: 4px !important;
+  }
+
+  .prompt-bar::-webkit-scrollbar-thumb {
+    background: var(--scrollbar-thumb);
+    border-radius: 3px;
+  }
+
+  .prompt-bar::-webkit-scrollbar-track {
+    background: var(--scrollbar-track);
+  }
+
+  .prompt-bar {
+    scrollbar-width: thin !important;
+    scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+  }
+}
+
+@media (max-width: 639px) {
+  .prompt-bar::-webkit-scrollbar {
+    display: none !important;
+    height: 0 !important;
+  }
+
+  .prompt-bar {
+    -ms-overflow-style: none !important;
+    scrollbar-width: none !important;
+  }
 }
 </style>
