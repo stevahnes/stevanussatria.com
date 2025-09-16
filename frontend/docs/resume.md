@@ -54,7 +54,7 @@ const DownloadResumeButton = defineAsyncComponent({
 
 ## Personal Profile
 
-Product leader with 7+ years driving B2B SaaS and consumer product growth across integration platforms, e-commerce, and aviation tech. Proven track record in launching revenue-generating features, modernizing legacy systems, and leading large-scale customer migrations. Skilled in balancing usability, performance, and security while guiding cross-functional teams from vision to execution. CCertified Scrum Product Owner, ScrumMaster, and Usability Analyst, with hands-on experience building AI-powered products, architecting scalable systems, and integrating APIs to deliver customer impact. Fluent in English, Indonesian, and Malay, with conversational Chinese.
+Product leader with 7+ years driving growth and innovation in B2B SaaS and consumer products across orchestration, e-commerce, and aviation industries. Proven track record in launching revenue-generating features, modernizing legacy systems, and leading large-scale customer migrations. Skilled in balancing usability, performance, and security while guiding cross-functional teams from vision to execution. Certified Scrum Product Owner, ScrumMaster, and Usability Analyst, with hands-on experience building AI-powered products, architecting scalable systems, and integrating APIs to drive customer impact. Fluent in English, Indonesian, and Malay, with conversational Chinese.
 
 ## Core Competencies
 
