@@ -54,7 +54,7 @@ const DownloadResumeButton = defineAsyncComponent({
 
 ## Personal Profile
 
-Seasoned product manager with 7+ years of experience in requirements gathering, data analysis, vision, and strategy of B2B SaaS and B2C software products. Successfully launched key functionalities, delivered performance and security enhancements, resolved production issues, and managed global customer relationships. Certified Scrum Product Owner, Certified ScrumMaster, and Usability Analyst who is also proficient in modern software development stack, API standards, issue tracking tools, and leading UI design applications. Fluent in English, Indonesian, Malay, and basic conversational Chinese.
+Product leader with 7+ years driving B2B SaaS and consumer product growth across integration platforms, e-commerce, and aviation tech. Proven track record in launching revenue-generating features, modernizing legacy systems, and leading large-scale customer migrations. Skilled in balancing usability, performance, and security while guiding cross-functional teams from vision to execution. Certified Scrum Product Owner, ScrumMaster, and Usability Analyst, with hands-on expertise building AI-powered products, architecting scalable systems, and integrating APIs. Fluent in English, Indonesian, and Malay, with conversational Chinese.
 
 ## Core Competencies
 
