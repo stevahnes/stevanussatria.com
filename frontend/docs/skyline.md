@@ -35,9 +35,7 @@ head:
 import { defineAsyncComponent } from 'vue'
 import FlightMap from './components/FlightMap.vue'
 
-const MiniChat = defineAsyncComponent(() => 
-  import('./components/MiniChat.vue')
-)
+
 
 // Optimized flight data with compressed structure and type safety
 interface FlightRecord {
@@ -241,7 +239,5 @@ const flightData: FlightRecord[] = [
   ["2025-09-12", "21:40:00", "FRA", "SIN", "SQ325", "SQ"],
 ].map(createFlight);
 </script>
-
-<MiniChat />
 
 <FlightMap :flights="flightData" height="80vh" />

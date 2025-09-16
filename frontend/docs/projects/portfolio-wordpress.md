@@ -4,16 +4,6 @@ prev: false
 next: false
 ---
 
-<script setup lang="ts">
-import { defineAsyncComponent } from 'vue'
-
-const MiniChat = defineAsyncComponent(() => 
-  import('../components/MiniChat.vue')
-)
-</script>
-
-<MiniChat />
-
 # Portfolio (WordPress)
 
 Prior to this site, I built my personal portfolio on WordPress, with a small custom Smoothstate.js script sprinkled on top. It was first hosted on BlueHost, and subsequently moved to DreamHost.

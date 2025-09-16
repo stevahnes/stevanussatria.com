@@ -35,9 +35,7 @@ head:
 import { defineAsyncComponent } from 'vue'
 import Timeline from './components/Timeline.vue'
 
-const MiniChat = defineAsyncComponent(() => 
-  import('./components/MiniChat.vue')
-)
+
 
 // Optimized milestone data with compressed structure and type safety
 interface MilestoneRecord {
@@ -103,7 +101,5 @@ const milestoneData: MilestoneRecord[] = [
   ["Nov 2008", "Received the MOE School-Based Scholarship", "And migrated to Singapore in search of a better future.", null, null, "2008"],
 ].map(createMilestone);
 </script>
-
-<MiniChat />
 
 <Timeline :items="milestoneData" />

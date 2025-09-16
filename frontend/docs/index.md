@@ -39,12 +39,4 @@ hero:
     alt: Advocado Avatar - AI Assistant for Stevanus Satria's Portfolio
 ---
 
-<script setup lang="ts">
-import { defineAsyncComponent } from 'vue'
-
-const Chat = defineAsyncComponent(() => 
-  import('./components/Chat.vue')
-)
-</script>
-
-<Chat />
+<div id="chat-container"></div>

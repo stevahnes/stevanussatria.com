@@ -561,7 +561,7 @@ export default defineConfig({
       rollupOptions: {
         output: {
           manualChunks: {
-            chat: ["./docs/components/Chat.vue"],
+            chat: ["./docs/.vitepress/theme/components/Chat.vue"],
             "download-resume": ["./docs/components/DownloadResume.vue"],
           },
         },
