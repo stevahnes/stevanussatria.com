@@ -515,12 +515,40 @@ const routes = computed<Route[]>(() => {
   }));
 });
 
-// Performance-optimized route filtering
+const performanceConfig = computed(() => ({
+  shouldShowAllRoutes: !isZooming.value && currentZoom.value >= 3,
+  shouldShowAllAirports: !isZooming.value && currentZoom.value >= 4,
+  maxRoutes: isZooming.value ? 20 : Infinity,
+  maxAirports: isZooming.value
+    ? 15
+    : currentZoom.value < 3
+      ? 20
+      : currentZoom.value < 4
+        ? 30
+        : Infinity,
+  minFlightCount: isZooming.value ? 2 : currentZoom.value < 3 ? 3 : currentZoom.value < 4 ? 1 : 0,
+}));
+
+// Replace the existing simplifiedRoutes computed property
 const simplifiedRoutes = computed<Route[]>(() => {
-  if (isZooming.value || currentZoom.value < 3) {
-    return routes.value.filter(route => route.count > 1).slice(0, 20);
+  const config = performanceConfig.value;
+
+  if (!config.shouldShowAllRoutes) {
+    return routes.value.filter(route => route.count > 1).slice(0, config.maxRoutes);
   }
   return routes.value;
+});
+
+// Replace the existing simplifiedAirports computed property
+const simplifiedAirports = computed<Airport[]>(() => {
+  const config = performanceConfig.value;
+
+  if (isZooming.value) {
+    return airports.value.filter(airport => airport.flightCount > 2).slice(0, 15);
+  }
+
+  const filtered = airports.value.filter(airport => airport.flightCount > config.minFlightCount);
+  return config.maxAirports === Infinity ? filtered : filtered.slice(0, config.maxAirports);
 });
 
 // Optimized airports computation with better filtering
@@ -664,25 +692,6 @@ const airports = computed<Airport[]>(() => {
   return [...filteredOriginalAirports, ...wrappedAirportData];
 });
 
-// Performance-optimized airport filtering
-const simplifiedAirports = computed<Airport[]>(() => {
-  if (isZooming.value) {
-    return airports.value.filter(airport => airport.flightCount > 2).slice(0, 15);
-  }
-
-  const filters = [
-    { minZoom: 0, maxZoom: 3, minFlights: 3, maxAirports: 20 },
-    { minZoom: 3, maxZoom: 4, minFlights: 1, maxAirports: 30 },
-    { minZoom: 4, maxZoom: Infinity, minFlights: 0, maxAirports: Infinity },
-  ];
-
-  const filter = filters.find(f => currentZoom.value >= f.minZoom && currentZoom.value < f.maxZoom);
-  if (!filter) return airports.value;
-
-  const filtered = airports.value.filter(airport => airport.flightCount > filter.minFlights);
-  return filter.maxAirports === Infinity ? filtered : filtered.slice(0, filter.maxAirports);
-});
-
 // Optimized zoom level calculation
 const zoomLevels = computed<ZoomLevels>(() => {
   return {
@@ -718,14 +727,18 @@ const checkMobile = (): void => {
   isMobile.value = window.innerWidth <= 768;
 };
 
-// Debounced zoom handler for better performance
-let zoomTimeout: ReturnType<typeof setTimeout>;
-const handleZoomEnd = (): void => {
-  clearTimeout(zoomTimeout);
-  zoomTimeout = setTimeout(() => {
-    isZooming.value = false;
-  }, 150);
+const createZoomDebouncer = (fn: () => void, delay: number) => {
+  let timeout: ReturnType<typeof setTimeout>;
+  return () => {
+    clearTimeout(timeout);
+    timeout = setTimeout(fn, delay);
+  };
 };
+
+// Then use it like this:
+const handleZoomEnd = createZoomDebouncer(() => {
+  isZooming.value = false;
+}, 150);
 
 const onMapReady = async (): Promise<void> => {
   isMapReady.value = true;
