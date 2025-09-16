@@ -82,6 +82,9 @@ features:
   - icon: { src: ./xiaomi.svg }
     title: Vortex
     details: Mi Robot Vacuum-Mop 2
+  - icon: { dark: "./braun-dark.png", light: "./braun-light.png" }
+    title: Crispr
+    details: Braun Series 9 Pro+ 9510S
   - icon: { src: ./ewelink.png }
     title: Klik-Klak
     details: eWeLink Sonoff Basic Switch
