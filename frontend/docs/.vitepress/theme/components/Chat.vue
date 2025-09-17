@@ -238,15 +238,28 @@ const observeMountPoint = (): void => {
   checkMountPoint();
 
   // Set up observer for DOM changes
-  mountPointObserver = new MutationObserver(() => {
-    checkMountPoint();
-  });
+  try {
+    mountPointObserver = new MutationObserver(() => {
+      checkMountPoint();
+    });
 
-  // Observe the document body for changes
-  mountPointObserver.observe(document.body, {
-    childList: true,
-    subtree: false,
-  });
+    // Try to target .vp-doc first, fallback to document.body
+    const targetElement = document.querySelector(".vp-doc") || document.body;
+    mountPointObserver.observe(targetElement, {
+      childList: true,
+      subtree: false,
+    });
+  } catch (error) {
+    console.warn("MutationObserver not supported, using fallback");
+    // Fallback: periodic check every 500ms
+    const interval = setInterval(() => {
+      if (displayMode.value !== "full") {
+        clearInterval(interval);
+        return;
+      }
+      checkMountPoint();
+    }, 500);
+  }
 };
 
 const stopObservingMountPoint = (): void => {
