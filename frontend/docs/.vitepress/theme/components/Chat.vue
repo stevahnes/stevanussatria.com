@@ -212,6 +212,51 @@ const handleKeyDown = (e: KeyboardEvent): void => {
   }
 };
 
+// --- VitePress-specific Mount Point Management ---
+let mountPointObserver: MutationObserver | null = null;
+
+const observeMountPoint = (): void => {
+  if (typeof window === "undefined" || displayMode.value !== "full") return;
+
+  // Clean up existing observer
+  if (mountPointObserver) {
+    mountPointObserver.disconnect();
+    mountPointObserver = null;
+  }
+
+  const checkMountPoint = () => {
+    const element = document.getElementById("chat-container");
+    const newValue = !!element;
+
+    // Only update if value changed to prevent unnecessary re-renders
+    if (chatMountPoint.value !== newValue) {
+      chatMountPoint.value = newValue;
+    }
+  };
+
+  // Initial check
+  checkMountPoint();
+
+  // Set up observer for DOM changes
+  mountPointObserver = new MutationObserver(() => {
+    checkMountPoint();
+  });
+
+  // Observe the document body for changes
+  mountPointObserver.observe(document.body, {
+    childList: true,
+    subtree: false,
+  });
+};
+
+const stopObservingMountPoint = (): void => {
+  if (mountPointObserver) {
+    mountPointObserver.disconnect();
+    mountPointObserver = null;
+  }
+  chatMountPoint.value = false;
+};
+
 // --- Fetch Messages from Backend ---
 const fetchThreadMessages = async (): Promise<void> => {
   if (!threadId.value) return;
@@ -463,9 +508,8 @@ onMounted(async () => {
 
   // Handle mini chat open state
   if (displayMode.value === "mini") {
-    isMiniChat.value = false; // handles miniChat open/close state
-    isCompactMode.value = true; //handles whether to display prompts (true) or messages
-    // Check if user has previously toggled the mini chat
+    isMiniChat.value = false;
+    isCompactMode.value = true;
     const lastMiniChatExpanded = localStorage.getItem("miniChatExpanded") || "true";
     if (lastMiniChatExpanded === "true") {
       isMiniChat.value = true;
@@ -486,9 +530,11 @@ onMounted(async () => {
       chatHeight.value = 500;
       localStorage.removeItem("chatHeight");
     }
-    nextTick(() => {
-      chatMountPoint.value = !!document.getElementById("chat-container");
-    });
+  }
+
+  // Start observing mount point for full mode
+  if (displayMode.value === "full") {
+    nextTick(() => observeMountPoint());
   }
 
   // Setup event listeners
@@ -513,26 +559,23 @@ onMounted(async () => {
 
 onUnmounted(() => {
   promptBarRef.value?.removeEventListener("scroll", updatePromptScrollButtons);
+  stopObservingMountPoint();
 });
 
 // --- Watchers ---
 watch(userInput, () => nextTick(resizeTextarea));
 watch(messages, () => scrollToBottom(), { deep: true });
+
 watch(
   displayMode,
-  (newMode, oldMode) => {
-    if (newMode === "full" && oldMode === "mini") {
-      nextTick(() => {
-        // Set chatMountPoint to true for full mode
-        chatMountPoint.value = !!document.getElementById("chat-container");
-        if (isFirstMessageSent.value) {
-          nextTick(() => {
-            setFullHeightAndScroll();
-          });
-        }
-      });
-    } else if (newMode === "mini" && oldMode === "full") {
-      // Switching from full to mini - sync the expanded state
+  newMode => {
+    if (newMode === "full") {
+      nextTick(() => observeMountPoint());
+      if (isFirstMessageSent.value) {
+        nextTick(() => setFullHeightAndScroll());
+      }
+    } else if (newMode === "mini") {
+      stopObservingMountPoint();
       const lastMiniChatExpanded = localStorage.getItem("miniChatExpanded") || "true";
       if (lastMiniChatExpanded === "true") {
         isMiniChat.value = true;
@@ -544,13 +587,25 @@ watch(
   },
   { immediate: false },
 );
+
+// Watch route changes for VitePress navigation
+watch(
+  () => route.path,
+  () => {
+    if (displayMode.value === "full") {
+      nextTick(() => observeMountPoint());
+    } else {
+      stopObservingMountPoint();
+    }
+  },
+  { immediate: false },
+);
 </script>
 
 <template>
-  <!-- Full Chat Mode (Homepage) -->
+  <!-- Full Chat Mode (Homepage) - Only render if mount point exists -->
   <Teleport to="#chat-container" v-if="isClient && displayMode === 'full' && chatMountPoint">
     <div
-      v-if="isClient && displayMode === 'full'"
       ref="chatWindowRef"
       :style="{ height: `${chatHeight}px`, ...cssVars }"
       :class="[
@@ -880,6 +935,7 @@ watch(
       </div>
     </div>
   </Teleport>
+
   <!-- Mini Chat Mode (Other Pages) -->
   <div v-else-if="isClient && displayMode === 'mini'" class="!fixed !bottom-4 !right-4 !z-50">
     <!-- Chat Toggle Button -->
