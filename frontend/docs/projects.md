@@ -41,7 +41,7 @@ features:
       alt: Simple Frontend Markdown Renderer
     title: MarkView (Private Repo)
     details: A simple purely browser-based markdown renderer with MermaidJS support
-    link: https://github.com/stevahnes/frontend-markdown-renderer
+    link: https://markviewui.vercel.app
     target: _blank
   - icon:
       src: /llm-judge.png
