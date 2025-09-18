@@ -41,7 +41,7 @@ features:
       alt: Simple Frontend Markdown Renderer
     title: MarkView (Private Repo)
     details: A simple purely browser-based markdown renderer with MermaidJS support
-    link: https://github.com/stevahnes/frontend-markdown-renderer
+    link: https://markviewui.vercel.app
     target: _blank
   - icon:
       src: /llm-judge.png
@@ -49,6 +49,13 @@ features:
     title: docs-eval (Private Repo)
     details: A simple LLM-as-a-judge implementation for documentation agent output, hosted on Vercel
     link: https://github.com/stevahnes/docs-eval
+    target: _blank
+  - icon:
+      src: /paisehkias.png
+      alt: Housewarming Agent AI Chatbot
+    title: Paisehkias
+    details: An AI agent chatbot that handles our housewarming requests
+    link: https://github.com/stevahnes/paisehkias
     target: _blank
   - icon:
       src: /advocado.webp
