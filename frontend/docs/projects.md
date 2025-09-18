@@ -51,6 +51,13 @@ features:
     link: https://github.com/stevahnes/docs-eval
     target: _blank
   - icon:
+      src: /paisehkias.png
+      alt: Housewarming Agent AI Chatbot
+    title: Paisehkias
+    details: An AI agent chatbot that handles our housewarming requests
+    link: https://github.com/stevahnes/paisehkias
+    target: _blank
+  - icon:
       src: /advocado.webp
       alt: Advocado AI Assistant
     title: Advocado
