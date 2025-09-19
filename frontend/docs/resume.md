@@ -38,14 +38,26 @@ onMounted(async () => {
   if (autoDownload) {
     // Wait for the component to be fully mounted
     await nextTick()
-    // Small delay to ensure the DownloadResumeButton is ready
-    setTimeout(() => {
-      // Try to find and click the download button
-      const downloadBtn = document.querySelector('button[data-download-resume]') 
+    
+    // Try multiple approaches with increasing delays
+    const attemptDownload = (attempt = 1) => {      
+      // Method 1: Try DOM query
+      const downloadBtn = document.querySelector('button[data-download-resume]')
       if (downloadBtn) {
         downloadBtn.click()
+        return
       }
-    }, 500)
+      
+      // Method 2: Retry if component hasn't loaded yet (max 5 attempts)
+      if (attempt < 5) {
+        setTimeout(() => attemptDownload(attempt + 1), 300 * attempt)
+      } else {
+        console.warn('Could not trigger auto-download - component not ready')
+      }
+    }
+    
+    // Start the first attempt after a small delay
+    setTimeout(() => attemptDownload(), 200)
   }
 })
 
@@ -61,7 +73,7 @@ const DownloadResumeButton = defineAsyncComponent({
 
 <div style="text-align: right; margin-bottom: 20px;">
   <ClientOnly>
-    <DownloadResumeButton filename="Stevanus SATRIA.pdf" />
+    <DownloadResumeButton ref="downloadComponentRef" filename="Stevanus SATRIA.pdf" />
   </ClientOnly>
 </div>
 
