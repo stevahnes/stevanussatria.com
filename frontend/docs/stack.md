@@ -58,7 +58,7 @@ features:
   - icon: { dark: "./v0-dark.png", light: "./v0-light.png", alt: v0 }
     title: v0
     details: Ship a product UI magic without the midnight Figma grind.
-  - icon: { src: ./travis-ci.svg, alt: Travis CI Continuous Integration }
+  - icon: { src: ./travis-ci.png, alt: Travis CI Continuous Integration }
     title: Travis CI
     details: Ship with confidence while your tests do the heavy lifting.
   - icon: { src: ./cloudflare.webp, alt: Cloudflare CDN and Security }
