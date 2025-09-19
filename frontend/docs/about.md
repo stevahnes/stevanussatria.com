@@ -42,7 +42,7 @@ hero:
       link: /projects
     - theme: alt
       text: Let's Chat
-      link: https://calendly.com/stevanus-satria/30min
+      link: "#chat"
 
 features:
   - title: ⌛ 7+
@@ -54,9 +54,29 @@ features:
 ---
 
 <script setup lang="ts">
+import { onMounted } from 'vue'
 import { defineAsyncComponent } from 'vue'
+const ContactChatLink = defineAsyncComponent(() => 
+  import('./components/ContactChatLink.vue')
+)
 
-
+onMounted(() => {
+  // Find the "Let's Chat" button and override its behavior
+  const chatButton = document.querySelector('a[href="#chat"]')
+  
+  if (chatButton) {
+    chatButton.addEventListener('click', (e) => {
+      e.preventDefault()
+      
+      // Dispatch the chat activation event
+      window.dispatchEvent(new CustomEvent('activateChat', {
+        detail: {
+          message: "I'd like to schedule a chat with Steve!"
+        }
+      }))
+    })
+  }
+})
 </script>
 
 ## Hi, I'm Steve 👋
@@ -71,4 +91,4 @@ My journey into software began at [Works Applications](https://www.worksap.sg/),
 
 Outside of work, I enjoy **cycling**, **practicing yoga**, and **going to the gym**. The [longest ride](https://www.strava.com/activities/11811566357) I've completed was a 120km loop around Singapore. My most challenging ride to date was a triple climb of [Page Mill Rd, Pescadero, and Tunitas Creek](https://www.strava.com/activities/12183241879) in the Bay Area. I also enjoy playing the **piano** casually. During the COVID-19 lockdowns, I challenged myself to record **30 covers in 30 days**, which I compiled into a [playlist on SoundCloud](https://soundcloud.com/stevanus-satria/sets/piano-covers).
 
-Whether I’m cycling, playing piano, or building software, I love tackling challenges, learning new things, and creating experiences that matter. Want to learn more or have a conversation about products, tech, or hobbies? Get [Advocado](/) to help you drop me a note!
+Whether I'm cycling, playing piano, or building software, I love tackling challenges, learning new things, and creating experiences that matter. Want to learn more or have a conversation about products, tech, or hobbies? Get <ContactChatLink message="I'd like to get in touch with Steve!">Advocado</ContactChatLink> to help you drop me a note!

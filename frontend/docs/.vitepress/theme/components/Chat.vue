@@ -10,6 +10,19 @@ interface ChatMessage {
   timestamp?: number;
 }
 
+interface ChatActivationEvent extends CustomEvent {
+  detail: {
+    message: string;
+  };
+}
+
+// Extend the Window interface for TypeScript
+declare global {
+  interface WindowEventMap {
+    activateChat: ChatActivationEvent;
+  }
+}
+
 // --- Constants ---
 const API_BASE = "https://advocado-agent.vercel.app";
 
@@ -435,6 +448,32 @@ const sendMessage = async (): Promise<void> => {
   }
 };
 
+const handleChatActivation = (event: ChatActivationEvent): void => {
+  const { message } = event.detail;
+
+  // Only work in mini mode
+  if (displayMode.value === "mini") {
+    // Expand the chat if it's not already open
+    if (!isMiniChat.value) {
+      isMiniChat.value = true;
+      if (isClient.value) {
+        localStorage.setItem("miniChatExpanded", "true");
+      }
+    }
+
+    // Prefill the input
+    if (message && typeof message === "string") {
+      userInput.value = message;
+      // Focus the input after nextTick
+      nextTick(() => {
+        if (inputRef.value) {
+          inputRef.value.focus({ preventScroll: true });
+        }
+      });
+    }
+  }
+};
+
 // --- End Chat & Feedback ---
 const endChat = (): void => {
   if (isEndingChat.value || showFeedbackModal.value || !threadId.value) return;
@@ -560,6 +599,9 @@ onMounted(async () => {
     updatePromptScrollButtons();
   });
 
+  // Listen for chat activation events
+  window.addEventListener("activateChat", handleChatActivation);
+
   await nextTick();
   scrollToBottom();
   inputRef.value?.focus();
@@ -572,6 +614,7 @@ onMounted(async () => {
 
 onUnmounted(() => {
   promptBarRef.value?.removeEventListener("scroll", updatePromptScrollButtons);
+  window.removeEventListener("activateChat", handleChatActivation);
   stopObservingMountPoint();
 });
 
