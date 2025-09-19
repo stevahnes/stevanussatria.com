@@ -111,8 +111,21 @@ const scrollToBottom = async (): Promise<void> => {
 
 const resizeTextarea = (): void => {
   if (!inputRef.value) return;
+
+  // Reset height to auto to get accurate scrollHeight
   inputRef.value.style.height = "auto";
-  const newHeight = Math.min(inputRef.value.scrollHeight, displayMode.value === "mini" ? 100 : 200);
+
+  // Define line height and padding
+  const lineHeight = 20; // 20px line height
+  const paddingVertical = 12; // 6px top + 6px bottom padding (p-3 = 12px total)
+  const maxLines = 3;
+  const minHeight = lineHeight + paddingVertical; // 1 line + padding
+  const maxHeight = lineHeight * maxLines + paddingVertical; // 3 lines + padding
+
+  // Calculate new height based on content
+  const scrollHeight = inputRef.value.scrollHeight;
+  const newHeight = Math.max(minHeight, Math.min(scrollHeight, maxHeight));
+
   inputRef.value.style.height = `${newHeight}px`;
 };
 
@@ -374,6 +387,12 @@ const sendMessage = async (): Promise<void> => {
   const originalInput = userInput.value;
   userInput.value = "";
 
+  // Reset textarea height after clearing input
+  if (inputRef.value) {
+    inputRef.value.style.height = "auto";
+    resizeTextarea();
+  }
+
   try {
     const requestBody: any = {
       stream: true,
@@ -441,7 +460,6 @@ const sendMessage = async (): Promise<void> => {
     }
   } finally {
     loading.value = false;
-    if (inputRef.value) inputRef.value.style.height = "auto";
     await nextTick();
     if (inputRef.value) inputRef.value.focus();
     await scrollToBottom();
@@ -468,6 +486,7 @@ const handleChatActivation = (event: ChatActivationEvent): void => {
       nextTick(() => {
         if (inputRef.value) {
           inputRef.value.focus({ preventScroll: true });
+          resizeTextarea();
         }
       });
     }
@@ -533,6 +552,7 @@ const closeFeedbackModal = (): void => {
 const setSuggestion = (suggestion: string): void => {
   userInput.value = suggestion;
   inputRef.value?.focus();
+  nextTick(() => resizeTextarea());
 };
 
 // --- Lifecycle ---
@@ -604,7 +624,10 @@ onMounted(async () => {
 
   await nextTick();
   scrollToBottom();
-  inputRef.value?.focus();
+  if (inputRef.value) {
+    inputRef.value.focus();
+    resizeTextarea(); // Set initial height
+  }
 
   if (displayMode.value === "full") {
     updatePromptScrollButtons();
@@ -873,7 +896,7 @@ watch(
           placeholder="Ask something about Steve..."
           :class="[
             '!flex-1 !border-0 !p-3 !outline-none !focus:ring-0 !resize-none',
-            '!min-h-[42px] !max-h-[200px] !overflow-y-auto',
+            '!leading-5 !overflow-y-auto',
             clientSideTheme && isDark
               ? '!bg-gray-800 !text-gray-100 !placeholder-gray-500'
               : '!bg-gray-100 !text-gray-800 !placeholder-gray-400',
@@ -1106,8 +1129,8 @@ watch(
             v-model="userInput"
             placeholder="Ask something..."
             :class="[
-              '!flex-1 !rounded-lg !p-2 !text-base !resize-none !min-h-[2.5rem] !max-h-[100px]',
-              '!border-0 !outline-none !focus:ring-0 !overflow-y-auto',
+              '!flex-1 !rounded-lg !p-2 !text-base !resize-none !leading-5 !overflow-y-auto',
+              '!border-0 !outline-none !focus:ring-0',
               clientSideTheme && isDark
                 ? '!bg-gray-800 !text-gray-100 !placeholder-gray-400'
                 : '!bg-gray-100 !text-gray-800 !placeholder-gray-500',
@@ -1318,8 +1341,8 @@ watch(
               v-model="userInput"
               placeholder="AMA about Steve! 🎤"
               :class="[
-                '!flex-1 !rounded-lg !p-2 !text-base !resize-none !min-h-[2.5rem] !max-h-[100px]',
-                '!border-0 !outline-none !focus:ring-0 !overflow-y-auto',
+                '!flex-1 !rounded-lg !p-2 !text-base !resize-none !leading-5 !overflow-y-auto',
+                '!border-0 !outline-none !focus:ring-0',
                 clientSideTheme && isDark
                   ? '!bg-gray-800 !text-gray-100 !placeholder-gray-400'
                   : '!bg-gray-100 !text-gray-800 !placeholder-gray-500',

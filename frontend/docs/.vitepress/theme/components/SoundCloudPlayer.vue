@@ -542,7 +542,7 @@ onUnmounted(() => {
   position: fixed;
   bottom: 20px;
   left: 20px;
-  z-index: 1000;
+  z-index: 30;
   font-family:
     -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
