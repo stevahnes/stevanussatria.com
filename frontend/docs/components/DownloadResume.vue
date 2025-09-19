@@ -218,7 +218,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <button v-if="isReady" :class="buttonClasses" @click="downloadResume">
+  <button v-if="isReady" data-download-resume :class="buttonClasses" @click="downloadResume">
     {{ props.buttonText }}
   </button>
   <button v-else :class="loadingButtonClasses">Loading...</button>

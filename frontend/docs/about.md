@@ -41,8 +41,8 @@ hero:
       text: Let's Chat
       link: "#chat"
     - theme: alt
-      text: Explore Projects
-      link: /projects
+      text: Download Resume
+      link: /resume?auto=true
 
 features:
   - title: ⌛ 7+

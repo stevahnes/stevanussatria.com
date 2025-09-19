@@ -23,14 +23,31 @@ head:
 ---
 
 <script setup lang="ts">
-import { defineAsyncComponent, ref, onMounted } from 'vue'
+import { defineAsyncComponent, ref, onMounted, nextTick } from 'vue'
 
 const isClient = ref(false)
-onMounted(() => {
+const downloadButtonRef = ref(null)
+
+onMounted(async () => {
   isClient.value = true
+
+  // Check if we should auto-trigger download (from navigation)
+  const urlParams = new URLSearchParams(window.location.search)
+  const autoDownload = urlParams.get('auto') === 'true'
+  
+  if (autoDownload) {
+    // Wait for the component to be fully mounted
+    await nextTick()
+    // Small delay to ensure the DownloadResumeButton is ready
+    setTimeout(() => {
+      // Try to find and click the download button
+      const downloadBtn = document.querySelector('button[data-download-resume]') 
+      if (downloadBtn) {
+        downloadBtn.click()
+      }
+    }, 500)
+  }
 })
-
-
 
 const DownloadResumeButton = defineAsyncComponent({
   loader: () => import('./components/DownloadResume.vue'),
