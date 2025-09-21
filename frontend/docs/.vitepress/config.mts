@@ -16,7 +16,7 @@ export default defineConfig({
         rel: "icon",
         type: "image/png",
         sizes: "32x32",
-        href: "/small-logo-white-circle-bg.png",
+        href: "/small-logo-white-circle-bg.webp",
       },
     ],
     [
@@ -25,7 +25,7 @@ export default defineConfig({
         rel: "icon",
         type: "image/png",
         sizes: "16x16",
-        href: "/small-logo-white-circle-bg.png",
+        href: "/small-logo-white-circle-bg.webp",
       },
     ],
     [
@@ -33,7 +33,7 @@ export default defineConfig({
       {
         rel: "apple-touch-icon",
         sizes: "180x180",
-        href: "/small-logo-white-circle-bg.png",
+        href: "/small-logo-white-circle-bg.webp",
       },
     ],
     [
@@ -63,7 +63,7 @@ export default defineConfig({
           "Senior Product Manager at Workato with 7+ years of experience in B2B SaaS, frontend development, and product management.",
       },
     ],
-    ["meta", { property: "og:image", content: "https://stevanussatria.com/me.png" }],
+    ["meta", { property: "og:image", content: "https://stevanussatria.com/me.webp" }],
     ["meta", { property: "og:image:width", content: "1200" }],
     ["meta", { property: "og:image:height", content: "630" }],
     ["meta", { property: "og:image:alt", content: "Stevanus Satria - Product Manager" }],
@@ -83,7 +83,7 @@ export default defineConfig({
           "Senior Product Manager at Workato with 7+ years of experience in B2B SaaS, frontend development, and product management.",
       },
     ],
-    ["meta", { name: "twitter:image", content: "https://stevanussatria.com/me.png" }],
+    ["meta", { name: "twitter:image", content: "https://stevanussatria.com/me.webp" }],
     ["meta", { name: "twitter:image:alt", content: "Stevanus Satria - Product Manager" }],
 
     // Additional SEO
@@ -128,7 +128,7 @@ export default defineConfig({
           description:
             "Senior Product Manager with 7+ years of experience in B2B SaaS, frontend development, and product management",
           url: "https://stevanussatria.com",
-          image: "https://stevanussatria.com/me.png",
+          image: "https://stevanussatria.com/me.webp",
           sameAs: [
             "https://www.linkedin.com/in/stevanussatria",
             "https://github.com/stevahnes",
@@ -154,7 +154,7 @@ export default defineConfig({
     // ["script", { innerHTML: "window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag('js', new Date()); gtag('config', 'GA_MEASUREMENT_ID');" }],
   ],
   themeConfig: {
-    logo: "/small-logo-no-bg.png",
+    logo: "/small-logo-no-bg.webp",
     nav: [
       { text: "Home", link: "/" },
       { text: "About", link: "/about" },
