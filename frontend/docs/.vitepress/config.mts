@@ -148,7 +148,6 @@ export default defineConfig({
         }),
       },
     ],
-
     // Google Analytics (if you have it)
     // ["script", { async: true, src: "https://www.googletagmanager.com/gtag/js?id=GA_MEASUREMENT_ID" }],
     // ["script", { innerHTML: "window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag('js', new Date()); gtag('config', 'GA_MEASUREMENT_ID');" }],
@@ -158,6 +157,7 @@ export default defineConfig({
     nav: [
       { text: "Home", link: "/" },
       { text: "About", link: "/about" },
+      { text: "Resume", link: "/resume" },
       { text: "Projects", link: "/projects" },
       { text: "Milestones", link: "/milestones" },
       { text: "Recommendations", link: "/recommendations" },
@@ -165,380 +165,358 @@ export default defineConfig({
       { text: "Stack", link: "/stack" },
       { text: "Gear", link: "/gear" },
       { text: "Skyline", link: "/skyline" },
-      { text: "Resume", link: "/resume" },
     ],
 
     sidebar: {
       "/projects/": [
         {
-          text: "Projects",
-          link: "/projects",
-          items: [
-            {
-              text: "Advocado",
-              link: "https://github.com/stevahnes/vitepress-portfolio/tree/main/langbase",
-              target: "_blank",
-            },
-            {
-              text: "Portfolio (VitePress)",
-              link: "https://github.com/stevahnes/vitepress-portfolio",
-              target: "_blank",
-            },
-            {
-              text: "Call Home",
-              link: "https://github.com/bettersg/call-home",
-              target: "_blank",
-            },
-            {
-              text: "Portfolio (WordPress)",
-              link: "/projects/portfolio-wordpress",
-            },
-            {
-              text: "Figma Plugins",
-              link: "https://www.figma.com/@stevahnes",
-              target: "_blank",
-            },
-            {
-              text: "BRÜ-ME",
-              link: "https://youtu.be/ch4kpChdSHs",
-              target: "_blank",
-            },
-            {
-              text: "Lumos",
-              link: "https://youtu.be/qXR_C5dezqM",
-              target: "_blank",
-            },
-            {
-              text: "RoverBot",
-              link: "https://youtu.be/VbQ1-GKdCEk",
-              target: "_blank",
-            },
-            {
-              text: "ZOUBA",
-              link: "https://youtu.be/oQVsBJ_NuM8",
-              target: "_blank",
-            },
-            {
-              text: "Mod-Bot",
-              link: "https://youtu.be/DdzkIislYo0",
-              target: "_blank",
-            },
-            {
-              text: "SALAMANDER",
-              link: "https://youtu.be/3CECXdaeLnI",
-              target: "_blank",
-            },
-            {
-              text: "Velox",
-              link: "https://youtu.be/IPcm3R25azw",
-              target: "_blank",
-            },
-            {
-              text: "Troll Kart",
-              link: "https://youtu.be/lIg7apmuWjo",
-              target: "_blank",
-            },
-            {
-              text: "Quadwalker",
-              link: "https://youtu.be/xLcHc-iailM",
-              target: "_blank",
-            },
-          ],
+          text: "Advocado",
+          link: "https://github.com/stevahnes/vitepress-portfolio/tree/main/langbase",
+          target: "_blank",
+        },
+        {
+          text: "Portfolio (VitePress)",
+          link: "https://github.com/stevahnes/vitepress-portfolio",
+          target: "_blank",
+        },
+        {
+          text: "Call Home",
+          link: "https://github.com/bettersg/call-home",
+          target: "_blank",
+        },
+        {
+          text: "Portfolio (WordPress)",
+          link: "/projects/portfolio-wordpress",
+        },
+        {
+          text: "Figma Plugins",
+          link: "https://www.figma.com/@stevahnes",
+          target: "_blank",
+        },
+        {
+          text: "BRÜ-ME",
+          link: "https://youtu.be/ch4kpChdSHs",
+          target: "_blank",
+        },
+        {
+          text: "Lumos",
+          link: "https://youtu.be/qXR_C5dezqM",
+          target: "_blank",
+        },
+        {
+          text: "RoverBot",
+          link: "https://youtu.be/VbQ1-GKdCEk",
+          target: "_blank",
+        },
+        {
+          text: "ZOUBA",
+          link: "https://youtu.be/oQVsBJ_NuM8",
+          target: "_blank",
+        },
+        {
+          text: "Mod-Bot",
+          link: "https://youtu.be/DdzkIislYo0",
+          target: "_blank",
+        },
+        {
+          text: "SALAMANDER",
+          link: "https://youtu.be/3CECXdaeLnI",
+          target: "_blank",
+        },
+        {
+          text: "Velox",
+          link: "https://youtu.be/IPcm3R25azw",
+          target: "_blank",
+        },
+        {
+          text: "Troll Kart",
+          link: "https://youtu.be/lIg7apmuWjo",
+          target: "_blank",
+        },
+        {
+          text: "Quadwalker",
+          link: "https://youtu.be/xLcHc-iailM",
+          target: "_blank",
         },
       ],
       "/milestones": [
         {
-          text: "Milestones",
-          link: "/milestones",
-          items: [
-            {
-              text: "2025",
-              link: "/milestones#2025",
-            },
-            {
-              text: "2024",
-              link: "/milestones#2024",
-            },
-            {
-              text: "2022",
-              link: "/milestones#2022",
-            },
-            {
-              text: "2021",
-              link: "/milestones#2021",
-            },
-            {
-              text: "2020",
-              link: "/milestones#2020",
-            },
-            {
-              text: "2017",
-              link: "/milestones#2017",
-            },
-            {
-              text: "2016",
-              link: "/milestones#2016",
-            },
-            {
-              text: "2015",
-              link: "/milestones#2015",
-            },
-            {
-              text: "2014",
-              link: "/milestones#2014",
-            },
-            {
-              text: "2013",
-              link: "/milestones#2013",
-            },
-            {
-              text: "2008",
-              link: "/milestones#2008",
-            },
-          ],
+          text: "2025",
+          link: "/milestones#2025",
+        },
+        {
+          text: "2024",
+          link: "/milestones#2024",
+        },
+        {
+          text: "2022",
+          link: "/milestones#2022",
+        },
+        {
+          text: "2021",
+          link: "/milestones#2021",
+        },
+        {
+          text: "2020",
+          link: "/milestones#2020",
+        },
+        {
+          text: "2017",
+          link: "/milestones#2017",
+        },
+        {
+          text: "2016",
+          link: "/milestones#2016",
+        },
+        {
+          text: "2015",
+          link: "/milestones#2015",
+        },
+        {
+          text: "2014",
+          link: "/milestones#2014",
+        },
+        {
+          text: "2013",
+          link: "/milestones#2013",
+        },
+        {
+          text: "2008",
+          link: "/milestones#2008",
         },
       ],
       "/recommendations": [
         {
-          text: "Recommendations",
-          link: "/recommendations",
+          text: "Workato",
+          link: "/recommendations#workato",
           items: [
             {
-              text: "Workato",
-              link: "/recommendations#workato",
-              items: [
-                {
-                  text: "Vishakan Subramanian",
-                  link: "/recommendations#vishakan-subramanian",
-                },
-                { text: "Chisin Ng", link: "/recommendations#chisin-ng" },
-                {
-                  text: "Swathi Asokraj",
-                  link: "/recommendations#swathi-asokraj",
-                },
-              ],
+              text: "Vishakan Subramanian",
+              link: "/recommendations#vishakan-subramanian",
             },
+            { text: "Chisin Ng", link: "/recommendations#chisin-ng" },
             {
-              text: "ADPList",
-              link: "/recommendations#adplist",
-              items: [
-                {
-                  text: "Alyssa De Conceicao",
-                  link: "/recommendations#alyssa-de-conceicao",
-                },
-                {
-                  text: "Rahul M Jacob",
-                  link: "/recommendations#rahul-m-jacob",
-                },
-                {
-                  text: "Karen Kaycia",
-                  link: "/recommendations#karen-kaycia",
-                },
-                {
-                  text: "Sharon Siah",
-                  link: "/recommendations#sharon-siah",
-                },
-                {
-                  text: "Jean Ong",
-                  link: "/recommendations#jean-ong",
-                },
-                {
-                  text: "Tulika Khabia",
-                  link: "/recommendations#tulika-khabia",
-                },
-                {
-                  text: "Maxwell Kabona",
-                  link: "/recommendations#maxwell-kabona",
-                },
-                {
-                  text: "Zioedy Wong",
-                  link: "/recommendations#zioedy-wong",
-                },
-                {
-                  text: "Yao Yao",
-                  link: "/recommendations#yao-yao",
-                },
-                {
-                  text: "Shahroze Husain",
-                  link: "/recommendations#shahroze-husain",
-                },
-                {
-                  text: "Clement Perdana",
-                  link: "/recommendations#clement-perdana",
-                },
-                {
-                  text: "Kevin Govinda",
-                  link: "/recommendations#kevin-govinda",
-                },
-                {
-                  text: "Yashi Huang",
-                  link: "/recommendations#yashi-huang",
-                },
-                {
-                  text: "Stephanie Gascon",
-                  link: "/recommendations#stephanie-gascon",
-                },
-                {
-                  text: "Lim Mun Hong",
-                  link: "/recommendations#lim-mun-hong",
-                },
-                {
-                  text: "Hue Nguyen",
-                  link: "/recommendations#hue-nguyen",
-                },
-                {
-                  text: "Preston Ong Jin Bin",
-                  link: "/recommendations#preston-ong-jin-bin",
-                },
-                {
-                  text: "Ahmed",
-                  link: "/recommendations#ahmed",
-                },
-              ],
-            },
-            {
-              text: "Shopee",
-              link: "/recommendations#shopee",
-              items: [
-                {
-                  text: "Siyu (Henry) Tang",
-                  link: "/recommendations#siyu-henry-tang",
-                },
-                {
-                  text: "Joanne Tan",
-                  link: "/recommendations#joanne-tan",
-                },
-                {
-                  text: "Xiang Rong Ong",
-                  link: "/recommendations#xiang-rong-ong",
-                },
-                {
-                  text: "Laurinda Wu",
-                  link: "/recommendations#laurinda-wu",
-                },
-                {
-                  text: "Rachel Esther Chan",
-                  link: "/recommendations#rachel-esther-chan",
-                },
-              ],
-            },
-            {
-              text: "Amadeus",
-              link: "/recommendations#amadeus",
-              items: [
-                {
-                  text: "Gus Salamoun",
-                  link: "/recommendations#gus-salamoun",
-                },
-                {
-                  text: "Stephanie Tan",
-                  link: "/recommendations#stephanie-tan",
-                },
-                {
-                  text: "Jyolsna Elangovan",
-                  link: "/recommendations#jyolsna-elangovan",
-                },
-                {
-                  text: "Gwendolin Tan",
-                  link: "/recommendations#gwendolin-tan",
-                },
-                {
-                  text: "Jameel Shaik",
-                  link: "/recommendations#jameel-shaik",
-                },
-                {
-                  text: "Zeyao Liu",
-                  link: "/recommendations#zeyao-liu",
-                },
-                {
-                  text: "Satyaranjan Muduli",
-                  link: "/recommendations#satyaranjan-muduli",
-                },
-                {
-                  text: "Gopinath Gunanithi",
-                  link: "/recommendations#gopinath-gunanithi",
-                },
-                {
-                  text: "Thejashree Chandraiah",
-                  link: "/recommendations#thejashree-chandraiah",
-                },
-                {
-                  text: "Colin McKell-Redwood",
-                  link: "/recommendations#colin-mckell-redwood",
-                },
-              ],
-            },
-            {
-              text: "Works Applications",
-              link: "/recommendations#works-applications",
-              items: [{ text: "Ray Pan", link: "/recommendations#ray-pan" }],
-            },
-            {
-              text: "SUTD",
-              link: "/recommendations#sutd",
-              items: [{ text: "Harry Nguyen", link: "/recommendations#harry-nguyen" }],
+              text: "Swathi Asokraj",
+              link: "/recommendations#swathi-asokraj",
             },
           ],
+        },
+        {
+          text: "ADPList",
+          link: "/recommendations#adplist",
+          items: [
+            {
+              text: "Alyssa De Conceicao",
+              link: "/recommendations#alyssa-de-conceicao",
+            },
+            {
+              text: "Rahul M Jacob",
+              link: "/recommendations#rahul-m-jacob",
+            },
+            {
+              text: "Karen Kaycia",
+              link: "/recommendations#karen-kaycia",
+            },
+            {
+              text: "Sharon Siah",
+              link: "/recommendations#sharon-siah",
+            },
+            {
+              text: "Jean Ong",
+              link: "/recommendations#jean-ong",
+            },
+            {
+              text: "Tulika Khabia",
+              link: "/recommendations#tulika-khabia",
+            },
+            {
+              text: "Maxwell Kabona",
+              link: "/recommendations#maxwell-kabona",
+            },
+            {
+              text: "Zioedy Wong",
+              link: "/recommendations#zioedy-wong",
+            },
+            {
+              text: "Yao Yao",
+              link: "/recommendations#yao-yao",
+            },
+            {
+              text: "Shahroze Husain",
+              link: "/recommendations#shahroze-husain",
+            },
+            {
+              text: "Clement Perdana",
+              link: "/recommendations#clement-perdana",
+            },
+            {
+              text: "Kevin Govinda",
+              link: "/recommendations#kevin-govinda",
+            },
+            {
+              text: "Yashi Huang",
+              link: "/recommendations#yashi-huang",
+            },
+            {
+              text: "Stephanie Gascon",
+              link: "/recommendations#stephanie-gascon",
+            },
+            {
+              text: "Lim Mun Hong",
+              link: "/recommendations#lim-mun-hong",
+            },
+            {
+              text: "Hue Nguyen",
+              link: "/recommendations#hue-nguyen",
+            },
+            {
+              text: "Preston Ong Jin Bin",
+              link: "/recommendations#preston-ong-jin-bin",
+            },
+            {
+              text: "Ahmed",
+              link: "/recommendations#ahmed",
+            },
+          ],
+        },
+        {
+          text: "Shopee",
+          link: "/recommendations#shopee",
+          items: [
+            {
+              text: "Siyu (Henry) Tang",
+              link: "/recommendations#siyu-henry-tang",
+            },
+            {
+              text: "Joanne Tan",
+              link: "/recommendations#joanne-tan",
+            },
+            {
+              text: "Xiang Rong Ong",
+              link: "/recommendations#xiang-rong-ong",
+            },
+            {
+              text: "Laurinda Wu",
+              link: "/recommendations#laurinda-wu",
+            },
+            {
+              text: "Rachel Esther Chan",
+              link: "/recommendations#rachel-esther-chan",
+            },
+          ],
+        },
+        {
+          text: "Amadeus",
+          link: "/recommendations#amadeus",
+          items: [
+            {
+              text: "Gus Salamoun",
+              link: "/recommendations#gus-salamoun",
+            },
+            {
+              text: "Stephanie Tan",
+              link: "/recommendations#stephanie-tan",
+            },
+            {
+              text: "Jyolsna Elangovan",
+              link: "/recommendations#jyolsna-elangovan",
+            },
+            {
+              text: "Gwendolin Tan",
+              link: "/recommendations#gwendolin-tan",
+            },
+            {
+              text: "Jameel Shaik",
+              link: "/recommendations#jameel-shaik",
+            },
+            {
+              text: "Zeyao Liu",
+              link: "/recommendations#zeyao-liu",
+            },
+            {
+              text: "Satyaranjan Muduli",
+              link: "/recommendations#satyaranjan-muduli",
+            },
+            {
+              text: "Gopinath Gunanithi",
+              link: "/recommendations#gopinath-gunanithi",
+            },
+            {
+              text: "Thejashree Chandraiah",
+              link: "/recommendations#thejashree-chandraiah",
+            },
+            {
+              text: "Colin McKell-Redwood",
+              link: "/recommendations#colin-mckell-redwood",
+            },
+          ],
+        },
+        {
+          text: "Works Applications",
+          link: "/recommendations#works-applications",
+          items: [{ text: "Ray Pan", link: "/recommendations#ray-pan" }],
+        },
+        {
+          text: "SUTD",
+          link: "/recommendations#sutd",
+          items: [{ text: "Harry Nguyen", link: "/recommendations#harry-nguyen" }],
         },
       ],
       "/resume": [
         {
-          text: "Resume",
-          link: "/resume",
+          text: "Personal Profile",
+          link: "/resume#personal-profile",
+          items: [],
+        },
+        {
+          text: "Core Competencies",
+          link: "/resume#core-competencies",
+          items: [],
+        },
+        {
+          text: "Work Experience",
+          link: "/resume#work-experience",
           items: [
             {
-              text: "Personal Profile",
-              link: "/resume#personal-profile",
+              text: "Workato",
+              link: "/resume#workato",
             },
             {
-              text: "Core Competencies",
-              link: "/resume#core-competencies",
+              text: "Shopee",
+              link: "/resume#shopee",
             },
             {
-              text: "Work Experience",
-              link: "/resume#work-experience",
-              items: [
-                {
-                  text: "Workato",
-                  link: "/resume#workato",
-                },
-                {
-                  text: "Shopee",
-                  link: "/resume#shopee",
-                },
-                {
-                  text: "Amadeus IT Group",
-                  link: "/resume#amadeus-it-group",
-                },
-                {
-                  text: "Works Applications Co., Ltd.",
-                  link: "/resume#works-applications-co-ltd",
-                },
-              ],
+              text: "Amadeus IT Group",
+              link: "/resume#amadeus-it-group",
             },
             {
-              text: "Education",
-              link: "/resume#education",
-              items: [
-                {
-                  text: "Kellogg School of Management",
-                  link: "/resume#kellogg-school-of-management-northwestern-university",
-                },
-                {
-                  text: "SUTD",
-                  link: "/resume#singapore-university-of-technology-and-design",
-                },
-                {
-                  text: "Catholic Junior College",
-                  link: "/resume#catholic-junior-college",
-                },
-              ],
-            },
-            {
-              text: "Awards and Certifications",
-              link: "/resume#awards-and-certifications",
+              text: "Works Applications Co., Ltd.",
+              link: "/resume#works-applications-co-ltd",
             },
           ],
+        },
+        {
+          text: "Education",
+          link: "/resume#education",
+          items: [
+            {
+              text: "Kellogg School of Management",
+              link: "/resume#kellogg-school-of-management-northwestern-university",
+            },
+            {
+              text: "SUTD",
+              link: "/resume#singapore-university-of-technology-and-design",
+            },
+            {
+              text: "Catholic Junior College",
+              link: "/resume#catholic-junior-college",
+            },
+          ],
+        },
+        {
+          text: "Awards and Certifications",
+          link: "/resume#awards-and-certifications",
+          items: [],
         },
       ],
     },
