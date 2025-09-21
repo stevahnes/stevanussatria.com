@@ -41,7 +41,7 @@ Here’s how it works:
 - Drop your questions in the thread below.
 - I’ll reply as best (and as honestly!) as I can.
 - Feel free to chime in on other people’s questions too.
-- Keep it respectful and fun—this is about good conversation 💬.
+- Keep it respectful and fun!
 
 So… what’s on your mind?
 
