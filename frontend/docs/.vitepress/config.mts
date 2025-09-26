@@ -540,13 +540,25 @@ export default defineConfig({
   },
 
   vite: {
-    plugins: [tailwindcss(), ViteImageOptimizer()] as any,
+    plugins: [
+      tailwindcss(),
+      ViteImageOptimizer({
+        png: { quality: 70, compressionLevel: 8 },
+        jpeg: { quality: 70, progressive: true },
+        webp: { quality: 68 },
+        avif: { quality: 50 },
+        includePublic: true,
+      }),
+    ] as any,
     build: {
+      cssMinify: true,
+      sourcemap: false,
       chunkSizeWarningLimit: 500,
       rollupOptions: {
         output: {
           manualChunks: {
             chat: ["./docs/.vitepress/theme/components/Chat.vue"],
+            "soundcloud-player": ["./docs/.vitepress/theme/components/SoundCloudPlayer.vue"],
             "download-resume": ["./docs/components/DownloadResume.vue"],
           },
         },
