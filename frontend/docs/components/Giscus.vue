@@ -29,7 +29,7 @@ const loadGiscus = async () => {
   script.setAttribute("data-term", "128");
   script.setAttribute("data-reactions-enabled", "0");
   script.setAttribute("data-emit-metadata", "0");
-  script.setAttribute("data-input-position", "bottom");
+  script.setAttribute("data-input-position", "top");
   script.setAttribute("data-theme", isDark.value ? "dark" : "light");
   script.setAttribute("data-lang", "en");
   script.setAttribute("data-loading", "lazy"); // Enable lazy loading
@@ -89,7 +89,8 @@ watch(isDark, newVal => {
 
 <style scoped>
 .giscus-container {
-  min-height: 200px; /* Reserve space to prevent layout shift */
+  min-height: 200px;
+  /* Reserve space to prevent layout shift */
   position: relative;
 }
 
@@ -118,6 +119,7 @@ watch(isDark, newVal => {
   0% {
     background-position: 200% 0;
   }
+
   100% {
     background-position: -200% 0;
   }
