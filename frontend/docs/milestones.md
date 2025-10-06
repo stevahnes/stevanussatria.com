@@ -2,14 +2,14 @@
 outline: false
 prev: false
 next: false
-title: "Stevanus Satria | Milestones"
+title: "Milestones"
 description: "Key achievements and milestones in Stevanus Satria's professional journey, from academic excellence to career advancement and community contributions."
 keywords: "Stevanus Satria, career milestones, achievements, awards, certifications, professional journey"
 author: "Stevanus Satria"
 head:
   - - meta
     - property: og:title
-      content: "Stevanus Satria | Milestones"
+      content: "Milestones"
   - - meta
     - property: og:description
       content: "Key achievements and milestones in Stevanus Satria's professional journey, from academic excellence to career advancement and community contributions."
@@ -21,7 +21,7 @@ head:
       content: https://stevanussatria.com/milestones
   - - meta
     - name: twitter:title
-      content: "Stevanus Satria | Milestones"
+      content: "Milestones"
   - - meta
     - name: twitter:description
       content: "Key achievements and milestones in Stevanus Satria's professional journey, from academic excellence to career advancement and community contributions."
@@ -62,7 +62,7 @@ const createMilestone = ([time, title, description, path = null, cta = null, anc
 // All milestone data using consistent array approach
 const milestoneData: MilestoneRecord[] = [
   // 2025 milestones
-  ["Oct 2025", "Completed Professional Certificate in Strategic Management", "Obtained from Wharton School of the University of Pennsylvania.", "https://credentials.edx.org/credentials/c2a6ddb085a24150bac2d81b37bc3616/", "Verify", "2025"],
+  ["Oct 2025", "Completed Professional Certificate in Strategic Management", "Obtained from the Wharton School of the University of Pennsylvania.", "https://credentials.edx.org/credentials/c2a6ddb085a24150bac2d81b37bc3616/", "Verify", "2025"],
   ["Mar 2025", "Promoted to Senior Product Manager", "Finally made my first career big splash.", null, null, "2025"],
   ["Mar 2025", "Got married", "Mrs said yes to a lifetime together. Strictly no take backsies!"],
 

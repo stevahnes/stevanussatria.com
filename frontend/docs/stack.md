@@ -1,13 +1,13 @@
 ---
 layout: home
-title: "Stevanus Satria Tech Stack - Tools & Technologies"
+title: "Stack (Tools & Technologies)"
 description: "Explore Stevanus Satria's technology stack including SQL, TypeScript, Angular, Node.js, VitePress, and modern development tools. Senior Product Manager with strong technical background."
 keywords: "Stevanus Satria tech stack, TypeScript, Angular, Node.js, SQL, VitePress, development tools, product manager, Singapore"
 author: "Stevanus Satria"
 head:
   - - meta
     - property: og:title
-      content: "Stevanus Satria Tech Stack - Tools & Technologies"
+      content: "Stack (Tools & Technologies)"
   - - meta
     - property: og:description
       content: "Explore Stevanus Satria's technology stack including SQL, TypeScript, Angular, Node.js, VitePress, and modern development tools."

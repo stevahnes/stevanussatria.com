@@ -1,13 +1,13 @@
 ---
 layout: home
-title: "Projects by Stevanus Satria - Software & Hardware Portfolio"
+title: "Projects (Software & Hardware)"
 description: "Explore Stevanus Satria's diverse portfolio of projects including Advocado AI assistant, VitePress portfolio, Figma plugins, robotics projects, and innovative hardware solutions."
 keywords: "Stevanus Satria projects, Advocado AI, VitePress portfolio, Figma plugins, robotics, hardware projects, software development, Singapore"
 author: "Stevanus Satria"
 head:
   - - meta
     - property: og:title
-      content: "Projects by Stevanus Satria - Software & Hardware Portfolio"
+      content: "Projects (Software & Hardware)"
   - - meta
     - property: og:description
       content: "Explore Stevanus Satria's diverse portfolio of projects including Advocado AI assistant, VitePress portfolio, Figma plugins, robotics projects, and innovative hardware solutions."
