@@ -2,17 +2,17 @@
 outline: false
 prev: false
 next: false
-title: "Stevanus Satria Resume - Senior Product Manager at Workato"
-description: "Download Stevanus Satria's professional resume. Senior Product Manager at Workato with 7+ years of experience in B2B SaaS, product management, and software engineering. Former roles at Shopee and Amadeus."
+title: "Resume"
+description: "Download Stevanus Satria's professional resume. Product Leader with 7+ years of experience in B2B SaaS, product management, and software engineering."
 keywords: "Stevanus Satria resume, product manager resume, Workato, Shopee, Amadeus, software engineer, B2B SaaS, Singapore, Kellogg, SUTD"
 author: "Stevanus Satria"
 head:
   - - meta
     - property: og:title
-      content: "Stevanus Satria Resume - Senior Product Manager at Workato"
+      content: "Resume"
   - - meta
     - property: og:description
-      content: "Download Stevanus Satria's professional resume. Senior Product Manager at Workato with 7+ years of experience in B2B SaaS, product management, and software engineering."
+      content: "Download Stevanus Satria's professional resume. Product Leader with 7+ years of experience in B2B SaaS, product management, and software engineering."
   - - meta
     - property: og:type
       content: profile

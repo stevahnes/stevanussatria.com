@@ -2,14 +2,14 @@
 outline: false
 prev: false
 next: false
-title: "Stevanus Satria | Milestones"
+title: "Milestones"
 description: "Key achievements and milestones in Stevanus Satria's professional journey, from academic excellence to career advancement and community contributions."
 keywords: "Stevanus Satria, career milestones, achievements, awards, certifications, professional journey"
 author: "Stevanus Satria"
 head:
   - - meta
     - property: og:title
-      content: "Stevanus Satria | Milestones"
+      content: "Milestones"
   - - meta
     - property: og:description
       content: "Key achievements and milestones in Stevanus Satria's professional journey, from academic excellence to career advancement and community contributions."
@@ -21,7 +21,7 @@ head:
       content: https://stevanussatria.com/milestones
   - - meta
     - name: twitter:title
-      content: "Stevanus Satria | Milestones"
+      content: "Milestones"
   - - meta
     - name: twitter:description
       content: "Key achievements and milestones in Stevanus Satria's professional journey, from academic excellence to career advancement and community contributions."

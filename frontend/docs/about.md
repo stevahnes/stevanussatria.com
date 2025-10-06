@@ -1,16 +1,16 @@
 ---
 layout: home
-title: "About Stevanus Satria - Senior Product Manager at Workato"
-description: "Learn about Stevanus Satria, a Senior Product Manager at Workato with 7+ years of experience in B2B SaaS, frontend development, and product management. Former Product Manager at Shopee and Software Engineer at Amadeus."
+title: "About"
+description: "Learn about Stevanus Satria, a Product Leader with 7+ years of experience in B2B SaaS, frontend development, and product management."
 keywords: "Stevanus Satria, about, product manager, Workato, Shopee, Amadeus, software engineer, B2B SaaS, Singapore, SUTD, Kellogg"
 author: "Stevanus Satria"
 head:
   - - meta
     - property: og:title
-      content: "About Stevanus Satria - Senior Product Manager at Workato"
+      content: "About"
   - - meta
     - property: og:description
-      content: "Learn about Stevanus Satria, a Senior Product Manager at Workato with 7+ years of experience in B2B SaaS, frontend development, and product management."
+      content: "Learn about Stevanus Satria, a Product Leader with 7+ years of experience in B2B SaaS, frontend development, and product management."
   - - meta
     - property: og:type
       content: profile
@@ -35,7 +35,7 @@ hero:
   text: "Product Manager"
   image:
     src: /me.webp
-    alt: Stevanus Satria - Senior Product Manager at Workato
+    alt: Stevanus Satria
   actions:
     - theme: brand
       text: Let's Chat

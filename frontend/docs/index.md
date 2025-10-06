@@ -1,13 +1,13 @@
 ---
 layout: home
-title: "Stevanus Satria | Home"
+title: "Home"
 description: "Welcome to Stevanus Satria's portfolio. Senior Product Manager at Workato with 7+ years of experience in B2B SaaS, frontend development, and product management. Chat with Advocado, my AI assistant!"
 keywords: "Stevanus Satria, product manager, software engineer, Workato, B2B SaaS, frontend developer, Singapore, portfolio"
 author: "Stevanus Satria"
 head:
   - - meta
     - property: og:title
-      content: "Stevanus Satria | Home"
+      content: "Home"
   - - meta
     - property: og:description
       content: "Welcome to Stevanus Satria's portfolio. Senior Product Manager at Workato with 7+ years of experience in B2B SaaS, frontend development, and product management. Chat with Advocado, my AI assistant!"
@@ -19,7 +19,7 @@ head:
       content: https://stevanussatria.com
   - - meta
     - name: twitter:title
-      content: "Stevanus Satria | Home"
+      content: "Home"
   - - meta
     - name: twitter:description
       content: "Welcome to Stevanus Satria's portfolio. Senior Product Manager at Workato with 7+ years of experience in B2B SaaS, frontend development, and product management. Chat with Advocado, my AI assistant!"

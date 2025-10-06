@@ -1,13 +1,13 @@
 ---
 layout: home
-title: "Stevanus Satria | Flight History"
+title: "Skyline"
 description: "Explore Stevanus Satria's travel history and flight routes around the world, visualized on an interactive map."
 keywords: "Stevanus Satria, flight history, travel map, interactive visualization, flight routes"
 author: "Stevanus Satria"
 head:
   - - meta
     - property: og:title
-      content: "Stevanus Satria | Flight History"
+      content: "Skyline"
   - - meta
     - property: og:description
       content: "Explore Stevanus Satria's travel history and flight routes around the world, visualized on an interactive map."
@@ -19,7 +19,7 @@ head:
       content: https://stevanussatria.com/skyline
   - - meta
     - name: twitter:title
-      content: "Stevanus Satria | Flight History"
+      content: "Skyline"
   - - meta
     - name: twitter:description
       content: "Explore Stevanus Satria's travel history and flight routes around the world, visualized on an interactive map."
