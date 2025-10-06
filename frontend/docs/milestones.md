@@ -62,11 +62,12 @@ const createMilestone = ([time, title, description, path = null, cta = null, anc
 // All milestone data using consistent array approach
 const milestoneData: MilestoneRecord[] = [
   // 2025 milestones
+  ["Oct 2025", "Completed Professional Certificate in Strategic Management", "Obtained from Wharton School of the University of Pennsylvania.", "https://credentials.edx.org/credentials/c2a6ddb085a24150bac2d81b37bc3616/", "Verify", "2025"],
   ["Mar 2025", "Promoted to Senior Product Manager", "Finally made my first career big splash.", null, null, "2025"],
   ["Mar 2025", "Got married", "Mrs said yes to a lifetime together. Strictly no take backsies!"],
 
   // 2024 milestones
-  ["May 2024", "Completed executive education in Product Strategy", "Obtained from Northwestern Kellogg School of Management.", "https://execedcertificate.kellogg.northwestern.edu/e767d718-50bc-4034-bcca-7be97a9b53ba", "Verify", "2024"],
+  ["May 2024", "Completed Executive Education in Product Strategy", "Obtained from the Northwestern University Kellogg School of Management.", "https://execedcertificate.kellogg.northwestern.edu/e767d718-50bc-4034-bcca-7be97a9b53ba", "Verify", "2024"],
 
   // 2022 milestones
   ["Sep 2022", "Second ADPList Super Mentor award", "I guess people find my thoughts and opinion rather insightful.", null, null, "2022"],
