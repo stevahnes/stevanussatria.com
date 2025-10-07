@@ -155,7 +155,7 @@ University Admission Score (UAS): 90/90, H3: Physics (Merit)
 ## Awards and Certifications
 
 - Professional Certificate: Strategic Management by Wharton Online | October 2025
-- Executive Education: Product Strategy by Northwestern Kellogg | May 2024
+- Executive Education: Product Strategy by Northwestern Kellogg Executive Education | May 2024
 - Shopee Value Star Award - "We Serve" (Marketplace Product Manager) | May 2022
 - IES Gold Medal (Top Cohort Graduate) & Keppel Award of Excellence (Senior & Junior Years) | September 2016
 - ASEAN Undergraduate Scholarship & Tay Chen Hui Memorial Award (Top Science Student) | July 2013
