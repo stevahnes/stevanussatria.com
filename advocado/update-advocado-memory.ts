@@ -8,13 +8,13 @@ const langbase = new Langbase({
 });
 
 const docNames = [
-  ["../frontend/docs", "about.md"],
-  ["../frontend/docs", "gear.md"],
-  ["../frontend/docs", "stack.md"],
-  ["../frontend/docs", "milestones.md"],
-  ["../frontend/docs", "projects.md"],
-  ["../frontend/docs", "recommendations.md"],
+  ["../frontend/docs", "index.md"],
   ["../frontend/docs", "resume.md"],
+  ["../frontend/docs", "projects.md"],
+  ["../frontend/docs", "milestones.md"],
+  ["../frontend/docs", "recommendations.md"],
+  ["../frontend/docs", "stack.md"],
+  ["../frontend/docs", "gear.md"],
   ["./private", "supplementary.md"],
 ];
 

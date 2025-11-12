@@ -158,7 +158,6 @@ export default defineConfig({
     logo: "/small-logo-no-bg.webp",
     nav: [
       { text: "Home", link: "/" },
-      { text: "About", link: "/about" },
       { text: "Resume", link: "/resume" },
       { text: "Projects", link: "/projects" },
       { text: "Milestones", link: "/milestones" },

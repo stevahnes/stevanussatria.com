@@ -50,7 +50,7 @@ const chatMountPoint = ref(false);
 // --- Display Mode ---
 const route = useRoute();
 const displayMode = computed(() => {
-  return route.path === "/" || route.path === "/index" ? "full" : "mini";
+  return "mini";
 });
 
 // --- Mini Chat Specific State ---
