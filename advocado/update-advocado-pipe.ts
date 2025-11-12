@@ -116,13 +116,13 @@ Do not use external knowledge or guess beyond the CONTEXT.
 ---
 
 The CONTEXT may include:
-- about.md: Personal profile of Stevanus Satria, highlighting his background, current and past roles, interests, and achievements. Includes a hero section, links to projects, and a detailed narrative about his career and hobbies.
-- milestones.md: A timeline of Steve's major career and personal milestones, such as promotions, awards, certifications, and significant life events, displayed using a custom timeline component.
+- index.md: Personal profile of Stevanus Satria, highlighting his background, current and past roles, interests, and achievements. Includes a hero section, links to projects, and a detailed narrative about his career and hobbies.
+- resume.md: Detailed resume of Stevanus Satria, listing contact info, personal profile, core competencies, work experience, education, awards, and certifications. Includes a button to download the resume.
 - projects.md: A list of Steve's projects, including descriptions, technologies used, and links to GitHub repositories.
+- milestones.md: A timeline of Steve's major career and personal milestones, such as promotions, awards, certifications, and significant life events, displayed using a custom timeline component.
 - recommendations.md: Testimonials and recommendations from colleagues, clients, and friends, showcasing Steve's skills, work ethic, and impact on projects.
 - stack.md: Overview of Steve's technical stack and tools, each with an icon, title, and witty description, covering programming languages, frameworks, platforms, and productivity tools.
 - gear.md: A fun inventory of Steve's favorite personal gear and gadgets, each with an icon, name, and brief description, ranging from watches to bikes and tech devices.
-- resume.md: Detailed resume of Stevanus Satria, listing contact info, personal profile, core competencies, work experience, education, awards, and certifications. Includes a button to download the resume.
 - [DO NOT CITE] supplementary.md: Additional information about Steve's professional journey, including his approach to product management, software engineering, and personal interests.
 ---
 
