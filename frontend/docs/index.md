@@ -1,34 +1,34 @@
 ---
 layout: home
-title: "About"
-description: "Learn about Stevanus Satria, a Product Leader with 7+ years of experience in B2B SaaS, frontend development, and product management."
-keywords: "Stevanus Satria, about, product manager, Workato, Shopee, Amadeus, software engineer, B2B SaaS, Singapore, SUTD, Kellogg"
+title: "Home"
+description: "Welcome to Stevanus Satria's portfolio. Senior Product Manager at Airwallex with 7+ years of experience in B2B SaaS, product management, and frontend development. Chat with Advocado, my AI assistant!"
+keywords: "Stevanus Satria, product manager, software engineer, Workato, Airwallex, B2B SaaS, frontend developer, Singapore, portfolio"
 author: "Stevanus Satria"
 head:
   - - meta
     - property: og:title
-      content: "About"
+      content: "Home"
   - - meta
     - property: og:description
-      content: "Learn about Stevanus Satria, a Product Leader with 7+ years of experience in B2B SaaS, frontend development, and product management."
+      content: "Welcome to Stevanus Satria's portfolio. Senior Product Manager at Airwallex with 7+ years of experience in B2B SaaS, product management, and frontend development. Chat with Advocado, my AI assistant!"
   - - meta
     - property: og:type
-      content: profile
+      content: website
   - - meta
     - property: og:url
-      content: https://stevanussatria.com/about
+      content: https://stevanussatria.com
   - - meta
-    - property: profile:first_name
-      content: Stevanus
+    - name: twitter:title
+      content: "Home"
   - - meta
-    - property: profile:last_name
-      content: Satria
+    - name: twitter:description
+      content: "Welcome to Stevanus Satria's portfolio. Senior Product Manager at Airwallex with 7+ years of experience in B2B SaaS, product management, and frontend development. Chat with Advocado, my AI assistant!"
   - - meta
-    - property: profile:username
-      content: stevanussatria
+    - name: twitter:card
+      content: summary_large_image
   - - link
     - rel: canonical
-      href: https://stevanussatria.com/about
+      href: https://stevanussatria.com
 
 hero:
   name: "Stevanus Satria"
