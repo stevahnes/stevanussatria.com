@@ -295,7 +295,7 @@ const getItemKey = (item: Recommendation): string => item.id;
   line-height: 1.625rem;
   color: var(--vp-c-text-2);
   margin: 0;
-  text-align: justify;
+  text-align: left;
 }
 
 /* Card Footer */

@@ -51,6 +51,14 @@ interface Recommendation {
 
 const recommendationData: Recommendation[] = [
   {
+    "id": "0",
+    "name": "Arkadiy Rushkevich",
+    "title": "Director of Product Management",
+    "company": "Workato",
+    "date": "November 7, 2025",
+    "testimonial": "I had the pleasure of managing Steve during his time at Workato, and he consistently impressed me with his ability to combine user-centric thinking, technical depth, and strong ownership. Steve started in the Workato Connectors area and quickly proved he can handle ownership of much more complex product of Data Tables, where he quickly caught up on backlog delivery and reframed the roadmap to align with our low-code/no-code strategy, showing adaptability and strategic thinking. Beyond features, Steve was instrumental in ensuring our connectors met enterprise expectations. He led the charge in initiatives related to authentication and security, regulatory compliance, and improved connector reliability. I strongly recommend him to any organization looking for someone who can drive meaningful impact at both product and organizational levels."
+  },
+  {
     "id": "1",
     "name": "Vishakan Subramanian",
     "title": "Software Development Engineer",
