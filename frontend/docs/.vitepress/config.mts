@@ -479,6 +479,10 @@ export default defineConfig({
           link: "/resume#work-experience",
           items: [
             {
+              text: "Airwallex",
+              link: "/resume#airwallex",
+            },
+            {
               text: "Workato",
               link: "/resume#workato",
             },
