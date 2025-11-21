@@ -95,6 +95,7 @@ const recommendationData: Recommendation[] = [
     "name": "Rahul M Jacob",
     "title": "Product Manager Operations",
     "company": "Uber",
+    "date": "January 9, 2025",
     "testimonial": "I had a great conversation with Stevanus, where he shared valuable insights about the product landscape in Singapore. I truly appreciate his willingness to assist and the valuable guidance he provided."
   },
   {
@@ -102,6 +103,7 @@ const recommendationData: Recommendation[] = [
     "name": "Karen Kaycia",
     "title": "Merchandiser",
     "company": "PT Mitra Adiperkasa Tbk.",
+    "date": "May 26, 2024",
     "testimonial": "Had a really great session talking about my career with Ko Stevanus. Thank you for the advices, Ko Stevanus! Honestly they're really insightful and have helped me to better understand myself on which path I should be taking. Thank you for giving me an insight on what a product manager does, too."
   },
   {
@@ -109,6 +111,7 @@ const recommendationData: Recommendation[] = [
     "name": "Sharon Siah",
     "title": "Student",
     "company": "SMU",
+    "date": "April 11, 2023",
     "testimonial": "Stevanus is a dedicated mentor who has helped me grow both personally and professionally. He encourages me to think strategically and consider the bigger picture. He is patient, supportive and an excellent communicator."
   },
   {
@@ -116,6 +119,7 @@ const recommendationData: Recommendation[] = [
     "name": "Jean Ong",
     "title": "Programmer",
     "company": "Arup",
+    "date": "February 6, 2023",
     "testimonial": "I had a great chat with Stevanus! He is both knowledgeable and insightful. I learnt a lot from his sharing. He is a great connection to have!"
   },
   {
@@ -123,6 +127,7 @@ const recommendationData: Recommendation[] = [
     "name": "Tulika Khabia",
     "title": "Assistant Product Manager",
     "company": "Zaggle",
+    "date": "September 21, 2022",
     "testimonial": "I had an amazing session with Steve. He comes from rich product experience. He's very detail oriented and very helpful. My session with him was very helpful and I'll definitely be booking another session with him."
   },
   {
@@ -130,6 +135,7 @@ const recommendationData: Recommendation[] = [
     "name": "Maxwell Kabona",
     "title": "Business Data Analyst",
     "company": "DevelopmentShift Consulting Ltd",
+    "date": "September 12, 2022",
     "testimonial": "Stevanus' insights were extremely helpful and he allowed me to express a lot of what was on my mind comfortably. He went the extra mile in providing me with useful information to guide me on my path."
   },
   {
@@ -137,6 +143,7 @@ const recommendationData: Recommendation[] = [
     "name": "Zioedy Wong",
     "title": "UX Researcher and Writer",
     "company": "Section",
+    "date": "September 10, 2022",
     "testimonial": "Stevanus was very helpful in his sharing about Product Management and interview preparations."
   },
   {
@@ -144,6 +151,7 @@ const recommendationData: Recommendation[] = [
     "name": "Yao Yao",
     "title": "Business Associate",
     "company": "Visa",
+    "date": "July 24, 2022",
     "testimonial": "Stevanus offers great perspectives on the varying working culture and scope of a product manager. He gives very practical advice on how to upskill and prepare for a career switch. He is super approachable, open and resourceful. Definitely would recommend anyone who is interested in becoming a PM to talk to him."
   },
   {
@@ -151,6 +159,7 @@ const recommendationData: Recommendation[] = [
     "name": "Shahroze Husain",
     "title": "Head of Strategy | Product Manager",
     "company": "Apex Husain",
+    "date": "June 1, 2022",
     "testimonial": "Super insightful and helpful. Stevanus as a mentor goes over and above to help you understand the role of a PM and how to navigate the job search. Highly recommend!"
   },
   {
@@ -158,6 +167,7 @@ const recommendationData: Recommendation[] = [
     "name": "Clement Perdana",
     "title": "Digital Product Manager",
     "company": "DBS",
+    "date": "April 29, 2022",
     "testimonial": "Stevanus is very knowledgeable and passionate about his PM role. He gave me the advice to help me start my first PM role. And not only that, but he also clears my doubt about what and how a PM do their day to day job. It's very insightful to talk with Stevanus, who is very knowledgeable about the industry. I highly recommend him to be your mentor too!"
   },
   {
@@ -165,6 +175,7 @@ const recommendationData: Recommendation[] = [
     "name": "Kevin Govinda",
     "title": "Management Trainee",
     "company": "CIMB Niaga",
+    "date": "April 26, 2022",
     "testimonial": "Insightful, Warm, and Fun describes the session I had with kak Stevanus. He is very candid and willing to share his learnings as a PM."
   },
   {
@@ -172,6 +183,7 @@ const recommendationData: Recommendation[] = [
     "name": "Yashi Huang",
     "title": "Senior Product Manager",
     "company": "Pitchbook",
+    "date": "April 11, 2022",
     "testimonial": "I had a great conversation with Stevanus. He was super knowledgeable on the product management related topics and interviews and he was able to bring his own working experiences to help you from a practical standpoint. He gave great suggestions and provided a structured framework on how to tackle certain problems. I highly recommend everyone to have a chat with him and learn from him."
   },
   {
@@ -179,6 +191,7 @@ const recommendationData: Recommendation[] = [
     "name": "Stephanie Gascon",
     "title": "Customer Success Operations Manager",
     "company": "Nugit",
+    "date": "March 5, 2022",
     "testimonial": "Stevanus gave helpful suggestions on how to show aptitude when trying for a first-time PM role and shared his experiences with problem-solving and career progression. Do have a chat with him to hear his valuable perspectives."
   },
   {
@@ -186,6 +199,7 @@ const recommendationData: Recommendation[] = [
     "name": "Lim Mun Hong",
     "title": "Data Analyst",
     "company": "Top Glove",
+    "date": "February 28, 2022",
     "testimonial": "Steve is a nice and experienced person who knows what he is doing. He provided a lot of useful insight to me and I'm super grateful for this opportunity to talk to him."
   },
   {
@@ -193,6 +207,7 @@ const recommendationData: Recommendation[] = [
     "name": "Hue Nguyen",
     "title": "Business Analyst",
     "company": "Doxa",
+    "date": "February 19, 2022",
     "testimonial": "I am grateful to have an extraordinary 1-hour session with Stevanus. He shared from the bottom of his heart. He gave me actionable and valuable advice on how to prepare to jump into the role of PM. He shared with me great sources to start with as a junior PM. Words can barely express how thankful I am."
   },
   {
@@ -200,6 +215,7 @@ const recommendationData: Recommendation[] = [
     "name": "Preston Ong Jin Bin",
     "title": "Student",
     "company": "Monash University",
+    "date": "December 23, 2021",
     "testimonial": "Stevanus is kind and generous in sharing his knowledge about Product Management. Learnt a lot about PM as a student from him albeit a short mentorship session!"
   },
   {
@@ -207,6 +223,7 @@ const recommendationData: Recommendation[] = [
     "name": "Ahmed",
     "title": "Senior Product Manager",
     "company": "ShopBack",
+    "date": "December 21, 2021",
     "testimonial": "I had a nice chat with Stevanus. I appreciate his candidness about his onboarding experiences and some of the possible pitfalls I should be aware of when it comes to joining new teams/companies. His career journey would be very useful for others on a similar trajectory to learn from."
   },
   {
@@ -342,9 +359,11 @@ const recommendationData: Recommendation[] = [
     "name": "Harry Nguyen",
     "title": "Research Officer, Robotics Innovation Lab",
     "company": "SUTD",
+    "date": "July 10, 2019",
     "testimonial": "I had the privilege to work with Stevanus in several course-works and final year project when we were at undergraduate school. Later, we worked together SUTD robotics lab over a year. He is the recipient of countless highly prestigious award from our school, industrial partners and other academic bodies. Stevanus is a creative thinker and hardworking doer who is excel at both theory and hands-on tasks. In group works, he always takes lead with example in every single project. He strives for the best and delivers the highest-quality projects. He also cares about his peers, motivating them and giving them the best advice. I think that with his qualities, Stevanus can thrive in his future career and archive the bests in his life."
   }
 ]
+
 </script>
 
 <Recommendations :recommendations="recommendationData" />
