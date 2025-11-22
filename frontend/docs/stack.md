@@ -93,6 +93,9 @@ features:
   - icon: { dark: "./github-dark.webp", light: "./github-light.webp", alt: GitHub Code Repository }
     title: Github
     details: Where code lives and PMs occasionally lurk.
+  - icon: { src: ./gitlab.webp, alt: GitLab Repo and Pipelines }
+    title: GitLab
+    details: Repos and pipelines with a dash of merge-request magic.
   - icon: { src: ./github-copilot.webp, alt: GitHub Copilot AI Assistant }
     title: Github Copilot
     details: Code completion so good it feels like cheating.
