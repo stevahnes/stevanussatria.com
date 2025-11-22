@@ -165,6 +165,7 @@ export default defineConfig({
       { text: "AMA", link: "/ama" },
       { text: "Stack", link: "/stack" },
       { text: "Gear", link: "/gear" },
+      { text: "Loops", link: "/loops" },
       { text: "Skyline", link: "/skyline" },
     ],
 
