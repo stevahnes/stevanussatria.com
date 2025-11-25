@@ -14,6 +14,7 @@ import type { Map as LeafletMap } from "leaflet";
 import type * as LeafletTypes from "leaflet";
 
 interface StravaActivity {
+  type: string;
   name: string;
   distance: number;
   moving_time: number;
@@ -296,7 +297,9 @@ onMounted(async () => {
               : '!text-transparent !bg-clip-text !bg-gradient-to-r !from-green-600 !to-emerald-600'
           "
         >
+          <!-- E-Bike Icon -->
           <svg
+            v-if="activity.type === 'EBikeRide'"
             class="!w-4 !h-4 md:!w-5 md:!h-5 !flex-shrink-0"
             :class="clientSideTheme && isDark ? '!text-green-400' : '!text-green-600'"
             fill="none"
@@ -304,13 +307,64 @@ onMounted(async () => {
             viewBox="0 0 24 24"
             xmlns="http://www.w3.org/2000/svg"
           >
-            <!-- Rear wheel - bigger -->
+            <path
+              d="M2.75 5 L0.75 9 3.5 9 L1.5 13"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              fill="currentColor"
+            />
+            <circle cx="7.2" cy="15" r="4" stroke="currentColor" stroke-width="1.5" fill="none" />
+            <circle cx="19.2" cy="15" r="4" stroke="currentColor" stroke-width="1.5" fill="none" />
+            <path
+              d="M7.2 15 L11.2 8.5"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+            <path
+              d="M11.2 8.5 L16.2 8.5 M11.2 8.5 L15.2 15"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+            <path
+              d="M11.2 8.5 L11.2 5.5 M10.2 5.5 L12.2 5.5"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+            <path
+              d="M16.2 8.5 L19.2 15 M16.2 8.5 L16.2 6 M15.2 6 L17.2 6"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+            <path
+              d="M15.2 15 L19.2 15 M7.2 15 L11.2 15"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+            />
+          </svg>
+
+          <!-- Regular Bike Icon -->
+          <svg
+            v-else-if="activity.type === 'Ride'"
+            class="!w-4 !h-4 md:!w-5 md:!h-5 !flex-shrink-0"
+            :class="clientSideTheme && isDark ? '!text-green-400' : '!text-green-600'"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
             <circle cx="6" cy="15" r="4" stroke="currentColor" stroke-width="1.5" fill="none" />
-
-            <!-- Front wheel - bigger -->
             <circle cx="18" cy="15" r="4" stroke="currentColor" stroke-width="1.5" fill="none" />
-
-            <!-- Frame - rear triangle (shorter) -->
             <path
               d="M6 15 L10 8.5"
               stroke="currentColor"
@@ -318,8 +372,6 @@ onMounted(async () => {
               stroke-linecap="round"
               stroke-linejoin="round"
             />
-
-            <!-- Frame - top tube and down tube (shorter, more compact) -->
             <path
               d="M10 8.5 L15 8.5 M10 8.5 L14 15"
               stroke="currentColor"
@@ -327,8 +379,6 @@ onMounted(async () => {
               stroke-linecap="round"
               stroke-linejoin="round"
             />
-
-            <!-- Seat post and saddle -->
             <path
               d="M10 8.5 L10 5.5 M9 5.5 L11 5.5"
               stroke="currentColor"
@@ -336,8 +386,6 @@ onMounted(async () => {
               stroke-linecap="round"
               stroke-linejoin="round"
             />
-
-            <!-- Front fork and handlebars -->
             <path
               d="M15 8.5 L18 15 M15 8.5 L15 6 M14 6 L16 6"
               stroke="currentColor"
@@ -345,8 +393,6 @@ onMounted(async () => {
               stroke-linecap="round"
               stroke-linejoin="round"
             />
-
-            <!-- Chain stays connecting to wheels -->
             <path
               d="M14 15 L18 15 M6 15 L10 15"
               stroke="currentColor"
@@ -354,6 +400,7 @@ onMounted(async () => {
               stroke-linecap="round"
             />
           </svg>
+
           <span class="!truncate">{{ activity.name }}</span>
         </h3>
         <div
