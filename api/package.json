@@ -10,7 +10,7 @@
   "dependencies": {
     "@langbase/components": "^0.1.8",
     "langbase": "^1.1.55",
-    "next": "15.3.1",
+    "next": "15.3.8",
     "resend": "^4.5.1"
   },
   "devDependencies": {
