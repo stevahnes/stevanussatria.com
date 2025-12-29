@@ -23,6 +23,13 @@ head:
 
 features:
   - icon:
+      src: /3d-printing.webp
+      alt: Fixing broken parts of a musical box with CAD and 3D printing
+    title: Vulcan's Fixes
+    details: Fixing broken parts of a musical box with CAD and 3D printing
+    link: https://www.linkedin.com/posts/stevanussatria_3dprinting-rapidprototyping-cad-activity-7410634123716960256-jSDn?utm_source=share&utm_medium=member_desktop&rcm=ACoAAAewUU4BIjH2rhnVSnKmoK5cYbKNUsrn4P8
+    target: _blank
+  - icon:
       src: /claire.webp
       alt: Cognitive Learning AI for Reasoning and Education
     title: CLAIRE (Private Repo)
