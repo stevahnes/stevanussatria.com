@@ -55,6 +55,9 @@ features:
   - icon: { src: ./aftershock.webp }
     title: Zoom
     details: Aftershock | 5600X | RTX3060
+  - icon: { src: ./creality.webp }
+    title: Vulcan
+    details: Creality Ender 3 V3 SE
   - icon: { src: ./apple.webp }
     title: Jean
     details: Apple iPhone 13 Pro Max
