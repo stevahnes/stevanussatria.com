@@ -6,7 +6,7 @@ import { ViteImageOptimizer } from "vite-plugin-image-optimizer";
 export default defineConfig({
   title: "Stevanus Satria",
   description:
-    "Stevanus Satria is a Senior Product Manager at Workato with 7+ years of experience in B2B SaaS, frontend development, and product management. Explore his projects, experience, and professional journey.",
+    "Stevanus Satria is a Senior Product Manager at Airwallex with 7+ years of experience in B2B SaaS, fintech, frontend development, and product management. Explore his projects, experience, and professional journey.",
   lang: "en-US",
   head: [
     // Favicon
@@ -60,7 +60,7 @@ export default defineConfig({
       {
         property: "og:description",
         content:
-          "Senior Product Manager at Workato with 7+ years of experience in B2B SaaS, frontend development, and product management.",
+          "Senior Product Manager at Airwallex with 7+ years of experience in B2B SaaS, fintech, frontend development, and product management.",
       },
     ],
     ["meta", { property: "og:image", content: "https://stevanussatria.com/me.webp" }],
@@ -80,7 +80,7 @@ export default defineConfig({
       {
         name: "twitter:description",
         content:
-          "Senior Product Manager at Workato with 7+ years of experience in B2B SaaS, frontend development, and product management.",
+          "Senior Product Manager at Airwallex with 7+ years of experience in B2B SaaS, fintech, frontend development, and product management.",
       },
     ],
     ["meta", { name: "twitter:image", content: "https://stevanussatria.com/me.webp" }],
@@ -92,7 +92,7 @@ export default defineConfig({
       {
         name: "keywords",
         content:
-          "product manager, software engineer, frontend developer, B2B SaaS, Workato, Shopee, Amadeus, VitePress, Vue.js, TypeScript, Singapore",
+          "product manager, software engineer, frontend developer, B2B SaaS, Airwallex, Workato, Shopee, Amadeus, fintech, VitePress, Vue.js, TypeScript, Singapore",
       },
     ],
     ["meta", { name: "viewport", content: "width=device-width, initial-scale=1" }],
