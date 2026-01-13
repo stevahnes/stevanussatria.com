@@ -120,7 +120,13 @@ features:
   - icon: { src: ./annotate.webp, alt: Annotate Screenshot Tool }
     title: Annotate
     details: Screenshots that don’t just show, they speak.
-  - icon: { src: ./cove-ai.webp, alt: Cove AI Platform }
-    title: Cove AI
-    details: Bring context to your content and sanity to your stack.
+  - icon: { src: ./solidworks.webp, alt: SOLIDWORKS }
+    title: SOLIDWORKS
+    details: Where parametric dreams become manufacturable reality, one sketch at a time.
+  - icon: { src: ./onshape.webp, alt: Onshape }
+    title: Onshape
+    details: CAD in the cloud, because “it works on my machine” is so last decade.
+  - icon: { src: ./orca-slicer.webp, alt: Orca Slicer }
+    title: Orca Slicer
+    details: Turning 3D models into printer poetry, layer by perfectly tuned layer.
 ---

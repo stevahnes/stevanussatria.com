@@ -172,6 +172,35 @@ export default defineConfig({
     sidebar: {
       "/projects/": [
         {
+          text: "Vulcan's Fixes",
+          link: "/projects/vulcan-fixes",
+        },
+        {
+          text: "CLAIRE (Private Repo)",
+          link: "https://github.com/stevahnes/edu-mentor",
+          target: "_blank",
+        },
+        {
+          text: "VibeChef Wiz (Private Repo)",
+          link: "https://github.com/stevahnes/vibe-chef-wiz",
+          target: "_blank",
+        },
+        {
+          text: "MarkView (Private Repo)",
+          link: "https://markviewui.vercel.app/",
+          target: "_blank",
+        },
+        {
+          text: "docs-eval (Private Repo)",
+          link: "https://github.com/stevahnes/docs-eval",
+          target: "_blank",
+        },
+        {
+          text: "Paisehkias",
+          link: "https://github.com/stevahnes/paisehkias",
+          target: "_blank",
+        },
+        {
           text: "Advocado",
           link: "https://github.com/stevahnes/vitepress-portfolio/tree/main/langbase",
           target: "_blank",
