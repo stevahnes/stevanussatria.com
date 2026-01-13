@@ -24,9 +24,9 @@ head:
 features:
   - icon:
       src: /3d-printing.webp
-      alt: Fixing broken parts of a musical box with CAD and 3D printing
+      alt: Rediscovering my love for hardware design and prototyping
     title: Vulcan's Fixes
-    details: Fixing broken parts of a musical box with CAD and 3D printing
+    details: Rediscovering my love for hardware design and prototyping
     link: /projects/vulcan-fixes
   - icon:
       src: /claire.webp
