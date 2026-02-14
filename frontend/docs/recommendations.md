@@ -51,6 +51,13 @@ interface Recommendation {
 
 const recommendationData: Recommendation[] = [
   {
+    "id": "40",
+    "name": "Isabelle Leong Qihui",
+    "title": "Customer Centric Engineer",
+    "company": "Workato",
+    "date": "February 9, 2026",
+    "testimonial": "I had the pleasure of working with Steve while I was in CCE, triaging Level 4 bug tickets. He was always responsive, approachable, and great to collaborate with. Passing bug tickets to him was smooth because he provided clear guidance, helped prioritize issues effectively, and ensured timely follow-ups. His professionalism and strong communication made working together easy and efficient."
+  },{
     "id": "39",
     "name": "Arkadiy Rushkevich",
     "title": "Director of Product Management",
