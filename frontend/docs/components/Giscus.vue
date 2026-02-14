@@ -23,7 +23,7 @@ const loadGiscus = async () => {
 
   const script = document.createElement("script");
   script.src = "https://giscus.app/client.js";
-  script.setAttribute("data-repo", "stevahnes/vitepress-portfolio");
+  script.setAttribute("data-repo", "stevahnes/stevanussatria.com");
   script.setAttribute("data-repo-id", "R_kgDOObyIyA");
   script.setAttribute("data-mapping", "number");
   script.setAttribute("data-term", "128");
