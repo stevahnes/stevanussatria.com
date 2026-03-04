@@ -34,8 +34,13 @@ function stripNoise(content: string): string {
   } while (cleaned !== previous);
 
   // As a final safeguard, strip any remaining opening/closing script tags,
-  // including malformed ones without a closing </script>.
-  cleaned = cleaned.replace(/<\s*\/?\s*script\b[^>]*>/gi, "");
+  // including malformed ones without a closing </script>. Apply repeatedly
+  // to avoid incomplete multi-character sanitization.
+  const scriptTagPattern = /<\s*\/?\s*script\b[^>]*>/gi;
+  do {
+    previous = cleaned;
+    cleaned = cleaned.replace(scriptTagPattern, "");
+  } while (cleaned !== previous);
 
   // Normalize excessive blank lines and trim whitespace
   return cleaned.replace(/\n{3,}/g, "\n\n").trim();
