@@ -26,7 +26,7 @@ function stripNoise(content: string): string {
   // Aggressively remove <script> blocks. Apply repeatedly to avoid
   // incomplete multi-character sanitization where new "<script"
   // sequences could be formed after a single replacement.
-  const scriptBlockPattern = /<script[\s\S]*?<\/script>/gi;
+  const scriptBlockPattern = /<script\b[\s\S]*?<\/\s*script\b[^>]*>/gi;
   let previous: string;
   do {
     previous = cleaned;
