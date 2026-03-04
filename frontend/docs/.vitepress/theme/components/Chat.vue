@@ -37,12 +37,7 @@ const PROMPT_SUGGESTIONS = [
 // --- State ---
 const messages = ref<ChatMessage[]>([]);
 const loading = ref(false);
-const isInitialLoading = ref(false);
 const isClient = ref(false);
-const isEndingChat = ref(false);
-const showFeedbackModal = ref(false);
-const feedback = ref<"good" | "bad" | null>(null);
-const threadId = ref<string | null>(null);
 const userInput = ref("");
 const isMobile = ref(false);
 const chatMountPoint = ref(false);
@@ -83,9 +78,6 @@ const cssVars = computed(() => ({
   "--link-color": clientSideTheme.value && isDark.value ? "#90cdf4" : "#3182ce",
   "--blockquote-border-color": clientSideTheme.value && isDark.value ? "#4a5568" : "#cbd5e0",
 }));
-
-// --- Computed ---
-const hasOngoingThread = computed(() => !!threadId.value);
 
 // --- Utility Functions ---
 const formatTime = (timestamp: number): string =>
@@ -296,53 +288,6 @@ const stopObservingMountPoint = (): void => {
   chatMountPoint.value = false;
 };
 
-// --- Fetch Messages from Backend ---
-const fetchThreadMessages = async (): Promise<void> => {
-  if (!threadId.value) return;
-
-  isInitialLoading.value = true;
-  try {
-    const response = await fetch(`${API_BASE}/thread/listMessages?threadId=${threadId.value}`);
-
-    if (response.ok) {
-      const messagesData = await response.json();
-      if (messagesData && Array.isArray(messagesData)) {
-        messages.value = messagesData.map((msg: any) => ({
-          role: msg.role,
-          content: msg.content || "",
-          timestamp: Date.now(),
-        }));
-        isCompactMode.value = false;
-        isFirstMessageSent.value = true;
-      } else {
-        throw new Error("Invalid messages data");
-      }
-    } else {
-      throw new Error("Failed to fetch messages");
-    }
-  } catch (error) {
-    console.error("Error fetching thread messages:", error);
-    // Clear invalid thread
-    localStorage.removeItem("threadId");
-    threadId.value = null;
-    messages.value = [
-      {
-        role: "assistant",
-        content: "Hi! What would you like to learn about Steve today?",
-        timestamp: Date.now(),
-      },
-    ];
-  } finally {
-    isInitialLoading.value = false;
-    await nextTick();
-    if (displayMode.value === "mini" && isMiniChat.value && !isCompactMode.value) {
-      scrollToBottom();
-    } else if (displayMode.value === "full") {
-      scrollToBottom();
-    }
-  }
-};
-
 // --- Message Handling ---
 const sendMessage = async (): Promise<void> => {
   if (!userInput.value.trim()) return;
@@ -394,13 +339,11 @@ const sendMessage = async (): Promise<void> => {
   }
 
   try {
-    const requestBody: any = {
-      stream: true,
-      rawResponse: true,
-      messages: [{ role: "user", content: originalInput }],
+    const requestBody = {
+      messages: messages.value
+        .filter(m => m.role !== "system")
+        .map(m => ({ role: m.role, content: m.content })),
     };
-
-    if (threadId.value) requestBody.threadId = threadId.value;
 
     const response = await fetch(`${API_BASE}/chat`, {
       method: "POST",
@@ -410,12 +353,6 @@ const sendMessage = async (): Promise<void> => {
 
     if (!response.ok) throw new Error(`Server responded with status: ${response.status}`);
     if (!response.body) throw new Error("No response body");
-
-    const threadIdHeader = response.headers.get("lb-thread-id");
-    if (threadIdHeader && isClient.value) {
-      localStorage.setItem("threadId", threadIdHeader);
-      threadId.value = threadIdHeader;
-    }
 
     const reader = response.body.getReader();
     const decoder = new TextDecoder("utf-8");
@@ -430,23 +367,19 @@ const sendMessage = async (): Promise<void> => {
       buffer = lines.pop() || "";
 
       for (const line of lines) {
-        if (!line.trim()) continue;
+        // AI SDK data stream: text chunks are prefixed with `0:`
+        if (!line.startsWith("0:")) continue;
         try {
-          const parsed = JSON.parse(line);
-          const delta = parsed.choices[0]?.delta;
-          if (delta?.content) {
-            if (!assistantMessageAdded) {
-              messages.value.push({ role: "assistant", content: "", timestamp: Date.now() });
-              assistantMessageAdded = true;
-            }
-            currentAssistantContent += delta.content;
-            messages.value[messages.value.length - 1].content = currentAssistantContent;
-            messages.value = [...messages.value];
-            await scrollToBottom();
+          const text = JSON.parse(line.slice(2));
+          if (!assistantMessageAdded) {
+            messages.value.push({ role: "assistant", content: "", timestamp: Date.now() });
+            assistantMessageAdded = true;
           }
-        } catch (error) {
-          console.error("Error parsing line:", line, error);
-        }
+          currentAssistantContent += text;
+          messages.value[messages.value.length - 1].content = currentAssistantContent;
+          messages.value = [...messages.value];
+          await scrollToBottom();
+        } catch {}
       }
     }
   } catch (error) {
@@ -493,62 +426,6 @@ const handleChatActivation = (event: ChatActivationEvent): void => {
   }
 };
 
-// --- End Chat & Feedback ---
-const endChat = (): void => {
-  if (isEndingChat.value || showFeedbackModal.value || !threadId.value) return;
-  showFeedbackModal.value = true;
-  feedback.value = null;
-};
-
-const submitFeedback = async (): Promise<void> => {
-  if (!feedback.value || isEndingChat.value || !threadId.value) return;
-
-  isEndingChat.value = true;
-  try {
-    const response = await fetch(`${API_BASE}/thread/resolve`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ threadId: threadId.value, feedback: feedback.value }),
-    });
-
-    if (!response.ok) throw new Error("Failed to end chat");
-
-    // Clear session
-    localStorage.removeItem("threadId");
-    localStorage.removeItem("miniChatExpanded");
-    threadId.value = null;
-
-    // Reset to initial state
-    messages.value = [
-      {
-        role: "assistant",
-        content: "Hi! What would you like to learn about Steve today?",
-        timestamp: Date.now(),
-      },
-    ];
-
-    // Reset UI states
-    isCompactMode.value = true;
-    isFirstMessageSent.value = false;
-  } catch (error) {
-    console.error("Error ending chat:", error);
-    messages.value.push({
-      role: "assistant",
-      content: "Failed to end chat session. Please try again.",
-      timestamp: Date.now(),
-    });
-  } finally {
-    isEndingChat.value = false;
-    showFeedbackModal.value = false;
-    feedback.value = null;
-  }
-};
-
-const closeFeedbackModal = (): void => {
-  showFeedbackModal.value = false;
-  feedback.value = null;
-};
-
 const setSuggestion = (suggestion: string): void => {
   userInput.value = suggestion;
   inputRef.value?.focus();
@@ -561,9 +438,6 @@ onMounted(async () => {
   clientSideTheme.value = true;
   isMobile.value = checkIfMobile();
 
-  // Load threadId
-  threadId.value = localStorage.getItem("threadId");
-
   // Initialize with default message
   messages.value = [
     {
@@ -572,11 +446,6 @@ onMounted(async () => {
       timestamp: Date.now(),
     },
   ];
-
-  // Fetch messages if thread exists
-  if (threadId.value) {
-    await fetchThreadMessages();
-  }
 
   // Handle mini chat open state
   if (displayMode.value === "mini") {
@@ -588,19 +457,6 @@ onMounted(async () => {
     }
     if (isFirstMessageSent.value) {
       isCompactMode.value = false;
-    }
-  }
-
-  // Handle full chat height
-  if (displayMode.value === "full") {
-    if (threadId.value) {
-      const savedHeight = localStorage.getItem("chatHeight");
-      if (savedHeight) {
-        chatHeight.value = parseInt(savedHeight, 10);
-      }
-    } else {
-      chatHeight.value = 500;
-      localStorage.removeItem("chatHeight");
     }
   }
 
@@ -694,18 +550,6 @@ watch(
           : '!border !border-gray-200 !bg-gray-50',
       ]"
     >
-      <!-- Loading Overlay -->
-      <div v-if="isInitialLoading" class="chat-loading-overlay">
-        <div class="chat-loading-content">
-          <div
-            class="!h-8 !w-8 !border-4 !border-indigo-600 !border-t-transparent !rounded-full !animate-spin"
-          ></div>
-          <p :class="clientSideTheme && isDark ? '!text-gray-200' : '!text-gray-700'">
-            Loading conversation...
-          </p>
-        </div>
-      </div>
-
       <!-- Header -->
       <div
         :class="[
@@ -725,18 +569,6 @@ watch(
             Chat with Advocado 🥑
           </h3>
         </div>
-        <button
-          v-if="hasOngoingThread"
-          :disabled="isEndingChat || isInitialLoading"
-          :class="[
-            '!px-3 !py-1 !rounded-lg !text-sm !transition-colors',
-            '!bg-indigo-600 !hover:bg-indigo-700 !text-white',
-            (isEndingChat || isInitialLoading) && '!opacity-50 !cursor-not-allowed',
-          ]"
-          @click="endChat"
-        >
-          {{ isEndingChat ? "Ending..." : "End Chat" }}
-        </button>
       </div>
 
       <!-- Messages Area -->
@@ -864,14 +696,12 @@ watch(
             v-for="(suggestion, idx) in PROMPT_SUGGESTIONS"
             :key="idx"
             type="button"
-            :disabled="isInitialLoading"
             :class="[
               '!px-4 !py-2 !rounded-full !text-sm !font-medium !transition-colors !shadow',
               '!border !whitespace-nowrap',
               clientSideTheme && isDark
                 ? '!bg-gray-800 !text-gray-100 !border-gray-700 hover:!bg-gray-700'
                 : '!bg-white !text-gray-800 !border-gray-200 hover:!bg-gray-100',
-              isInitialLoading && '!opacity-50 !cursor-not-allowed',
             ]"
             @click="setSuggestion(suggestion)"
           >
@@ -901,14 +731,14 @@ watch(
               ? '!bg-gray-800 !text-gray-100 !placeholder-gray-500'
               : '!bg-gray-100 !text-gray-800 !placeholder-gray-400',
           ]"
-          :disabled="loading || isInitialLoading"
+          :disabled="loading"
           rows="1"
           @keydown="handleKeyDown"
         ></textarea>
         <button
           type="submit"
           class="!bg-indigo-600 !hover:bg-indigo-700 !text-white !px-4 !transition-colors !flex !items-center !justify-center !min-w-[60px]"
-          :disabled="loading || isInitialLoading"
+          :disabled="loading"
         >
           <svg
             v-if="!loading"
@@ -931,87 +761,6 @@ watch(
           ></div>
         </button>
       </form>
-
-      <!-- Feedback Modal -->
-      <div
-        v-if="showFeedbackModal"
-        class="!absolute !inset-0 !flex !items-center !justify-center !z-50"
-      >
-        <div
-          :class="[
-            '!absolute !inset-0',
-            clientSideTheme && isDark ? '!bg-black !bg-opacity-60' : '!bg-white !bg-opacity-60',
-          ]"
-        ></div>
-        <div
-          :class="[
-            '!relative !rounded-lg !p-6 !w-96 !shadow-xl',
-            clientSideTheme && isDark ? '!bg-gray-800 !text-white' : '!bg-white !text-gray-800',
-          ]"
-        >
-          <h3
-            :class="[
-              '!text-lg !font-medium !mb-4',
-              clientSideTheme && isDark ? '!text-white' : '!text-gray-900',
-            ]"
-          >
-            How was your chat experience?
-          </h3>
-          <div class="!flex !space-x-4 !mb-6">
-            <button
-              :class="[
-                '!flex-1 !py-2 !px-4 !rounded-lg !transition-colors',
-                feedback === 'good'
-                  ? '!bg-green-500 !text-white'
-                  : clientSideTheme && isDark
-                    ? '!bg-gray-700 !text-gray-300 !hover:bg-gray-600'
-                    : '!bg-gray-100 !text-gray-700 !hover:bg-gray-200',
-              ]"
-              @click="feedback = 'good'"
-            >
-              Good 👍
-            </button>
-            <button
-              :class="[
-                '!flex-1 !py-2 !px-4 !rounded-lg !transition-colors',
-                feedback === 'bad'
-                  ? '!bg-red-500 !text-white'
-                  : clientSideTheme && isDark
-                    ? '!bg-gray-700 !text-gray-300 !hover:bg-gray-600'
-                    : '!bg-gray-100 !text-gray-700 !hover:bg-gray-200',
-              ]"
-              @click="feedback = 'bad'"
-            >
-              Bad 👎
-            </button>
-          </div>
-          <div class="!flex !justify-end !space-x-3">
-            <button
-              :class="[
-                '!px-4 !py-2 !rounded-lg !transition-colors',
-                clientSideTheme && isDark
-                  ? '!bg-gray-700 !text-gray-300 !hover:bg-gray-600'
-                  : '!bg-gray-100 !text-gray-700 !hover:bg-gray-200',
-              ]"
-              @click="closeFeedbackModal"
-            >
-              Cancel
-            </button>
-            <button
-              :disabled="!feedback || isEndingChat"
-              :class="[
-                '!px-4 !py-2 !rounded-lg !transition-colors',
-                !feedback || isEndingChat
-                  ? '!bg-gray-400 !text-white !cursor-not-allowed'
-                  : '!bg-indigo-600 !text-white !hover:bg-indigo-700',
-              ]"
-              @click="submitFeedback"
-            >
-              {{ isEndingChat ? "Ending..." : "End Chat" }}
-            </button>
-          </div>
-        </div>
-      </div>
     </div>
   </Teleport>
 
@@ -1039,21 +788,6 @@ watch(
         isCompactMode ? '!h-auto' : '!max-h-[32rem]',
       ]"
     >
-      <!-- Loading Overlay -->
-      <div v-if="isInitialLoading" class="chat-loading-overlay">
-        <div class="chat-loading-content">
-          <div
-            class="!h-6 !w-6 !border-4 !border-indigo-600 !border-t-transparent !rounded-full !animate-spin"
-          ></div>
-          <p
-            :class="clientSideTheme && isDark ? '!text-gray-200' : '!text-gray-700'"
-            class="!text-base"
-          >
-            Loading conversation...
-          </p>
-        </div>
-      </div>
-
       <!-- Compact Mode -->
       <div v-if="isCompactMode" class="!relative !p-6 !pt-8">
         <!-- Close button -->
@@ -1106,14 +840,12 @@ watch(
               v-for="suggestion in PROMPT_SUGGESTIONS.slice(0, 3)"
               :key="suggestion"
               type="button"
-              :disabled="isInitialLoading"
               :class="[
                 '!w-full !px-4 !py-3 !rounded-xl !text-base !font-medium !transition-all',
                 '!border !text-left !shadow-sm',
                 clientSideTheme && isDark
                   ? '!bg-gray-800 !text-gray-200 !border-gray-600 hover:!bg-gray-700'
                   : '!bg-gray-50 !text-gray-700 !border-gray-200 hover:!bg-gray-100',
-                isInitialLoading && '!opacity-50 !cursor-not-allowed',
               ]"
               @click="setSuggestion(suggestion)"
             >
@@ -1135,7 +867,7 @@ watch(
                 ? '!bg-gray-800 !text-gray-100 !placeholder-gray-400'
                 : '!bg-gray-100 !text-gray-800 !placeholder-gray-500',
             ]"
-            :disabled="loading || isInitialLoading"
+            :disabled="loading"
             rows="1"
             @keydown="handleKeyDown"
           ></textarea>
@@ -1143,13 +875,13 @@ watch(
             type="submit"
             :class="[
               '!rounded-lg !px-3 !transition-all !flex !items-center !justify-center !min-w-[48px]',
-              userInput.trim() && !loading && !isInitialLoading
+              userInput.trim() && !loading
                 ? '!bg-indigo-600 hover:!bg-indigo-700 !text-white'
                 : clientSideTheme && isDark
                   ? '!bg-gray-700 !text-gray-400 !cursor-not-allowed'
                   : '!bg-gray-200 !text-gray-400 !cursor-not-allowed',
             ]"
-            :disabled="loading || isInitialLoading || !userInput.trim()"
+            :disabled="loading || !userInput.trim()"
           >
             <svg
               v-if="!loading"
@@ -1195,18 +927,6 @@ watch(
             </h3>
           </div>
           <div class="!flex !items-center !gap-2">
-            <button
-              v-if="hasOngoingThread"
-              :disabled="isEndingChat || isInitialLoading"
-              :class="[
-                '!px-2 !py-1 !rounded !text-base !transition-colors',
-                '!bg-indigo-600 !text-white hover:!bg-indigo-700',
-                (isEndingChat || isInitialLoading) && '!opacity-50 !cursor-not-allowed',
-              ]"
-              @click="endChat"
-            >
-              {{ isEndingChat ? "Ending..." : "End" }}
-            </button>
             <button
               :class="[
                 '!p-1 !rounded hover:!bg-gray-100 dark:hover:!bg-gray-800',
@@ -1347,7 +1067,7 @@ watch(
                   ? '!bg-gray-800 !text-gray-100 !placeholder-gray-400'
                   : '!bg-gray-100 !text-gray-800 !placeholder-gray-500',
               ]"
-              :disabled="loading || isInitialLoading"
+              :disabled="loading"
               rows="1"
               @keydown="handleKeyDown"
             ></textarea>
@@ -1355,13 +1075,13 @@ watch(
               type="submit"
               :class="[
                 '!rounded-lg !px-3 !transition-all !flex !items-center !justify-center !min-w-[48px]',
-                userInput.trim() && !loading && !isInitialLoading
+                userInput.trim() && !loading
                   ? '!bg-indigo-600 hover:!bg-indigo-700 !text-white'
                   : clientSideTheme && isDark
                     ? '!bg-gray-700 !text-gray-400 !cursor-not-allowed'
                     : '!bg-gray-200 !text-gray-400 !cursor-not-allowed',
               ]"
-              :disabled="loading || isInitialLoading || !userInput.trim()"
+              :disabled="loading || !userInput.trim()"
             >
               <svg
                 v-if="!loading"
@@ -1384,81 +1104,6 @@ watch(
               ></div>
             </button>
           </form>
-        </div>
-      </div>
-
-      <!-- Feedback Modal -->
-      <div
-        v-if="showFeedbackModal"
-        class="!absolute !inset-0 !flex !items-center !justify-center !bg-black !bg-opacity-50 !rounded-lg !z-50"
-      >
-        <div
-          :class="[
-            '!relative !rounded-lg !p-4 !w-72 !mx-4 !shadow-xl',
-            clientSideTheme && isDark ? '!bg-gray-800 !text-white' : '!bg-white !text-gray-800',
-          ]"
-        >
-          <h3
-            :class="[
-              '!text-base !font-medium !mb-3',
-              clientSideTheme && isDark ? '!text-white' : '!text-gray-900',
-            ]"
-          >
-            How was your chat experience?
-          </h3>
-          <div class="!flex !space-x-2 !mb-4">
-            <button
-              :class="[
-                '!flex-1 !py-1 !px-2 !rounded !text-base !transition-colors',
-                feedback === 'good'
-                  ? '!bg-green-500 !text-white'
-                  : clientSideTheme && isDark
-                    ? '!bg-gray-700 !text-gray-300 !hover:bg-gray-600'
-                    : '!bg-gray-100 !text-gray-700 !hover:bg-gray-200',
-              ]"
-              @click="feedback = 'good'"
-            >
-              Good 👍
-            </button>
-            <button
-              :class="[
-                '!flex-1 !py-1 !px-2 !rounded !text-base !transition-colors',
-                feedback === 'bad'
-                  ? '!bg-red-500 !text-white'
-                  : clientSideTheme && isDark
-                    ? '!bg-gray-700 !text-gray-300 !hover:bg-gray-600'
-                    : '!bg-gray-100 !text-gray-700 !hover:bg-gray-200',
-              ]"
-              @click="feedback = 'bad'"
-            >
-              Bad 👎
-            </button>
-          </div>
-          <div class="!flex !justify-end !space-x-2">
-            <button
-              :class="[
-                '!px-3 !py-1 !rounded !text-base !transition-colors',
-                clientSideTheme && isDark
-                  ? '!bg-gray-700 !text-gray-300 !hover:bg-gray-600'
-                  : '!bg-gray-100 !text-gray-700 !hover:bg-gray-200',
-              ]"
-              @click="closeFeedbackModal"
-            >
-              Cancel
-            </button>
-            <button
-              :disabled="!feedback || isEndingChat"
-              :class="[
-                '!px-3 !py-1 !rounded !text-base !transition-colors',
-                !feedback || isEndingChat
-                  ? '!bg-gray-400 !text-white !cursor-not-allowed'
-                  : '!bg-indigo-600 !text-white hover:!bg-indigo-700',
-              ]"
-              @click="submitFeedback"
-            >
-              {{ isEndingChat ? "Ending..." : "End Chat" }}
-            </button>
-          </div>
         </div>
       </div>
     </div>

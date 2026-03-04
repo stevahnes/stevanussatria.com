@@ -1,30 +1,121 @@
+// api/src/app/api/chat/route.ts
+
 import { NextRequest } from "next/server";
-import { Langbase, RunOptionsStream, getToolsFromStream } from "langbase";
+import { streamText, tool } from "ai";
+import { openai } from "@ai-sdk/openai";
 import { Resend } from "resend";
+import { z } from "zod";
+import { SITE_CONTEXT } from "../../src/context";
 
-// Initialize Resend client
-const resend = new Resend(process.env.RESEND_API_KEY);
+const resend = new Resend(process.env.RESEND_API_KEY!);
 
-// Initialize Langbase client
-const langbase = new Langbase({
-  apiKey: process.env.LANGBASE_API_KEY!,
+// ---------------------------------------------------------------------------
+// Types
+// ---------------------------------------------------------------------------
+
+interface EmailTemplateParams {
+  subject: string;
+  content: string;
+  senderName: string;
+  senderEmail: string;
+}
+
+// ---------------------------------------------------------------------------
+// Tool definition
+// ---------------------------------------------------------------------------
+
+const sendEmailTool = tool({
+  description:
+    "Send a message via email to Stevanus on behalf of the visitor. " +
+    "Only call this once you have their name, email address, and message.",
+  parameters: z.object({
+    subject: z.string().describe("Subject line for the email"),
+    content: z.string().describe("Full message body"),
+    senderName: z.string().describe("Full name of the visitor"),
+    senderEmail: z.string().email().describe("Email address of the visitor"),
+  }),
+  execute: async ({ subject, content, senderName, senderEmail }) => {
+    try {
+      const { data, error } = await resend.emails.send({
+        from: "Advocado <advocado@stevanussatria.com>",
+        to: ["me@stevanussatria.com"],
+        cc: [senderEmail],
+        subject,
+        html: buildEmailHtml({ subject, content, senderName, senderEmail }),
+      });
+
+      if (error) return { success: false, error: error.message };
+
+      return {
+        success: true,
+        id: data?.id,
+        message: "Email sent to Stevanus. The visitor has been CC'd.",
+      };
+    } catch (err) {
+      return {
+        success: false,
+        error: err instanceof Error ? err.message : "Unknown error",
+      };
+    }
+  },
 });
 
-/**
- * Create HTML email template based on stevanussatria.com color scheme
- * @param subject The email subject
- * @param content The email content/message
- * @param senderName Name of the person sending the message
- * @param senderEmail Email of the person sending the message
- * @returns Formatted HTML email template
- */
-const createEmailTemplate = (
-  subject: string,
-  content: string,
-  senderName: string,
-  senderEmail: string
-): string => {
-  // Format the current date
+// ---------------------------------------------------------------------------
+// Route handler
+// ---------------------------------------------------------------------------
+
+export async function POST(req: NextRequest) {
+  const { messages } = await req.json();
+
+  const result = streamText({
+    model: openai("gpt-5-nano"),
+    system: SYSTEM_PROMPT,
+    messages,
+    tools: { send_email: sendEmailTool },
+    maxSteps: 5,
+  });
+
+  return result.toDataStreamResponse();
+}
+
+// ---------------------------------------------------------------------------
+// System prompt
+// ---------------------------------------------------------------------------
+
+const SYSTEM_PROMPT = `
+You are Advocado, the friendly AI advocate on Stevanus Satria's personal website.
+
+## About Stevanus
+[Paste your full bio, work history, skills, and projects here.]
+
+## Responsibilities
+- Answer questions about Stevanus's background, projects, and experience
+- Help visitors reach out by collecting their name, email, and message,
+  then calling send_email to forward it to Stevanus
+- Be warm, concise, and professional
+- Don't invent information you don't have
+
+## Contact flow
+Before calling send_email, confirm you have:
+1. Visitor's full name
+2. Their email address
+3. The message they want to send
+Collect these naturally across the conversation if not given upfront.
+
+## Full site content
+${SITE_CONTEXT}
+`;
+
+// ---------------------------------------------------------------------------
+// Email HTML template
+// ---------------------------------------------------------------------------
+
+function buildEmailHtml({
+  subject,
+  content,
+  senderName,
+  senderEmail,
+}: EmailTemplateParams): string {
   const currentDate = new Date().toLocaleDateString("en-US", {
     year: "numeric",
     month: "long",
@@ -33,306 +124,29 @@ const createEmailTemplate = (
     minute: "2-digit",
   });
 
-  return `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${subject}</title>
+  return `<!DOCTYPE html><html><head><meta charset="UTF-8">
   <style>
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-      line-height: 1.6;
-      color: #444444;
-      margin: 0;
-      padding: 0;
-    }
-    .container {
-      max-width: 600px;
-      margin: 0 auto;
-      padding: 20px;
-    }
-    .header {
-      background-color: #191970; /* Deep blue similar to stevanussatria.com */
-      padding: 20px;
-      color: white;
-      text-align: center;
-      border-top-left-radius: 4px;
-      border-top-right-radius: 4px;
-    }
-    .content {
-      background-color: #ffffff;
-      padding: 30px;
-      border: 1px solid #e0e0e0;
-      border-bottom: none;
-    }
-    .sender-info {
-      background-color: #f5f5f5;
-      padding: 15px 30px;
-      border: 1px solid #e0e0e0;
-      border-top: none;
-      border-bottom-left-radius: 4px;
-      border-bottom-right-radius: 4px;
-    }
-    .sender-info h3 {
-      margin-top: 0;
-      margin-bottom: 10px;
-      color: #191970;
-      font-size: 16px;
-    }
-    .sender-info p {
-      margin: 5px 0;
-      font-size: 14px;
-    }
-    .footer {
-      text-align: center;
-      margin-top: 20px;
-      font-size: 12px;
-      color: #888888;
-    }
-    .timestamp {
-      color: #888888;
-      font-size: 14px;
-      margin-bottom: 20px;
-    }
-    h1 {
-      color: #333;
-      margin-top: 0;
-    }
-    .message {
-      background-color: #f9f9f9;
-      padding: 15px;
-      border-left: 4px solid #191970;
-      margin-bottom: 20px;
-      white-space: pre-line;
-    }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <div class="header">
-      <h2>Message from Advocado</h2>
-    </div>
+    body { font-family: system-ui, sans-serif; line-height: 1.6; color: #444; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .header { background: #191970; padding: 20px; color: white; text-align: center; border-radius: 4px 4px 0 0; }
+    .content { background: #fff; padding: 30px; border: 1px solid #e0e0e0; border-bottom: none; }
+    .sender-info { background: #f5f5f5; padding: 15px 30px; border: 1px solid #e0e0e0; border-top: none; border-radius: 0 0 4px 4px; }
+    .sender-info h3 { margin-top: 0; color: #191970; }
+    .message { background: #f9f9f9; padding: 15px; border-left: 4px solid #191970; white-space: pre-line; }
+    .footer { text-align: center; margin-top: 20px; font-size: 12px; color: #888; }
+  </style></head>
+  <body><div class="container">
+    <div class="header"><h2>Message from Advocado</h2></div>
     <div class="content">
-      <div class="timestamp">Received on: ${currentDate}</div>
+      <p style="color:#888;font-size:14px">Received: ${currentDate}</p>
       <h1>${subject}</h1>
       <div class="message">${content}</div>
     </div>
     <div class="sender-info">
-      <h3>Message sent on behalf of:</h3>
+      <h3>Sent on behalf of:</h3>
       <p><strong>Name:</strong> ${senderName}</p>
       <p><strong>Email:</strong> ${senderEmail}</p>
     </div>
-    <div class="footer">
-      <p>This message was sent via Advocado &copy; ${new Date().getFullYear()} Stevanus Satria</p>
-    </div>
-  </div>
-</body>
-</html>
-  `;
-};
-
-// Define email tool for Langbase - follows the OpenAI Function Calling format
-const emailTool = {
-  type: "function", // Required for Langbase tools
-  function: {
-    name: "send_email",
-    description: "Send a message via email to Stevanus",
-    parameters: {
-      type: "object",
-      properties: {
-        subject: {
-          type: "string",
-          description: "Subject of the email",
-        },
-        content: {
-          type: "string",
-          description: "Message content for the email",
-        },
-        senderName: {
-          type: "string",
-          description: "Name of the person sending this message",
-        },
-        senderEmail: {
-          type: "string",
-          description: "Email address of the person sending this message",
-        },
-      },
-      required: ["subject", "content", "senderName", "senderEmail"],
-    },
-  },
-};
-
-// Define proper interfaces for type safety
-interface EmailParams {
-  subject: string;
-  content: string;
-  senderName: string;
-  senderEmail: string;
-}
-
-interface EmailResponse {
-  success: boolean;
-  data?: {
-    id?: string;
-    message: string;
-  };
-  error?: string;
-}
-
-// Handler function to send email
-const sendEmail = async ({
-  subject,
-  content,
-  senderName,
-  senderEmail,
-}: EmailParams): Promise<string> => {
-  try {
-    // Create HTML email using template
-    const htmlContent = createEmailTemplate(
-      subject,
-      content,
-      senderName,
-      senderEmail
-    );
-
-    const { data, error } = await resend.emails.send({
-      from: "Advocado <advocado@stevanussatria.com>",
-      to: ["me@stevanussatria.com"], // Hardcoded recipient
-      cc: [senderEmail], // CC sender
-      subject: subject,
-      html: htmlContent,
-    });
-
-    if (error) {
-      return JSON.stringify({
-        success: false,
-        error: error.message,
-      });
-    }
-
-    return JSON.stringify({
-      success: true,
-      data: {
-        id: data?.id,
-        message: "Email sent successfully to Stevanus, with sender CC'ed.",
-      },
-    });
-  } catch (error) {
-    return JSON.stringify({
-      success: false,
-      error:
-        error instanceof Error ? error.message : "An unknown error occurred",
-    });
-  }
-};
-
-// Map of tools available to the agent
-const tools: {
-  [key: string]: ({
-    subject,
-    content,
-    senderName,
-    senderEmail,
-  }: EmailParams) => Promise<string>;
-} = {
-  send_email: sendEmail,
-};
-
-export async function POST(req: NextRequest) {
-  const options = await req.json();
-
-  // First call to get initial response and potential tool calls
-  const { stream: initialStream, threadId } = await langbase.pipes.run({
-    ...options,
-    name: "advocado",
-    tools: [emailTool], // Add the email tool to the available tools
-    toolCallBehavior: "auto", // Allow automatic tool calling
-    stream: true, // Ensure streaming is enabled
-  });
-
-  // Create a TransformStream to process the response
-  const { readable, writable } = new TransformStream();
-  const writer = writable.getWriter();
-
-  // Clone the stream for tool handling and response
-  const [streamForToolCalls, streamForResponse] = initialStream.tee();
-
-  // Process tool calls
-  (async () => {
-    try {
-      // Extract tool calls from the stream
-      const toolCalls = await getToolsFromStream(streamForToolCalls);
-
-      // If there are tool calls, handle them
-      if (toolCalls.length > 0) {
-        const toolMessages = [];
-
-        // Process each tool call
-        for (const toolCall of toolCalls) {
-          const toolName = toolCall.function.name;
-          const toolParameters = JSON.parse(toolCall.function.arguments);
-          const toolFunction = tools[toolName];
-
-          if (toolFunction) {
-            const toolResult = await toolFunction(toolParameters);
-
-            // Add the tool response message
-            toolMessages.push({
-              tool_call_id: toolCall.id,
-              role: "tool",
-              name: toolName,
-              content: toolResult,
-            });
-          }
-        }
-
-        // Get the final response after tool calls
-        const { stream: finalStream } = await langbase.pipes.run({
-          messages: toolMessages,
-          name: "advocado",
-          threadId: threadId,
-          stream: true,
-        } as RunOptionsStream);
-
-        // Forward the final stream to the client
-        const reader = finalStream.getReader();
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          await writer.write(value);
-        }
-      }
-
-      // Complete the stream
-      await writer.close();
-    } catch (error) {
-      console.error("Error processing tool calls:", error);
-      await writer.abort(error);
-    }
-  })();
-
-  // Forward the initial response stream if no tool calls or until tool calls are processed
-  (async () => {
-    try {
-      const reader = streamForResponse.getReader();
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        await writer.write(value);
-      }
-    } catch (error) {
-      console.error("Error forwarding response stream:", error);
-      // No need to abort here as it will be handled by the other async function
-    }
-  })();
-
-  return new Response(readable, {
-    status: 200,
-    headers: {
-      "lb-thread-id": threadId ?? "",
-    },
-  });
+    <div class="footer">Sent via Advocado &copy; ${new Date().getFullYear()} Stevanus Satria</div>
+  </div></body></html>`;
 }
