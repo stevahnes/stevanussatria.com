@@ -15,13 +15,30 @@ const SUMMARIZE_FILES = [
 ];
 
 function stripNoise(content: string): string {
-  return content
+  // Remove fenced code blocks
+  let cleaned = content
     .replace(/```[\s\S]*?```/g, "")
+    // Remove image markdown
     .replace(/!\[.*?\]\(.*?\)/g, "")
-    .replace(/\[.*?\]\(https?:\/\/.*?\)/g, "")
-    .replace(/<script[\s\S]*?<\/script>/g, "")
-    .replace(/\n{3,}/g, "\n\n")
-    .trim();
+    // Remove linkified URLs but keep link text
+    .replace(/\[.*?\]\(https?:\/\/.*?\)/g, "");
+
+  // Aggressively remove <script> blocks. Apply repeatedly to avoid
+  // incomplete multi-character sanitization where new "<script"
+  // sequences could be formed after a single replacement.
+  const scriptBlockPattern = /<script[\s\S]*?<\/script>/gi;
+  let previous: string;
+  do {
+    previous = cleaned;
+    cleaned = cleaned.replace(scriptBlockPattern, "");
+  } while (cleaned !== previous);
+
+  // As a final safeguard, strip any remaining opening/closing script tags,
+  // including malformed ones without a closing </script>.
+  cleaned = cleaned.replace(/<\s*\/?\s*script\b[^>]*>/gi, "");
+
+  // Normalize excessive blank lines and trim whitespace
+  return cleaned.replace(/\n{3,}/g, "\n\n").trim();
 }
 
 async function summarizeFile(
