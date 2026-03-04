@@ -1,7 +1,7 @@
 # Stevanus Satria's Portfolio (VitePress)
 
 A modern JAM-stack personal website built with [VitePress](https://vitepress.dev/), [Vue 3](https://vuejs.org/), and [Tailwind CSS v4](https://tailwindcss.com/).
-Home page is manned by GPT-powered advocate agent deployed on [Langbase](https://langbase.com/) and proxied through a [Next.js](https://nextjs.org/) backend.
+Home page is manned by GPT-powered advocate agent built using Vercel AI SDK and hosted on a [Next.js](https://nextjs.org/) backend.
 Everything is deployed on [Vercel](https://vercel.com/) with [Cloudflare](https://www.cloudflare.com/) as CDN.
 
 **Live Site:** [stevanussatria.com](https://stevanussatria.com)
@@ -12,7 +12,7 @@ Everything is deployed on [Vercel](https://vercel.com/) with [Cloudflare](https:
 - 🎨 **Tailwind CSS v4**: Utility-first CSS framework for rapid UI development.
 - 🌙 **Dark Mode**: Seamless light/dark theme toggle.
 - 📱 **Responsive Design**: Mobile-first and fully responsive layout.
-- 🧠 **Advocado**: The AMA agent welcoming you to the site, hosted on Langbase.
+- 🧠 **Advocado**: The AMA agent welcoming you to the site, directly built using Vercel's AI SDK.
 - 🛠 **Dedicated Backend**: Proxies requests to Langbase without exposing secret tokens.
 - 📦 **GitHub-Vercel Integration**: Dynamically fetches and displays public repositories to Vercel.
 
@@ -39,11 +39,6 @@ cd frontend & pnpm install
 cd api & npm install
 # or
 cd api & pnpm install
-
-# Install dependencies for langbase
-cd langbase & npm install
-# or
-cd langbase & pnpm install
 ```
 
 ### 🏃 Start the development server
