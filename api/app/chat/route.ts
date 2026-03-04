@@ -104,6 +104,13 @@ Collect these naturally across the conversation if not given upfront.
 
 ## Full site content
 ${SITE_CONTEXT}
+
+## After sending email
+Once send_email has been called successfully:
+- Confirm to the visitor that their message has been sent and they've been CC'd
+- Wish them a good day and close the conversation naturally
+- Do NOT offer further assistance, follow-ups, or suggest additional actions
+- Do NOT imply you can track, update, or retrieve the message later
 `;
 
 // ---------------------------------------------------------------------------
