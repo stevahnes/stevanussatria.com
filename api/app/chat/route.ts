@@ -96,6 +96,68 @@ conversational Chinese.
 ## Full site content
 ${SITE_CONTEXT}
 
+### Milestones & Achievements
+
+- **Oct 2025** – Joined Airwallex as Senior Product Manager (fintech)
+- **Oct 2025** – Completed Professional Certificate in Strategic Management (Wharton/UPenn)
+- **Mar 2025** – Promoted to Senior Product Manager at Workato
+- **Mar 2025** – Got married
+- **May 2024** – Completed Executive Education in Product Strategy (Kellogg/Northwestern)
+- **Sep/Mar 2022** – Received ADPList Super Mentor award twice
+- **Dec 2021** – Joined ADPList as a mentor for aspiring PMs
+- **Mar 2021** – Certified Usability Analyst (HFI)
+- **Jan 2021** – Advanced Certified Scrum Product Owner
+- **Apr 2020** – Published 4 Figma plugins
+- **Jul 2017** – Presented at IEEE AIM Conference in Germany
+- **Sep 2016** – Received IES Gold Medal (graduated top of batch at university)
+- **Oct 2015** – Exhibited at Maker Faire European Edition in Rome
+- **Jun 2014** – Di Yerbury International Scholar (exchange at MIT)
+- **Jul 2013** – Top science student; received ASEAN Undergraduate Scholarship
+- **Nov 2008** – MOE School-Based Scholarship; migrated to Singapore
+
+### What People Say
+
+Steve has received 40+ recommendations on LinkedIn and ADPList from colleagues,
+managers, and mentees across Amadeus, Shopee, Workato, and his mentoring work.
+
+Recurring themes from colleagues:
+- Strong technical depth combined with user-centric product thinking
+- Meticulous, detail-oriented, and delivers ahead of schedule
+- Excellent cross-functional collaborator across engineering, support, and leadership
+- Takes ownership and thinks about the big picture
+
+From his managers at Workato:
+- Reframed the Data Tables roadmap to align with low-code/no-code strategy
+- Led enterprise-grade initiatives in authentication, security, and compliance
+- Described as combining "user-centric thinking, technical depth, and strong ownership"
+
+From his mentees (ADPList):
+- Twice awarded ADPList Super Mentor
+- Known for actionable, practical advice and generously sharing time
+- Mentored aspiring PMs on career switching, interview prep, and day-to-day PM work
+
+From Shopee colleagues:
+- Leveraged technical background to form deep product understanding
+- Strong mentor to interns and junior PMs
+
+### Cycling
+
+Steve is an avid road cyclist. Highlight rides include:
+- Solo Round the Island (RTI), Singapore — 124km solo circumnavigation
+- Page Mill Rd + Pescadero + Tunitas Creek, Bay Area — 100km with 2,335m elevation
+- Old La Honda + Alpine Road, Bay Area — 54km climbing route
+- Zermatt – Zmutt trail, Switzerland — mountain e-bike ride with 579m elevation gain
+- Regular Sentosa + Faber Loop or TMCR rides in Singapore
+
+### Travel
+
+Steve is an avid traveler, having flown to destinations across Southeast Asia, Europe,
+North America, South America, and the Middle East since 2014. He is based in Singapore
+and travels frequently to Jakarta. Notable trips include São Paulo (2015), Rome (2015),
+Nice and Paris (multiple trips 2019), San Francisco (2018, 2024), Tokyo (2025),
+and Taipei (2024). He has also visited Hong Kong, Bangkok, Bangalore, Istanbul,
+Munich, Amsterdam, and Sofia.
+
 ## Responsibilities
 - Answer questions about Stevanus's background, projects, and experience
 - Help visitors reach out by collecting their name, email, and message,

@@ -7,7 +7,15 @@ async function main() {
   const files = await glob("**/*.md", {
     cwd: path.join(__dirname, "../../frontend/docs"),
     absolute: true, // returns absolute paths so fs.readFileSync works reliably
-    ignore: ["**/node_modules/**"],
+    ignore: [
+      "**/node_modules/**",
+      "**/.vitepress/**",
+      "**/components/**",
+      "**/public/**",
+      "**/ama.md",
+      "**/loops.md",
+      "**/skyline.md",
+    ],
   });
   const content = files
     .map((f) => fs.readFileSync(f, "utf-8"))
