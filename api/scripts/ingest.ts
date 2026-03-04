@@ -8,7 +8,6 @@ import { openai } from "@ai-sdk/openai";
 
 // Files to summarize via AI instead of ingesting raw
 const SUMMARIZE_FILES = [
-  "ama.md",
   "loops.md",
   "skyline.md",
   "milestones.md",
@@ -60,6 +59,7 @@ async function main() {
       "**/.vitepress/**",
       "**/components/**",
       "**/public/**",
+      "ama.md",
       ...SUMMARIZE_FILES.map((f) => `**/${f}`),
     ],
   });
