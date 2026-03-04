@@ -82,7 +82,7 @@ async function main() {
   const summarizedSections: string[] = [];
   for (const f of summarizeTargets) {
     const filename = path.basename(f);
-    const raw = stripNoise(fs.readFileSync(f, "utf-8"));
+    const raw = fs.readFileSync(f, "utf-8");
 
     if (raw.length < 50) {
       console.log(`  Skipping ${filename} (too short after stripping)`);
