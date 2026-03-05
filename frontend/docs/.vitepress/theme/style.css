@@ -81,6 +81,21 @@
   }
 }
 
+.VPHome .VPHero {
+  position: relative;
+  overflow: hidden;
+}
+
+:root {
+  --vp-home-hero-image-background-image: none;
+  --vp-home-hero-image-filter: none;
+}
+
+.VPHome .VPHero .container {
+  position: relative;
+  z-index: 1;
+}
+
 /**
  * Component: Custom Block
  * -------------------------------------------------------------------------- */
