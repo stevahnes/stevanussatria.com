@@ -1,0 +1,32 @@
+{
+  "name": "Stevanus Satria",
+  "short_name": "Stevanus",
+  "description": "Stevanus Satria is a Senior Product Manager at Airwallex with 7+ years of experience in B2B SaaS, fintech, frontend development, and product management.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "theme_color": "#3b82f6",
+  "background_color": "#ffffff",
+  "icons": [
+    {
+      "src": "/small-logo-white-circle-bg.webp",
+      "sizes": "192x192",
+      "type": "image/webp",
+      "purpose": "any"
+    },
+    {
+      "src": "/small-logo-white-circle-bg.webp",
+      "sizes": "512x512",
+      "type": "image/webp",
+      "purpose": "any"
+    },
+    {
+      "src": "/small-logo-white-circle-bg.webp",
+      "sizes": "192x192",
+      "type": "image/webp",
+      "purpose": "maskable"
+    }
+  ],
+  "categories": ["productivity"]
+}
