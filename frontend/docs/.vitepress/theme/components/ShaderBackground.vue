@@ -42,8 +42,8 @@ const fragmentShaderSource = `
 
     // --- BLOB A ---
     // If mobile, center is (0.5, 0.5). If desktop, it uses your original coords.
-    vec2 desktopCenterA = vec2(0.7 * aspect, 0.65);
-    vec2 mobileCenterA  = vec2(0.5 * aspect, 0.65);
+    vec2 desktopCenterA = vec2(0.71 * aspect, 0.65);
+    vec2 mobileCenterA  = vec2(0.55 * aspect, 0.65);
     vec2 centerA = mix(desktopCenterA, mobileCenterA, isMobile);
 
     float distA = distance(uvAspect, centerA);
@@ -53,7 +53,7 @@ const fragmentShaderSource = `
 
     // --- BLOB B ---
     // Offset slightly from center on mobile so they still "interact" 
-    vec2 desktopCenterB = vec2(0.65 * aspect, 0.75);
+    vec2 desktopCenterB = vec2(0.66 * aspect, 0.75);
     vec2 mobileCenterB  = vec2(0.45 * aspect, 0.75); 
     vec2 centerB = mix(desktopCenterB, mobileCenterB, isMobile);
 
