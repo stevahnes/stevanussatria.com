@@ -62,6 +62,9 @@ const createMilestone = ([time, title, description, path = null, cta = null, anc
 // All milestone data using consistent array approach
 const milestoneData: MilestoneRecord[] = [
   // 2025 milestones
+  ["Feb 2026", "Delivered ISTD COIL Seminar on AI and Enterprise MCP", "Always good to be back at SUTD but feels strange for it not to be for EPD.", null, null, "2026"],
+
+  // 2025 milestones
   ["Oct 2025", "Joined Airwallex as Senior Product Manager", "Broke into fintech and building the future of finance.", null, null, "2025"],
   ["Oct 2025", "Completed Professional Certificate in Strategic Management", "Obtained from the Wharton School of the University of Pennsylvania.", "https://credentials.edx.org/credentials/c2a6ddb085a24150bac2d81b37bc3616/", "Verify"],
   ["Mar 2025", "Promoted to Senior Product Manager", "Finally made my first career big splash."],
