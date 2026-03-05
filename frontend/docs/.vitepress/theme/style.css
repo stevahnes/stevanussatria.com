@@ -86,7 +86,7 @@
   overflow: hidden;
 }
 
-:root {
+.VPHome .VPHero {
   --vp-home-hero-image-background-image: none;
   --vp-home-hero-image-filter: none;
 }
