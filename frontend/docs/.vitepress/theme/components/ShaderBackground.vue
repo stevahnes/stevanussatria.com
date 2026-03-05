@@ -8,12 +8,31 @@ let gl: WebGLRenderingContext | null = null;
 let themeObserver: MutationObserver | null = null;
 let ro: ResizeObserver | null = null;
 
+let centerALoc: WebGLUniformLocation | null = null;
+let centerBLoc: WebGLUniformLocation | null = null;
+const centerUniform = ref<[number, number]>([0.7, 0.65]);
+
 const bgColorUniform = ref<[number, number, number]>([0.094, 0.094, 0.102]);
 let bgColorLoc: WebGLUniformLocation | null = null;
 
 function getBgColor(): [number, number, number] {
   const isDark = document.documentElement.classList.contains("dark");
   return isDark ? [0.094, 0.094, 0.102] : [0.99, 0.99, 0.99];
+}
+
+function getHeroImageCenter(): [number, number] {
+  const img = document.querySelector(".VPHero .image-container") as HTMLElement;
+  const canvas = canvasRef.value;
+  if (!img || !canvas) return [0.7, 0.65];
+
+  const imgRect = img.getBoundingClientRect();
+  const canvasRect = canvas.getBoundingClientRect();
+
+  // Convert to UV relative to canvas
+  const x = (imgRect.left + imgRect.width / 2 - canvasRect.left) / canvasRect.width;
+  const y = 1.0 - (imgRect.top + imgRect.height / 2 - canvasRect.top) / canvasRect.height; // flip Y for WebGL
+
+  return [x, y];
 }
 
 const vertexShaderSource = `
@@ -29,6 +48,8 @@ const fragmentShaderSource = `
   uniform vec2 u_resolution;
   uniform float u_time;
   uniform vec3 u_bgColor;
+  uniform vec2 u_centerA;
+  uniform vec2 u_centerB;
 
   void main() {
     vec2 uv = gl_FragCoord.xy / u_resolution;
@@ -36,27 +57,15 @@ const fragmentShaderSource = `
     float aspect = u_resolution.x / u_resolution.y;
     vec2 uvAspect = vec2(uv.x * aspect, uv.y);
 
-    // --- MOBILE DETECTION ---
-    // isMobile = 1.0 if screen is portrait (mobile), 0.0 if landscape (desktop)
-    float isMobile = step(aspect, 1.0); 
-
     // --- BLOB A ---
-    // If mobile, center is (0.5, 0.5). If desktop, it uses your original coords.
-    vec2 desktopCenterA = vec2(0.71 * aspect, 0.65);
-    vec2 mobileCenterA  = vec2(0.55 * aspect, 0.65);
-    vec2 centerA = mix(desktopCenterA, mobileCenterA, isMobile);
-
+    vec2 centerA = vec2(u_centerA.x * aspect, u_centerA.y);
     float distA = distance(uvAspect, centerA);
     float breathA = sin(u_time * 0.8) * 0.5 + 0.1;
     float radiusA = 0.001 + breathA * 0.08;
     float glowA = smoothstep(radiusA + 0.55, radiusA - 0.05, distA) * (0.55 + breathA * 0.25);
 
     // --- BLOB B ---
-    // Offset slightly from center on mobile so they still "interact" 
-    vec2 desktopCenterB = vec2(0.66 * aspect, 0.75);
-    vec2 mobileCenterB  = vec2(0.45 * aspect, 0.75); 
-    vec2 centerB = mix(desktopCenterB, mobileCenterB, isMobile);
-
+    vec2 centerB = vec2(u_centerB.x * aspect, u_centerB.y);
     float distB = distance(uvAspect, centerB);
     float basePulse = sin(u_time * 0.8 + 1.5708);
     float microPulse = sin(u_time * 2.1) * 0.2;
@@ -169,6 +178,9 @@ onMounted(() => {
   const timeLoc = gl.getUniformLocation(program, "u_time");
   bgColorLoc = gl.getUniformLocation(program, "u_bgColor");
 
+  centerALoc = gl.getUniformLocation(program, "u_centerA");
+  centerBLoc = gl.getUniformLocation(program, "u_centerB");
+
   gl.enableVertexAttribArray(posLoc);
   gl.vertexAttribPointer(posLoc, 2, gl.FLOAT, false, 0, 0);
   gl.useProgram(program);
@@ -189,6 +201,9 @@ onMounted(() => {
   const render = () => {
     if (!gl) return;
     const t = (performance.now() - startTime) / 1000;
+    const [cx, cy] = getHeroImageCenter();
+    gl.uniform2f(centerALoc, cx + 0.01, cy - 0.1);
+    gl.uniform2f(centerBLoc, cx - 0.01, cy);
     gl.uniform2f(resLoc, canvas.width, canvas.height);
     gl.uniform1f(timeLoc, t);
     gl.uniform3f(bgColorLoc, ...bgColorUniform.value);
