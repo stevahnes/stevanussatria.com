@@ -68,14 +68,14 @@ features:
       alt: Advocado AI Assistant
     title: Advocado
     details: My biggest advocate, made possible by Langbase and Vercel
-    link: https://github.com/stevahnes/vitepress-portfolio/tree/main/advocado
+    link: https://github.com/stevahnes/stevanussatria.com/tree/main/api
     target: _blank
   - icon:
       src: /vitepress.webp
       alt: VitePress Portfolio Website
     title: Portfolio (VitePress)
     details: Revamped personal website built using VitePress
-    link: https://github.com/stevahnes/vitepress-portfolio
+    link: https://github.com/stevahnes/stevanussatria.com
     target: _blank
   - icon:
       src: /call-home.webp
