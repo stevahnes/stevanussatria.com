@@ -222,5 +222,7 @@ onUnmounted(() => {
   display: block;
   pointer-events: none;
   z-index: 0;
+  -webkit-mask-image: linear-gradient(to bottom, black 70%, transparent 100%);
+  mask-image: linear-gradient(to bottom, black 70%, transparent 100%);
 }
 </style>
