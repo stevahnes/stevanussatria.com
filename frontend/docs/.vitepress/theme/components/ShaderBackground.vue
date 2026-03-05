@@ -13,7 +13,7 @@ let bgColorLoc: WebGLUniformLocation | null = null;
 
 function getBgColor(): [number, number, number] {
   const isDark = document.documentElement.classList.contains("dark");
-  return isDark ? [0.094, 0.094, 0.102] : [0.965, 0.965, 0.969];
+  return isDark ? [0.094, 0.094, 0.102] : [0.99, 0.99, 0.99];
 }
 
 const vertexShaderSource = `
