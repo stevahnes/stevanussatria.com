@@ -743,6 +743,12 @@ onMounted(async () => {
 
 <style scoped>
 .ride-accordion-item {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--glass-radius);
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  backdrop-filter: blur(var(--glass-blur));
+  box-shadow: var(--glass-shadow);
   transition: all 0.3s ease-in-out;
 }
 
@@ -758,14 +764,19 @@ onMounted(async () => {
 }
 
 .stats-panel {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--glass-radius);
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  backdrop-filter: blur(var(--glass-blur));
+  box-shadow: var(--glass-shadow);
   transition: all 0.2s ease-in-out;
 }
 
 .stats-panel:hover {
   transform: translateY(-2px);
-  box-shadow:
-    0 20px 35px -5px rgb(0 0 0 / 0.15),
-    0 10px 10px -5px rgb(0 0 0 / 0.04);
+  background: var(--glass-bg-strong);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18);
 }
 
 .stats-grid {
@@ -825,15 +836,13 @@ onMounted(async () => {
 }
 
 :deep(.leaflet-popup-content-wrapper) {
-  background: var(--vp-c-bg) !important;
-  border-color: var(--vp-c-border) !important;
-  border-radius: 0.75rem !important;
+  background: var(--glass-bg) !important;
+  border: 1px solid var(--glass-border) !important;
+  border-radius: var(--glass-radius) !important;
   padding: 0.75rem !important;
-  box-shadow:
-    0 10px 25px -3px rgb(0 0 0 / 0.1),
-    0 4px 6px -2px rgb(0 0 0 / 0.05) !important;
-  backdrop-filter: blur(12px) !important;
-  border-width: 1px !important;
+  box-shadow: var(--glass-shadow) !important;
+  -webkit-backdrop-filter: blur(var(--glass-blur)) !important;
+  backdrop-filter: blur(var(--glass-blur)) !important;
 }
 
 :deep(.leaflet-popup-content) {
