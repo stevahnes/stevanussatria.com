@@ -67,7 +67,7 @@ features:
       src: /advocado.webp
       alt: Advocado AI Assistant
     title: Advocado
-    details: My biggest advocate, made possible by Langbase and Vercel
+    details: My biggest advocate, made possible by Vercel (and their AI SDK)
     link: https://github.com/stevahnes/stevanussatria.com/tree/main/api
     target: _blank
   - icon:
