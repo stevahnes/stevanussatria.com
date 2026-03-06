@@ -534,11 +534,12 @@ onUnmounted(() => {
 }
 
 .sc-player-container {
-  background: var(--player-bg);
-  border-radius: 12px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
-  border: 1px solid var(--player-border);
-  backdrop-filter: blur(10px);
+  background: var(--glass-bg);
+  border-radius: var(--glass-radius);
+  box-shadow: var(--glass-shadow);
+  border: 1px solid var(--glass-border);
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  backdrop-filter: blur(var(--glass-blur));
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   overflow: hidden;
   color: var(--player-text);
@@ -553,19 +554,21 @@ onUnmounted(() => {
 .sc-collapsed {
   width: 56px;
   height: 56px;
-  background: #4f46e5;
+  background: rgba(79, 70, 229, 0.7);
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  backdrop-filter: blur(var(--glass-blur));
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   position: relative;
   transition: all 0.2s;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  box-shadow: var(--glass-shadow);
 }
 
 .sc-collapsed:hover {
-  background: #4338ca;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+  background: rgba(67, 56, 202, 0.8);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
 }
 
 .sc-music-note {
