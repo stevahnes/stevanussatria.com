@@ -28,9 +28,8 @@ function getHeroImageCenter(): [number, number] {
   const imgRect = img.getBoundingClientRect();
   const canvasRect = canvas.getBoundingClientRect();
 
-  // Convert to UV relative to canvas
   const x = (imgRect.left + imgRect.width / 2 - canvasRect.left) / canvasRect.width;
-  const y = 1.0 - (imgRect.top + imgRect.height / 2 - canvasRect.top) / canvasRect.height; // flip Y for WebGL
+  const y = 1.0 - (imgRect.top + imgRect.height / 2 - canvasRect.top) / canvasRect.height;
 
   return [x, y];
 }
@@ -57,54 +56,47 @@ const fragmentShaderSource = `
     float aspect = u_resolution.x / u_resolution.y;
     vec2 uvAspect = vec2(uv.x * aspect, uv.y);
 
-    // --- BLOB A ---
+    // --- BLOB A (blue) ---
     vec2 centerA = vec2(u_centerA.x * aspect, u_centerA.y);
     float distA = distance(uvAspect, centerA);
-    float breathA = sin(u_time * 0.8) * 0.5 + 0.1;
-    float radiusA = 0.001 + breathA * 0.08;
-    float glowA = smoothstep(radiusA + 0.55, radiusA - 0.05, distA) * (0.55 + breathA * 0.25);
+    float breathA = sin(u_time * 0.6) * 0.5 + 0.1;
+    float radiusA = 0.001 + breathA * 0.04;
+    float glowA = smoothstep(radiusA + 0.45, radiusA, distA) * (0.35 + breathA * 0.15);
 
-    // --- BLOB B ---
+    // --- BLOB B (teal) ---
     vec2 centerB = vec2(u_centerB.x * aspect, u_centerB.y);
     float distB = distance(uvAspect, centerB);
-    float basePulse = sin(u_time * 0.8 + 1.5708);
-    float microPulse = sin(u_time * 2.1) * 0.2;
-    float breathB = (basePulse + microPulse) * 0.4 + 0.2;
-    float radiusB = 0.001 + breathB * 0.06;
-    float glowB = smoothstep(radiusB + 0.45, radiusB - 0.05, distB) * (0.45 + breathB * 0.20);
+    float basePulse = sin(u_time * 0.6 + 1.5708);
+    float microPulse = sin(u_time * 1.6) * 0.15;
+    float breathB = (basePulse + microPulse) * 0.3 + 0.15;
+    float radiusB = 0.001 + breathB * 0.03;
+    float glowB = smoothstep(radiusB + 0.38, radiusB, distB) * (0.3 + breathB * 0.12);
 
-    float innerGlow = smoothstep(0.12, 0.0, distA) * (0.3 + breathA * 0.15);
+    float innerGlow = smoothstep(0.10, 0.0, distA) * (0.15 + breathA * 0.08);
 
-    // --- UPDATED COLORS ---
-    // Blue: rgb(0, 102, 178) -> vec3(0.0, 0.4, 0.698)
-    // Teal: rgb(0, 194, 168) -> vec3(0.0, 0.76, 0.658)
-    vec3 lightBlue = vec3(0.0, 0.4, 0.698);
-    vec3 lightTeal = vec3(0.0, 0.76, 0.658);
+    // --- COLORS: vibrant but not overwhelming ---
+    vec3 brightBlue = vec3(0.05, 0.45, 0.85);
+    vec3 brightTeal = vec3(0.0, 0.78, 0.7);
 
-    // For Dark Mode, we can use slightly more vibrant versions if desired,
-    // but here we'll use your exact colors for Light Mode logic.
     float bgLuma = dot(u_bgColor, vec3(0.299, 0.587, 0.114));
     float lightMode = step(0.5, bgLuma);
 
-    // We apply your exact RGB colors here
-    vec3 activeBlue = mix(vec3(0.0, 0.45, 0.8), lightBlue, lightMode);
-    vec3 activeTeal = mix(vec3(0.0, 0.85, 0.75), lightTeal, lightMode);
+    vec3 activeBlue = mix(vec3(0.1, 0.5, 0.95), brightBlue, lightMode);
+    vec3 activeTeal = mix(vec3(0.05, 0.9, 0.8), brightTeal, lightMode);
 
     vec3 blobColor = (activeBlue * glowA) + (activeTeal * glowB) + (activeTeal * innerGlow);
 
     vec3 color;
     if (lightMode > 0.5) {
-        // LIGHT MODE: Softly blend your 2 colors over the background
-        float alpha = clamp(glowA + glowB + innerGlow, 0.0, 1.0);
-        color = mix(u_bgColor, blobColor, alpha);
+        float alpha = clamp((glowA + glowB + innerGlow) * 0.7, 0.0, 1.0);
+        color = mix(u_bgColor, blobColor * 1.1, alpha);
     } else {
-        // DARK MODE: Additive glow
-        color = u_bgColor + blobColor;
+        color = u_bgColor + blobColor * 1.15;
     }
 
     // --- VIGNETTE ---
     float vignette = 1.0 - smoothstep(0.5, 1.0, distance(uv, vec2(0.5, 0.5)) * 1.2);
-    color *= mix(0.85, 1.0, vignette);
+    color *= mix(0.9, 1.0, vignette);
 
     gl_FragColor = vec4(color, 1.0);
   }
@@ -214,7 +206,6 @@ onMounted(() => {
   render();
 });
 
-// Top-level — this is the fix. onUnmounted must NOT be nested inside onMounted.
 onUnmounted(() => {
   themeObserver?.disconnect();
   ro?.disconnect();
