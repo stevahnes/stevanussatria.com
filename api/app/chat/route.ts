@@ -1,5 +1,3 @@
-// api/src/app/api/chat/route.ts
-
 import { NextRequest } from "next/server";
 import { streamText, tool } from "ai";
 import { openai } from "@ai-sdk/openai";

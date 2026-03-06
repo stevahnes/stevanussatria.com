@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { ref, onMounted, onUnmounted, computed, watch, nextTick } from "vue";
 import { marked } from "marked";
-import { useData, useRoute } from "vitepress";
+import { useData } from "vitepress";
 
 // --- Types ---
 interface ChatMessage {
@@ -16,7 +16,6 @@ interface ChatActivationEvent extends CustomEvent {
   };
 }
 
-// Extend the Window interface for TypeScript
 declare global {
   interface WindowEventMap {
     activateChat: ChatActivationEvent;
@@ -39,31 +38,12 @@ const messages = ref<ChatMessage[]>([]);
 const loading = ref(false);
 const isClient = ref(false);
 const userInput = ref("");
-const isMobile = ref(false);
-const chatMountPoint = ref(false);
-
-// --- Display Mode ---
-const route = useRoute();
-const displayMode = computed(() => {
-  return "mini";
-});
-
-// --- Mini Chat Specific State ---
 const isMiniChat = ref(false);
 const isCompactMode = ref(true);
-
-// --- Full Chat Specific State ---
-const chatHeight = ref(500);
-const isDragging = ref(false);
-const isFirstMessageSent = ref(false);
 
 // --- DOM Refs ---
 const inputRef = ref<HTMLTextAreaElement | null>(null);
 const chatContainerRef = ref<HTMLDivElement | null>(null);
-const chatWindowRef = ref<HTMLDivElement | null>(null);
-const promptBarRef = ref<HTMLDivElement | null>(null);
-const showLeftScroll = ref(false);
-const showRightScroll = ref(false);
 
 // --- Theme ---
 const { isDark } = useData();
@@ -104,33 +84,21 @@ const scrollToBottom = async (): Promise<void> => {
 const resizeTextarea = (): void => {
   if (!inputRef.value) return;
 
-  // Reset height to auto to get accurate scrollHeight
   inputRef.value.style.height = "auto";
 
-  // Define line height and padding
-  const lineHeight = 20; // 20px line height
-  const paddingVertical = 12; // 6px top + 6px bottom padding (p-3 = 12px total)
+  const lineHeight = 20;
+  const paddingVertical = 12;
   const maxLines = 3;
-  const minHeight = lineHeight + paddingVertical; // 1 line + padding
-  const maxHeight = lineHeight * maxLines + paddingVertical; // 3 lines + padding
+  const minHeight = lineHeight + paddingVertical;
+  const maxHeight = lineHeight * maxLines + paddingVertical;
 
-  // Calculate new height based on content
   const scrollHeight = inputRef.value.scrollHeight;
   const newHeight = Math.max(minHeight, Math.min(scrollHeight, maxHeight));
 
   inputRef.value.style.height = `${newHeight}px`;
 };
 
-const checkIfMobile = (): boolean => {
-  if (typeof window === "undefined") return false;
-  return (
-    window.innerWidth < 768 ||
-    window.matchMedia("(pointer: coarse)").matches ||
-    /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
-  );
-};
-
-// --- Mini Chat Expand/Collapse Logic ---
+// --- Mini Chat Logic ---
 const expandToFullMode = async (): Promise<void> => {
   isCompactMode.value = false;
   await nextTick();
@@ -142,84 +110,10 @@ const toggleMiniChat = (): void => {
   localStorage.setItem("miniChatExpanded", isMiniChat.value.toString());
   if (isMiniChat.value) {
     nextTick(() => {
-      inputRef.value?.focus();
+      inputRef.value?.focus({ preventScroll: true });
       if (!isCompactMode.value) scrollToBottom();
     });
   }
-};
-
-// --- Full Chat Height Management ---
-const setFullHeightAndScroll = async (): Promise<void> => {
-  if (!isClient.value || !chatWindowRef.value || displayMode.value !== "full") return;
-
-  const viewportHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
-  chatHeight.value = isMobile.value ? viewportHeight - 20 : viewportHeight;
-  localStorage.setItem("chatHeight", chatHeight.value.toString());
-
-  if (isMobile.value) {
-    requestAnimationFrame(() => {
-      if (!chatWindowRef.value) return;
-      const offsetTop = chatWindowRef.value.getBoundingClientRect().top + window.pageYOffset;
-      window.scrollTo({ top: offsetTop, behavior: "smooth" });
-      setTimeout(scrollToBottom, 150);
-    });
-  } else {
-    await nextTick();
-    if (!chatWindowRef.value) return;
-    const offsetTop = chatWindowRef.value.getBoundingClientRect().top + window.pageYOffset;
-    window.scrollTo({ top: offsetTop, behavior: "smooth" });
-  }
-};
-
-// --- Resize Handlers for Full Chat ---
-const resizeState = ref({ startY: 0, startHeight: 0 });
-
-const startResize = (e: MouseEvent | TouchEvent): void => {
-  if (displayMode.value !== "full") return;
-  e.preventDefault();
-  isDragging.value = true;
-  const clientY = "touches" in e ? e.touches[0].clientY : e.clientY;
-  resizeState.value = { startY: clientY, startHeight: chatHeight.value };
-
-  if ("touches" in e) {
-    document.addEventListener("touchmove", handleTouchResize, { passive: false });
-    document.addEventListener("touchend", stopResize);
-  } else {
-    document.addEventListener("mousemove", handleMouseResize);
-    document.addEventListener("mouseup", stopResize);
-  }
-};
-
-const handleMouseResize = (e: MouseEvent): void => {
-  if (!isDragging.value) return;
-  const deltaY = e.clientY - resizeState.value.startY;
-  chatHeight.value = Math.max(200, resizeState.value.startHeight + deltaY);
-};
-
-const handleTouchResize = (e: TouchEvent): void => {
-  if (!isDragging.value) return;
-  e.preventDefault();
-  const deltaY = e.touches[0].clientY - resizeState.value.startY;
-  chatHeight.value = Math.max(200, resizeState.value.startHeight + deltaY);
-};
-
-const stopResize = (): void => {
-  isDragging.value = false;
-  document.removeEventListener("mousemove", handleMouseResize);
-  document.removeEventListener("mouseup", stopResize);
-  document.removeEventListener("touchmove", handleTouchResize);
-  document.removeEventListener("touchend", stopResize);
-  if (isClient.value) {
-    localStorage.setItem("chatHeight", chatHeight.value.toString());
-  }
-};
-
-// --- Prompt Bar Scroll ---
-const updatePromptScrollButtons = (): void => {
-  const el = promptBarRef.value;
-  if (!el) return;
-  showLeftScroll.value = el.scrollLeft > 0;
-  showRightScroll.value = el.scrollLeft + el.clientWidth < el.scrollWidth - 1;
 };
 
 // --- Event Handlers ---
@@ -228,64 +122,6 @@ const handleKeyDown = (e: KeyboardEvent): void => {
     e.preventDefault();
     if (userInput.value.trim()) sendMessage();
   }
-};
-
-// --- VitePress-specific Mount Point Management ---
-let mountPointObserver: MutationObserver | null = null;
-
-const observeMountPoint = (): void => {
-  if (typeof window === "undefined" || displayMode.value !== "full") return;
-
-  // Clean up existing observer
-  if (mountPointObserver) {
-    mountPointObserver.disconnect();
-    mountPointObserver = null;
-  }
-
-  const checkMountPoint = () => {
-    const element = document.getElementById("chat-container");
-    const newValue = !!element;
-
-    // Only update if value changed to prevent unnecessary re-renders
-    if (chatMountPoint.value !== newValue) {
-      chatMountPoint.value = newValue;
-    }
-  };
-
-  // Initial check
-  checkMountPoint();
-
-  // Set up observer for DOM changes
-  try {
-    mountPointObserver = new MutationObserver(() => {
-      checkMountPoint();
-    });
-
-    // Try to target .vp-doc first, fallback to document.body
-    const targetElement = document.querySelector(".vp-doc") || document.body;
-    mountPointObserver.observe(targetElement, {
-      childList: true,
-      subtree: false,
-    });
-  } catch (error) {
-    console.warn("MutationObserver not supported, using fallback");
-    // Fallback: periodic check every 500ms
-    const interval = setInterval(() => {
-      if (displayMode.value !== "full") {
-        clearInterval(interval);
-        return;
-      }
-      checkMountPoint();
-    }, 500);
-  }
-};
-
-const stopObservingMountPoint = (): void => {
-  if (mountPointObserver) {
-    mountPointObserver.disconnect();
-    mountPointObserver = null;
-  }
-  chatMountPoint.value = false;
 };
 
 // --- Message Handling ---
@@ -303,36 +139,15 @@ const sendMessage = async (): Promise<void> => {
     timestamp: Date.now(),
   });
 
-  // Handle first message UI changes
   if (isFirstMessage) {
-    isFirstMessageSent.value = true;
-    if (displayMode.value === "mini") {
-      await expandToFullMode();
-    } else if (displayMode.value === "full" && !isFirstMessageSent.value) {
-      setTimeout(async () => {
-        await setFullHeightAndScroll();
-        if (isMobile.value) {
-          window.addEventListener(
-            "resize",
-            function onResize() {
-              scrollToBottom();
-              window.removeEventListener("resize", onResize);
-            },
-            { once: true },
-          );
-        }
-      }, 50);
-    }
+    await expandToFullMode();
   }
 
   let currentAssistantContent = "";
   let assistantMessageAdded = false;
   loading.value = true;
-
-  const originalInput = userInput.value;
   userInput.value = "";
 
-  // Reset textarea height after clearing input
   if (inputRef.value) {
     inputRef.value.style.height = "auto";
     resizeTextarea();
@@ -367,7 +182,6 @@ const sendMessage = async (): Promise<void> => {
       buffer = lines.pop() || "";
 
       for (const line of lines) {
-        // AI SDK data stream: text chunks are prefixed with `0:`
         if (!line.startsWith("0:")) continue;
         try {
           const text = JSON.parse(line.slice(2));
@@ -394,7 +208,7 @@ const sendMessage = async (): Promise<void> => {
   } finally {
     loading.value = false;
     await nextTick();
-    if (inputRef.value) inputRef.value.focus();
+    inputRef.value?.focus({ preventScroll: true });
     await scrollToBottom();
   }
 };
@@ -402,33 +216,27 @@ const sendMessage = async (): Promise<void> => {
 const handleChatActivation = (event: ChatActivationEvent): void => {
   const { message } = event.detail;
 
-  // Only work in mini mode
-  if (displayMode.value === "mini") {
-    // Expand the chat if it's not already open
-    if (!isMiniChat.value) {
-      isMiniChat.value = true;
-      if (isClient.value) {
-        localStorage.setItem("miniChatExpanded", "true");
-      }
+  if (!isMiniChat.value) {
+    isMiniChat.value = true;
+    if (isClient.value) {
+      localStorage.setItem("miniChatExpanded", "true");
     }
+  }
 
-    // Prefill the input
-    if (message && typeof message === "string") {
-      userInput.value = message;
-      // Focus the input after nextTick
-      nextTick(() => {
-        if (inputRef.value) {
-          inputRef.value.focus({ preventScroll: true });
-          resizeTextarea();
-        }
-      });
-    }
+  if (message && typeof message === "string") {
+    userInput.value = message;
+    nextTick(() => {
+      if (inputRef.value) {
+        inputRef.value.focus({ preventScroll: true });
+        resizeTextarea();
+      }
+    });
   }
 };
 
 const setSuggestion = (suggestion: string): void => {
   userInput.value = suggestion;
-  inputRef.value?.focus();
+  inputRef.value?.focus({ preventScroll: true });
   nextTick(() => resizeTextarea());
 };
 
@@ -436,9 +244,7 @@ const setSuggestion = (suggestion: string): void => {
 onMounted(async () => {
   isClient.value = true;
   clientSideTheme.value = true;
-  isMobile.value = checkIfMobile();
 
-  // Initialize with default message
   messages.value = [
     {
       role: "assistant",
@@ -447,325 +253,33 @@ onMounted(async () => {
     },
   ];
 
-  // Handle mini chat open state
-  if (displayMode.value === "mini") {
-    isMiniChat.value = false;
-    isCompactMode.value = true;
-    const lastMiniChatExpanded = localStorage.getItem("miniChatExpanded") || "true";
-    if (lastMiniChatExpanded === "true") {
-      isMiniChat.value = true;
-    }
-    if (isFirstMessageSent.value) {
-      isCompactMode.value = false;
-    }
+  isMiniChat.value = false;
+  isCompactMode.value = true;
+  if (localStorage.getItem("miniChatExpanded") === "true") {
+    isMiniChat.value = true;
   }
 
-  // Start observing mount point for full mode
-  if (displayMode.value === "full") {
-    nextTick(() => observeMountPoint());
-  }
-
-  // Setup event listeners
-  window.addEventListener("resize", () => {
-    isMobile.value = checkIfMobile();
-    if (isFirstMessageSent.value && displayMode.value === "full") {
-      chatHeight.value = window.innerHeight;
-      localStorage.setItem("chatHeight", chatHeight.value.toString());
-    }
-    updatePromptScrollButtons();
-  });
-
-  // Listen for chat activation events
   window.addEventListener("activateChat", handleChatActivation);
 
   await nextTick();
   scrollToBottom();
   if (inputRef.value) {
-    inputRef.value.focus();
-    resizeTextarea(); // Set initial height
-  }
-
-  if (displayMode.value === "full") {
-    updatePromptScrollButtons();
-    promptBarRef.value?.addEventListener("scroll", updatePromptScrollButtons);
+    inputRef.value.focus({ preventScroll: true });
+    resizeTextarea();
   }
 });
 
 onUnmounted(() => {
-  promptBarRef.value?.removeEventListener("scroll", updatePromptScrollButtons);
   window.removeEventListener("activateChat", handleChatActivation);
-  stopObservingMountPoint();
 });
 
 // --- Watchers ---
 watch(userInput, () => nextTick(resizeTextarea));
 watch(messages, () => scrollToBottom(), { deep: true });
-
-watch(
-  displayMode,
-  newMode => {
-    if (newMode === "full") {
-      nextTick(() => observeMountPoint());
-      if (isFirstMessageSent.value) {
-        nextTick(() => setFullHeightAndScroll());
-      }
-    } else if (newMode === "mini") {
-      stopObservingMountPoint();
-      const lastMiniChatExpanded = localStorage.getItem("miniChatExpanded") || "true";
-      if (lastMiniChatExpanded === "true") {
-        isMiniChat.value = true;
-      }
-      if (isFirstMessageSent.value) {
-        isCompactMode.value = false;
-      }
-    }
-  },
-  { immediate: false },
-);
-
-// Watch route changes for VitePress navigation
-watch(
-  () => route.path,
-  () => {
-    if (displayMode.value === "full") {
-      nextTick(() => observeMountPoint());
-    } else {
-      stopObservingMountPoint();
-    }
-  },
-  { immediate: false },
-);
 </script>
 
 <template>
-  <!-- Full Chat Mode (Homepage) - Only render if mount point exists -->
-  <Teleport to="#chat-container" v-if="isClient && displayMode === 'full' && chatMountPoint">
-    <div
-      ref="chatWindowRef"
-      :style="{ height: `${chatHeight}px`, ...cssVars }"
-      :class="[
-        '!relative !flex !w-full !flex-col !rounded-lg !p-4 !shadow-lg',
-        clientSideTheme && isDark
-          ? '!border !border-gray-700 !bg-gray-900'
-          : '!border !border-gray-200 !bg-gray-50',
-      ]"
-    >
-      <!-- Header -->
-      <div
-        :class="[
-          '!mb-4 !pb-3 !flex !items-center !justify-between',
-          clientSideTheme && isDark ? '!border-b !border-gray-700' : '!border-b !border-gray-200',
-        ]"
-      >
-        <div class="!flex !items-center">
-          <div class="!h-3 !w-3 !rounded-full !bg-green-500 !mr-2"></div>
-          <h3
-            :class="
-              clientSideTheme && isDark
-                ? '!text-gray-100 !font-medium'
-                : '!text-gray-800 !font-medium'
-            "
-          >
-            Chat with Advocado 🥑
-          </h3>
-        </div>
-      </div>
-
-      <!-- Messages Area -->
-      <div ref="chatContainerRef" class="!flex-1 !overflow-auto !space-y-4 !flex !flex-col !px-1">
-        <div
-          v-for="(msg, index) in messages"
-          :key="index"
-          class="!flex !w-full !mb-3"
-          :class="[msg.role === 'user' ? '!justify-end' : '!justify-start']"
-        >
-          <div
-            v-if="msg.content.trim()"
-            :class="[
-              '!rounded-lg !px-4 !py-3 !max-w-[85%] !shadow-md',
-              msg.role === 'user'
-                ? '!bg-indigo-600 !text-white'
-                : clientSideTheme && isDark
-                  ? '!bg-gray-800 !text-gray-100 !border !border-gray-700'
-                  : '!bg-white !text-gray-800 !border !border-gray-200',
-            ]"
-          >
-            <div class="!flex !justify-between !items-center !mb-1">
-              <span
-                :class="[
-                  '!text-xs',
-                  msg.role === 'user'
-                    ? '!text-gray-200'
-                    : clientSideTheme && isDark
-                      ? '!text-gray-400'
-                      : '!text-gray-500',
-                ]"
-              >
-                {{ msg.role === "user" ? "You" : "Advocado" }}
-              </span>
-              <span
-                v-if="msg.timestamp"
-                :class="[
-                  '!text-xs !ml-4',
-                  msg.role === 'user'
-                    ? '!text-gray-200'
-                    : clientSideTheme && isDark
-                      ? '!text-gray-400'
-                      : '!text-gray-500',
-                ]"
-              >
-                {{ formatTime(msg.timestamp) }}
-              </span>
-            </div>
-            <div
-              class="!whitespace-pre-wrap markdown-content"
-              v-html="parseMarkdown(msg.content)"
-            ></div>
-          </div>
-        </div>
-
-        <!-- Loading Indicator -->
-        <div v-if="loading" class="!flex !justify-start !w-full">
-          <div
-            :class="[
-              '!rounded-lg !px-4 !py-3 !max-w-[85%] !shadow-md',
-              clientSideTheme && isDark
-                ? '!bg-gray-800 !text-gray-300 !border !border-gray-700'
-                : '!bg-white !text-gray-600 !border !border-gray-200',
-            ]"
-          >
-            <div class="!flex !justify-between !items-center !mb-1">
-              <span
-                :class="
-                  clientSideTheme && isDark ? '!text-xs !text-gray-400' : '!text-xs !text-gray-500'
-                "
-              >
-                Advocado
-              </span>
-              <span
-                :class="
-                  clientSideTheme && isDark
-                    ? '!text-xs !text-gray-400 !ml-4'
-                    : '!text-xs !text-gray-500 !ml-4'
-                "
-              >
-                {{ formatTime(Date.now()) }}
-              </span>
-            </div>
-            <div class="!flex !items-center">
-              <span
-                v-for="(_, i) in 3"
-                :key="i"
-                :class="[
-                  '!inline-block !h-2 !w-2 !rounded-full !animate-pulse',
-                  clientSideTheme && isDark ? '!bg-gray-400' : '!bg-gray-300',
-                ]"
-                :style="{
-                  marginLeft: i > 0 ? '0.25rem' : 0,
-                  marginRight: i < 2 ? '0.25rem' : 0,
-                  animationDelay: `${i * 0.2}s`,
-                }"
-              ></span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Resize Handle -->
-      <div
-        class="!mb-6 !h-2 !w-full !cursor-ns-resize !flex !justify-center !items-center hover:!bg-gray-300 dark:hover:!bg-gray-700 !transition-colors !rounded-b-lg"
-        @mousedown="startResize"
-        @touchstart="startResize"
-      >
-        <div
-          :class="[
-            '!w-12 !h-1 !rounded-full',
-            clientSideTheme && isDark ? '!bg-gray-600' : '!bg-gray-300',
-          ]"
-        ></div>
-      </div>
-
-      <!-- Prompt Suggestions -->
-      <div class="!mb-0.5 !relative">
-        <div
-          ref="promptBarRef"
-          class="prompt-bar !flex !overflow-x-auto !space-x-2 !pb-1 !scroll-smooth !px-2"
-          @scroll="updatePromptScrollButtons"
-        >
-          <button
-            v-for="(suggestion, idx) in PROMPT_SUGGESTIONS"
-            :key="idx"
-            type="button"
-            :class="[
-              '!px-4 !py-2 !rounded-full !text-sm !font-medium !transition-colors !shadow',
-              '!border !whitespace-nowrap',
-              clientSideTheme && isDark
-                ? '!bg-gray-800 !text-gray-100 !border-gray-700 hover:!bg-gray-700'
-                : '!bg-white !text-gray-800 !border-gray-200 hover:!bg-gray-100',
-            ]"
-            @click="setSuggestion(suggestion)"
-          >
-            {{ suggestion }}
-          </button>
-        </div>
-      </div>
-
-      <!-- Input Form -->
-      <form
-        :class="[
-          '!mt-4 !flex !rounded-lg !overflow-hidden !shadow-md',
-          clientSideTheme && isDark
-            ? '!bg-gray-800 !border !border-gray-700'
-            : '!bg-gray-100 !border !border-gray-200',
-        ]"
-        @submit.prevent="sendMessage"
-      >
-        <textarea
-          ref="inputRef"
-          v-model="userInput"
-          placeholder="Ask something about Steve..."
-          :class="[
-            '!flex-1 !border-0 !p-3 !outline-none !focus:ring-0 !resize-none',
-            '!leading-5 !overflow-y-auto',
-            clientSideTheme && isDark
-              ? '!bg-gray-800 !text-gray-100 !placeholder-gray-500'
-              : '!bg-gray-100 !text-gray-800 !placeholder-gray-400',
-          ]"
-          :disabled="loading"
-          rows="1"
-          @keydown="handleKeyDown"
-        ></textarea>
-        <button
-          type="submit"
-          class="!bg-indigo-600 !hover:bg-indigo-700 !text-white !px-4 !transition-colors !flex !items-center !justify-center !min-w-[60px]"
-          :disabled="loading"
-        >
-          <svg
-            v-if="!loading"
-            xmlns="http://www.w3.org/2000/svg"
-            class="!h-5 !w-5"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
-            />
-          </svg>
-          <div
-            v-else
-            class="!h-5 !w-5 !border-2 !border-t-transparent !border-white !rounded-full !animate-spin"
-          ></div>
-        </button>
-      </form>
-    </div>
-  </Teleport>
-
-  <!-- Mini Chat Mode (Other Pages) -->
-  <div v-else-if="isClient && displayMode === 'mini'" class="!fixed !bottom-4 !right-4 !z-50">
+  <div v-if="isClient" class="chat-position !fixed !bottom-4 !z-50">
     <!-- Chat Toggle Button -->
     <button
       v-if="!isMiniChat"
@@ -993,7 +507,7 @@ watch(
                 </span>
               </div>
               <div
-                class="!whitespace-pre-wrap markdown-content"
+                class="markdown-content"
                 v-html="parseMarkdown(msg.content)"
               ></div>
             </div>
@@ -1111,7 +625,10 @@ watch(
 </template>
 
 <style scoped>
-/* Include all the existing styles from both components */
+.chat-position {
+  right: max(1rem, calc(50vw - 720px));
+}
+
 ::-webkit-scrollbar {
   width: 6px;
 }
@@ -1127,29 +644,6 @@ watch(
 
 ::-webkit-scrollbar-track {
   background: var(--scrollbar-track);
-}
-
-.chat-loading-overlay {
-  position: absolute;
-  inset: 0;
-  z-index: 40;
-  background: rgba(255, 255, 255, 0.7);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  pointer-events: all;
-  border-radius: 0.5rem;
-}
-
-.dark .chat-loading-overlay {
-  background: rgba(30, 30, 30, 0.7);
-}
-
-.chat-loading-content {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.75rem;
 }
 
 :deep(.markdown-content) {
@@ -1173,7 +667,15 @@ watch(
   margin-top: 0.4em !important;
 }
 
-:deep(.markdown-content li),
+:deep(.markdown-content li) {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+:deep(.markdown-content li + li) {
+  margin-top: 0.15em !important;
+}
+
 :deep(.markdown-content li p) {
   margin: 0 !important;
   padding: 0 !important;
@@ -1225,38 +727,5 @@ watch(
   padding-left: 1rem !important;
   font-style: italic !important;
   margin: 0 !important;
-}
-
-/* Prompt bar scrollbar styles */
-@media (min-width: 640px) {
-  .prompt-bar::-webkit-scrollbar {
-    height: 4px !important;
-  }
-
-  .prompt-bar::-webkit-scrollbar-thumb {
-    background: var(--scrollbar-thumb);
-    border-radius: 3px;
-  }
-
-  .prompt-bar::-webkit-scrollbar-track {
-    background: var(--scrollbar-track);
-  }
-
-  .prompt-bar {
-    scrollbar-width: thin !important;
-    scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
-  }
-}
-
-@media (max-width: 639px) {
-  .prompt-bar::-webkit-scrollbar {
-    display: none !important;
-    height: 0 !important;
-  }
-
-  .prompt-bar {
-    -ms-overflow-style: none !important;
-    scrollbar-width: none !important;
-  }
 }
 </style>

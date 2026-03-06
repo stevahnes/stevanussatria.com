@@ -61,14 +61,13 @@ const ContactChatLink = defineAsyncComponent(() =>
 )
 
 onMounted(() => {
-  // Find the "Let's Chat" button and override its behavior
   const chatButton = document.querySelector('a[href="#chat"]')
   
   if (chatButton) {
-    chatButton.addEventListener('click', (e) => {
-      e.preventDefault()
-      
-      // Dispatch the chat activation event
+    chatButton.removeAttribute('href')
+    chatButton.setAttribute('role', 'button')
+    chatButton.style.cursor = 'pointer'
+    chatButton.addEventListener('click', () => {
       window.dispatchEvent(new CustomEvent('activateChat', {
         detail: {
           message: "I'd like to schedule a chat with Steve!"
