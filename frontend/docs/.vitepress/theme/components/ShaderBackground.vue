@@ -56,40 +56,39 @@ const fragmentShaderSource = `
     float aspect = u_resolution.x / u_resolution.y;
     vec2 uvAspect = vec2(uv.x * aspect, uv.y);
 
+    float sf = clamp(u_resolution.x / 1400.0, 0.5, 0.92);
+
     // --- BLOB A (blue) ---
     vec2 centerA = vec2(u_centerA.x * aspect, u_centerA.y);
     float distA = distance(uvAspect, centerA);
-    float breathA = sin(u_time * 0.6) * 0.5 + 0.1;
+    float breathA = sin(u_time * 0.55) * 0.5 + 0.1;
     float radiusA = 0.001 + breathA * 0.04;
-    float glowA = smoothstep(radiusA + 0.45, radiusA, distA) * (0.35 + breathA * 0.15);
+    float glowA = smoothstep(radiusA + 0.45 * sf, radiusA, distA) * (0.35 + breathA * 0.15);
 
     // --- BLOB B (teal) ---
     vec2 centerB = vec2(u_centerB.x * aspect, u_centerB.y);
     float distB = distance(uvAspect, centerB);
-    float basePulse = sin(u_time * 0.6 + 1.5708);
-    float microPulse = sin(u_time * 1.6) * 0.15;
+    float drift = sin(u_time * 0.13) * 3.14159;
+    float basePulse = sin(u_time * 0.55 + drift);
+    float microPulse = sin(u_time * 1.9) * 0.15;
     float breathB = (basePulse + microPulse) * 0.3 + 0.15;
     float radiusB = 0.001 + breathB * 0.03;
-    float glowB = smoothstep(radiusB + 0.38, radiusB, distB) * (0.3 + breathB * 0.12);
+    float glowB = smoothstep(radiusB + 0.38 * sf, radiusB, distB) * (0.3 + breathB * 0.12);
 
-    float innerGlow = smoothstep(0.10, 0.0, distA) * (0.15 + breathA * 0.08);
-
-    // --- COLORS: vibrant but not overwhelming ---
-    vec3 brightBlue = vec3(0.05, 0.45, 0.85);
-    vec3 brightTeal = vec3(0.0, 0.78, 0.7);
+    float innerGlow = smoothstep(0.10 * sf, 0.0, distA) * (0.15 + breathA * 0.08);
 
     float bgLuma = dot(u_bgColor, vec3(0.299, 0.587, 0.114));
     float lightMode = step(0.5, bgLuma);
 
-    vec3 activeBlue = mix(vec3(0.1, 0.5, 0.95), brightBlue, lightMode);
-    vec3 activeTeal = mix(vec3(0.05, 0.9, 0.8), brightTeal, lightMode);
+    vec3 activeBlue = mix(vec3(0.1, 0.5, 0.95), vec3(0.0, 0.35, 0.82), lightMode);
+    vec3 activeTeal = mix(vec3(0.05, 0.9, 0.8), vec3(0.0, 0.58, 0.55), lightMode);
 
     vec3 blobColor = (activeBlue * glowA) + (activeTeal * glowB) + (activeTeal * innerGlow);
 
     vec3 color;
     if (lightMode > 0.5) {
-        float alpha = clamp((glowA + glowB + innerGlow) * 0.7, 0.0, 1.0);
-        color = mix(u_bgColor, blobColor * 1.1, alpha);
+        float alpha = clamp((glowA + glowB + innerGlow) * 1.5, 0.0, 1.0);
+        color = mix(u_bgColor, blobColor * 1.6, alpha);
     } else {
         color = u_bgColor + blobColor * 1.15;
     }
