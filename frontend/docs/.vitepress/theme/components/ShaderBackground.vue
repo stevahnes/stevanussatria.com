@@ -61,16 +61,16 @@ const fragmentShaderSource = `
     // --- BLOB A (blue) ---
     vec2 centerA = vec2(u_centerA.x * aspect, u_centerA.y);
     float distA = distance(uvAspect, centerA);
-    float breathA = sin(u_time * 0.55) * 0.5 + 0.1;
+    float breathA = sin(u_time * 1.1) * 0.5 + 0.1;
     float radiusA = 0.001 + breathA * 0.04;
     float glowA = smoothstep(radiusA + 0.45 * sf, radiusA, distA) * (0.35 + breathA * 0.15);
 
     // --- BLOB B (teal) ---
     vec2 centerB = vec2(u_centerB.x * aspect, u_centerB.y);
     float distB = distance(uvAspect, centerB);
-    float drift = sin(u_time * 0.13) * 3.14159;
-    float basePulse = sin(u_time * 0.55 + drift);
-    float microPulse = sin(u_time * 1.9) * 0.15;
+    float drift = sin(u_time * 0.26) * 3.14159;
+    float basePulse = sin(u_time * 1.1 + drift);
+    float microPulse = sin(u_time * 3.2) * 0.15;
     float breathB = (basePulse + microPulse) * 0.3 + 0.15;
     float radiusB = 0.001 + breathB * 0.03;
     float glowB = smoothstep(radiusB + 0.38 * sf, radiusB, distB) * (0.3 + breathB * 0.12);
