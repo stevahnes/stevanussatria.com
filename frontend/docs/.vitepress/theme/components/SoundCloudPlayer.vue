@@ -329,52 +329,27 @@ const toggleExpanded = (): void => {
   }
 };
 
+const applyScrollingIfOverflowing = (element: HTMLElement | null): void => {
+  if (!element) return;
+  const isOverflowing = element.scrollWidth > element.clientWidth;
+
+  if (isOverflowing) {
+    element.classList.add("sc-scrolling-text");
+    const translateDistance = element.scrollWidth - element.clientWidth + 20;
+    element.style.setProperty("--translate-distance", `-${translateDistance}px`);
+    element.style.setProperty("--container-width", `${element.clientWidth}px`);
+  } else {
+    element.classList.remove("sc-scrolling-text");
+    element.style.removeProperty("--translate-distance");
+    element.style.removeProperty("--container-width");
+  }
+};
+
 const checkTextOverflow = (): void => {
-  // Only run on client-side to avoid SSR issues
   if (!isClient.value) return;
-
   nextTick(() => {
-    // Check title overflow
-    if (titleRef.value) {
-      const isOverflowing = titleRef.value.scrollWidth > titleRef.value.clientWidth;
-      const element = titleRef.value;
-
-      if (isOverflowing) {
-        element.classList.add("sc-scrolling-text");
-        // Set CSS custom properties for dynamic animation
-        const containerWidth = element.clientWidth;
-        const textWidth = element.scrollWidth;
-        const translateDistance = textWidth - containerWidth + 20; // Add some padding
-
-        element.style.setProperty("--translate-distance", `-${translateDistance}px`);
-        element.style.setProperty("--container-width", `${containerWidth}px`);
-      } else {
-        element.classList.remove("sc-scrolling-text");
-        element.style.removeProperty("--translate-distance");
-        element.style.removeProperty("--container-width");
-      }
-    }
-
-    // Check artist overflow
-    if (artistRef.value) {
-      const isOverflowing = artistRef.value.scrollWidth > artistRef.value.clientWidth;
-      const element = artistRef.value;
-
-      if (isOverflowing) {
-        element.classList.add("sc-scrolling-text");
-        // Set CSS custom properties for dynamic animation
-        const containerWidth = element.clientWidth;
-        const textWidth = element.scrollWidth;
-        const translateDistance = textWidth - containerWidth + 20; // Add some padding
-
-        element.style.setProperty("--translate-distance", `-${translateDistance}px`);
-        element.style.setProperty("--container-width", `${containerWidth}px`);
-      } else {
-        element.classList.remove("sc-scrolling-text");
-        element.style.removeProperty("--translate-distance");
-        element.style.removeProperty("--container-width");
-      }
-    }
+    applyScrollingIfOverflowing(titleRef.value);
+    applyScrollingIfOverflowing(artistRef.value);
   });
 };
 
@@ -541,7 +516,7 @@ onUnmounted(() => {
 .sc-player {
   position: fixed;
   bottom: 20px;
-  left: 20px;
+  left: max(20px, calc(50vw - 720px));
   z-index: 30;
   font-family:
     -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
