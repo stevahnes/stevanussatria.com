@@ -65,6 +65,10 @@ const cssVars = computed(() => ({
   "--blockquote-border-color": tc("#4a5568", "#cbd5e0"),
 }));
 
+// --- Mobile Detection ---
+const isMobileDevice = (): boolean =>
+  /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || "ontouchstart" in window;
+
 // --- Utility Functions ---
 const formatTime = (timestamp: number): string =>
   new Date(timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
@@ -116,7 +120,10 @@ const toggleMiniChat = (): void => {
   localStorage.setItem("miniChatExpanded", isMiniChat.value.toString());
   if (isMiniChat.value) {
     nextTick(() => {
-      inputRef.value?.focus({ preventScroll: true });
+      // Only focus on desktop — mobile focus triggers keyboard
+      if (!isMobileDevice()) {
+        inputRef.value?.focus({ preventScroll: true });
+      }
       if (!isCompactMode.value) scrollToBottom();
     });
   }
@@ -129,9 +136,7 @@ const toggleFullHeight = (): void => {
 };
 
 const resetChat = (): void => {
-  messages.value = [
-    { role: "assistant", content: INITIAL_GREETING, timestamp: Date.now() },
-  ];
+  messages.value = [{ role: "assistant", content: INITIAL_GREETING, timestamp: Date.now() }];
   isCompactMode.value = true;
   isFullHeight.value = false;
   lastFailedMessage.value = null;
@@ -266,7 +271,10 @@ const sendMessage = async (): Promise<void> => {
   } finally {
     loading.value = false;
     await nextTick();
-    inputRef.value?.focus({ preventScroll: true });
+    // Only refocus on desktop — mobile focus triggers keyboard
+    if (!isMobileDevice()) {
+      inputRef.value?.focus({ preventScroll: true });
+    }
     await scrollToBottom();
   }
 };
@@ -284,9 +292,10 @@ const handleChatActivation = (event: ChatActivationEvent): void => {
   if (message && typeof message === "string") {
     userInput.value = message;
     nextTick(() => {
-      if (inputRef.value) {
-        inputRef.value.focus({ preventScroll: true });
-        resizeTextarea();
+      resizeTextarea();
+      // Only focus on desktop — mobile focus triggers keyboard
+      if (!isMobileDevice()) {
+        inputRef.value?.focus({ preventScroll: true });
       }
     });
   }
@@ -294,8 +303,13 @@ const handleChatActivation = (event: ChatActivationEvent): void => {
 
 const setSuggestion = (suggestion: string): void => {
   userInput.value = suggestion;
-  inputRef.value?.focus({ preventScroll: true });
-  nextTick(() => resizeTextarea());
+  nextTick(() => {
+    resizeTextarea();
+    // Only focus on desktop — mobile focus triggers keyboard
+    if (!isMobileDevice()) {
+      inputRef.value?.focus({ preventScroll: true });
+    }
+  });
 };
 
 // --- Lifecycle ---
@@ -309,17 +323,14 @@ onMounted(async () => {
       const parsed = JSON.parse(savedMessages);
       if (Array.isArray(parsed) && parsed.length > 0) {
         messages.value = parsed;
-        isCompactMode.value =
-          sessionStorage.getItem("chatCompactMode") === "false" ? false : true;
+        isCompactMode.value = sessionStorage.getItem("chatCompactMode") === "false" ? false : true;
       }
     } catch {
       /* fall through to default */
     }
   }
   if (messages.value.length === 0) {
-    messages.value = [
-      { role: "assistant", content: INITIAL_GREETING, timestamp: Date.now() },
-    ];
+    messages.value = [{ role: "assistant", content: INITIAL_GREETING, timestamp: Date.now() }];
   }
 
   isMiniChat.value = false;
@@ -336,8 +347,11 @@ onMounted(async () => {
   await nextTick();
   scrollToBottom();
   if (inputRef.value) {
-    inputRef.value.focus({ preventScroll: true });
     resizeTextarea();
+    // Only auto-focus on desktop — mobile focus triggers keyboard
+    if (!isMobileDevice()) {
+      inputRef.value.focus({ preventScroll: true });
+    }
   }
 });
 
@@ -350,7 +364,7 @@ onUnmounted(() => {
 watch(userInput, () => nextTick(resizeTextarea));
 watch(
   messages,
-  (newMessages) => {
+  newMessages => {
     scrollToBottom();
     if (isClient.value && newMessages.length > 0) {
       sessionStorage.setItem("chatMessages", JSON.stringify(newMessages));
@@ -383,7 +397,7 @@ watch(
         '!rounded-2xl !transition-all',
         tc(
           '!bg-gray-900/60 !border !border-white/10 !shadow-[0_8px_32px_rgba(0,0,0,0.3)]',
-          '!bg-white/60 !border !border-white/20 !shadow-[0_8px_32px_rgba(0,0,0,0.08)]'
+          '!bg-white/60 !border !border-white/20 !shadow-[0_8px_32px_rgba(0,0,0,0.08)]',
         ),
         '!backdrop-blur-[20px]',
         '!flex !flex-col',
@@ -423,18 +437,11 @@ watch(
           <div class="!text-center !mb-6">
             <div class="!flex !items-center !justify-center !mb-3">
               <div class="!h-3 !w-3 !rounded-full !bg-green-500 !mr-2"></div>
-              <h3
-                :class="['!text-xl !font-bold', tc('!text-white', '!text-gray-900')]"
-              >
+              <h3 :class="['!text-xl !font-bold', tc('!text-white', '!text-gray-900')]">
                 Chat with Advocado 🥑
               </h3>
             </div>
-            <p
-              :class="[
-                '!text-base !leading-relaxed',
-                tc('!text-gray-300', '!text-gray-600'),
-              ]"
-            >
+            <p :class="['!text-base !leading-relaxed', tc('!text-gray-300', '!text-gray-600')]">
               {{ messages[0]?.content || INITIAL_GREETING }}
             </p>
           </div>
@@ -528,9 +535,7 @@ watch(
           >
             <div class="!flex !items-center !gap-2">
               <div class="!h-2 !w-2 !rounded-full !bg-green-500"></div>
-              <h3
-                :class="['!text-base !font-medium', tc('!text-gray-100', '!text-gray-800')]"
-              >
+              <h3 :class="['!text-base !font-medium', tc('!text-gray-100', '!text-gray-800')]">
                 Chat with Advocado 🥑
               </h3>
             </div>
@@ -576,13 +581,7 @@ watch(
                     d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9m11.25-5.25v4.5m0-4.5h-4.5m4.5 0L15 9m-11.25 11.25v-4.5m0 4.5h4.5m-4.5 0L9 15m11.25 5.25v-4.5m0 4.5h-4.5m4.5 0L15 15"
                   />
                 </svg>
-                <svg
-                  v-else
-                  class="!w-4 !h-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
+                <svg v-else class="!w-4 !h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
                     stroke-linecap="round"
                     stroke-linejoin="round"
@@ -617,10 +616,7 @@ watch(
             ref="chatContainerRef"
             role="log"
             aria-live="polite"
-            :class="[
-              '!flex-1 !overflow-y-auto !p-3 !space-y-3',
-              isFullHeight ? '' : '!max-h-80',
-            ]"
+            :class="['!flex-1 !overflow-y-auto !p-3 !space-y-3', isFullHeight ? '' : '!max-h-80']"
           >
             <div
               v-for="(msg, index) in messages"
@@ -703,10 +699,7 @@ watch(
                     </button>
                   </div>
                 </div>
-                <div
-                  class="markdown-content"
-                  v-html="parseMarkdown(msg.content)"
-                ></div>
+                <div class="markdown-content" v-html="parseMarkdown(msg.content)"></div>
               </div>
             </div>
 
@@ -787,9 +780,7 @@ watch(
           </div>
 
           <!-- Input Area -->
-          <div
-            :class="['!p-3 !border-t', tc('!border-gray-700', '!border-gray-200')]"
-          >
+          <div :class="['!p-3 !border-t', tc('!border-gray-700', '!border-gray-200')]">
             <form class="!flex !gap-2" @submit.prevent="sendMessage">
               <textarea
                 ref="inputRef"
