@@ -709,7 +709,7 @@ onUnmounted(() => {
    * Sits just below the navbar (~64px) and hugs the
    * content column's right edge like the chat widget.
    */
-  position: fixed;
+  position: absolute;
   top: calc(64px + 0.75rem);
   right: max(1rem, calc(50vw - 720px + 1.5rem));
   z-index: 30;
