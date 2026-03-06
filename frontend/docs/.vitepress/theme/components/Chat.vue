@@ -24,6 +24,7 @@ declare global {
 
 // --- Constants ---
 const API_BASE = "https://advocado-agent.vercel.app";
+const INITIAL_GREETING = "Hi! What would you like to learn about Steve today?";
 
 const PROMPT_SUGGESTIONS = [
   "Tell me about Steve's background",
@@ -40,6 +41,9 @@ const isClient = ref(false);
 const userInput = ref("");
 const isMiniChat = ref(false);
 const isCompactMode = ref(true);
+const isFullHeight = ref(false);
+const copiedIndex = ref<number | null>(null);
+const lastFailedMessage = ref<string | null>(null);
 
 // --- DOM Refs ---
 const inputRef = ref<HTMLTextAreaElement | null>(null);
@@ -49,14 +53,16 @@ const chatContainerRef = ref<HTMLDivElement | null>(null);
 const { isDark } = useData();
 const clientSideTheme = ref(false);
 
+const tc = (dark: string, light: string): string =>
+  clientSideTheme.value && isDark.value ? dark : light;
+
 const cssVars = computed(() => ({
-  "--scrollbar-thumb": clientSideTheme.value && isDark.value ? "#4a5568" : "#cbd5e0",
-  "--scrollbar-thumb-hover": clientSideTheme.value && isDark.value ? "#2d3748" : "#a0aec0",
-  "--scrollbar-track": clientSideTheme.value && isDark.value ? "#1a202c" : "#edf2f7",
-  "--code-bg-color":
-    clientSideTheme.value && isDark.value ? "rgba(0, 0, 0, 0.2)" : "rgba(0, 0, 0, 0.05)",
-  "--link-color": clientSideTheme.value && isDark.value ? "#90cdf4" : "#3182ce",
-  "--blockquote-border-color": clientSideTheme.value && isDark.value ? "#4a5568" : "#cbd5e0",
+  "--scrollbar-thumb": tc("#4a5568", "#cbd5e0"),
+  "--scrollbar-thumb-hover": tc("#2d3748", "#a0aec0"),
+  "--scrollbar-track": tc("#1a202c", "#edf2f7"),
+  "--code-bg-color": tc("rgba(0, 0, 0, 0.2)", "rgba(0, 0, 0, 0.05)"),
+  "--link-color": tc("#90cdf4", "#3182ce"),
+  "--blockquote-border-color": tc("#4a5568", "#cbd5e0"),
 }));
 
 // --- Utility Functions ---
@@ -116,6 +122,24 @@ const toggleMiniChat = (): void => {
   }
 };
 
+const toggleFullHeight = (): void => {
+  isFullHeight.value = !isFullHeight.value;
+  localStorage.setItem("chatFullHeight", isFullHeight.value.toString());
+  nextTick(() => scrollToBottom());
+};
+
+const resetChat = (): void => {
+  messages.value = [
+    { role: "assistant", content: INITIAL_GREETING, timestamp: Date.now() },
+  ];
+  isCompactMode.value = true;
+  isFullHeight.value = false;
+  lastFailedMessage.value = null;
+  sessionStorage.removeItem("chatMessages");
+  sessionStorage.removeItem("chatCompactMode");
+  localStorage.removeItem("chatFullHeight");
+};
+
 // --- Event Handlers ---
 const handleKeyDown = (e: KeyboardEvent): void => {
   if (e.key === "Enter" && !e.shiftKey) {
@@ -124,14 +148,47 @@ const handleKeyDown = (e: KeyboardEvent): void => {
   }
 };
 
+const handleGlobalKeydown = (e: KeyboardEvent): void => {
+  if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key === ".") {
+    e.preventDefault();
+    toggleMiniChat();
+  }
+};
+
+// --- Copy ---
+const copyMessage = async (content: string, index: number): Promise<void> => {
+  try {
+    await navigator.clipboard.writeText(content);
+    copiedIndex.value = index;
+    setTimeout(() => {
+      copiedIndex.value = null;
+    }, 2000);
+  } catch {
+    /* clipboard API may fail in some contexts */
+  }
+};
+
+// --- Retry ---
+const retryLastMessage = (): void => {
+  if (!lastFailedMessage.value) return;
+  messages.value.pop();
+  messages.value.pop();
+  userInput.value = lastFailedMessage.value;
+  lastFailedMessage.value = null;
+  sendMessage();
+};
+
 // --- Message Handling ---
 const sendMessage = async (): Promise<void> => {
   if (!userInput.value.trim()) return;
 
+  const userText = userInput.value;
+  lastFailedMessage.value = null;
+
   const isFirstMessage =
     messages.value.length <= 1 &&
     messages.value[0]?.role === "assistant" &&
-    messages.value[0]?.content.includes("Hi! What would you like to learn about Steve today?");
+    messages.value[0]?.content.includes(INITIAL_GREETING);
 
   messages.value.push({
     role: "user",
@@ -198,6 +255,7 @@ const sendMessage = async (): Promise<void> => {
     }
   } catch (error) {
     console.error("Error during streaming:", error);
+    lastFailedMessage.value = userText;
     if (!assistantMessageAdded) {
       messages.value.push({
         role: "assistant",
@@ -245,21 +303,35 @@ onMounted(async () => {
   isClient.value = true;
   clientSideTheme.value = true;
 
-  messages.value = [
-    {
-      role: "assistant",
-      content: "Hi! What would you like to learn about Steve today?",
-      timestamp: Date.now(),
-    },
-  ];
+  const savedMessages = sessionStorage.getItem("chatMessages");
+  if (savedMessages) {
+    try {
+      const parsed = JSON.parse(savedMessages);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        messages.value = parsed;
+        isCompactMode.value =
+          sessionStorage.getItem("chatCompactMode") === "false" ? false : true;
+      }
+    } catch {
+      /* fall through to default */
+    }
+  }
+  if (messages.value.length === 0) {
+    messages.value = [
+      { role: "assistant", content: INITIAL_GREETING, timestamp: Date.now() },
+    ];
+  }
 
   isMiniChat.value = false;
-  isCompactMode.value = true;
   if (localStorage.getItem("miniChatExpanded") === "true") {
     isMiniChat.value = true;
   }
+  if (localStorage.getItem("chatFullHeight") === "true") {
+    isFullHeight.value = true;
+  }
 
   window.addEventListener("activateChat", handleChatActivation);
+  window.addEventListener("keydown", handleGlobalKeydown);
 
   await nextTick();
   scrollToBottom();
@@ -271,11 +343,22 @@ onMounted(async () => {
 
 onUnmounted(() => {
   window.removeEventListener("activateChat", handleChatActivation);
+  window.removeEventListener("keydown", handleGlobalKeydown);
 });
 
 // --- Watchers ---
 watch(userInput, () => nextTick(resizeTextarea));
-watch(messages, () => scrollToBottom(), { deep: true });
+watch(
+  messages,
+  (newMessages) => {
+    scrollToBottom();
+    if (isClient.value && newMessages.length > 0) {
+      sessionStorage.setItem("chatMessages", JSON.stringify(newMessages));
+      sessionStorage.setItem("chatCompactMode", isCompactMode.value.toString());
+    }
+  },
+  { deep: true },
+);
 </script>
 
 <template>
@@ -284,6 +367,7 @@ watch(messages, () => scrollToBottom(), { deep: true });
     <button
       v-if="!isMiniChat"
       class="!w-14 !h-14 !rounded-full !bg-indigo-600 !text-white !shadow-lg !flex !items-center !justify-center !transition-all hover:!bg-indigo-700"
+      aria-label="Open chat with Advocado"
       @click="toggleMiniChat"
     >
       <img src="/advocado.webp" alt="Advocado" class="!w-8 !h-8 !rounded-full" />
@@ -293,293 +377,100 @@ watch(messages, () => scrollToBottom(), { deep: true });
     <div
       v-else
       :style="cssVars"
+      role="dialog"
+      aria-label="Chat with Advocado"
       :class="[
-        '!rounded-2xl !shadow-2xl !transition-all !w-[calc(100vw-2rem)] sm:!w-[400px] !max-w-[400px]',
-        clientSideTheme && isDark
-          ? '!bg-gray-900 !border !border-gray-700'
-          : '!bg-white !border !border-gray-200',
+        '!rounded-2xl !shadow-2xl !transition-all',
+        tc('!bg-gray-900 !border !border-gray-700', '!bg-white !border !border-gray-200'),
         '!flex !flex-col',
-        isCompactMode ? '!h-auto' : '!max-h-[32rem]',
+        isCompactMode
+          ? '!h-auto !w-[calc(100vw-2rem)] sm:!w-[400px] !max-w-[400px]'
+          : isFullHeight
+            ? '!h-[calc(100vh-6rem)] !w-[calc(100vw-2rem)] sm:!w-[560px] !max-w-[560px]'
+            : '!max-h-[32rem] !w-[calc(100vw-2rem)] sm:!w-[400px] !max-w-[400px]',
       ]"
     >
-      <!-- Compact Mode -->
-      <div v-if="isCompactMode" class="!relative !p-6 !pt-8">
-        <!-- Close button -->
-        <button
-          :class="[
-            '!absolute !top-3 !right-3 !p-1.5 !rounded-full !transition-colors',
-            clientSideTheme && isDark
-              ? '!text-gray-400 hover:!text-gray-200 hover:!bg-gray-700'
-              : '!text-gray-500 hover:!text-gray-700 hover:!bg-gray-100',
-          ]"
-          @click="toggleMiniChat"
-        >
-          <svg class="!w-4 !h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M6 18L18 6M6 6l12 12"
-            />
-          </svg>
-        </button>
-
-        <!-- Welcome Header -->
-        <div class="!text-center !mb-6">
-          <div class="!flex !items-center !justify-center !mb-3">
-            <div class="!h-3 !w-3 !rounded-full !bg-green-500 !mr-2"></div>
-            <h3
-              :class="[
-                '!text-xl !font-bold',
-                clientSideTheme && isDark ? '!text-white' : '!text-gray-900',
-              ]"
-            >
-              Chat with Advocado 🥑
-            </h3>
-          </div>
-          <p
-            :class="[
-              '!text-base !leading-relaxed',
-              clientSideTheme && isDark ? '!text-gray-300' : '!text-gray-600',
-            ]"
-          >
-            {{ messages[0]?.content || "Hi! What would you like to learn about Steve today?" }}
-          </p>
-        </div>
-
-        <!-- Prompt Suggestions -->
-        <div class="!mb-6">
-          <div class="!flex !flex-col !gap-3">
-            <button
-              v-for="suggestion in PROMPT_SUGGESTIONS.slice(0, 3)"
-              :key="suggestion"
-              type="button"
-              :class="[
-                '!w-full !px-4 !py-3 !rounded-xl !text-base !font-medium !transition-all',
-                '!border !text-left !shadow-sm',
-                clientSideTheme && isDark
-                  ? '!bg-gray-800 !text-gray-200 !border-gray-600 hover:!bg-gray-700'
-                  : '!bg-gray-50 !text-gray-700 !border-gray-200 hover:!bg-gray-100',
-              ]"
-              @click="setSuggestion(suggestion)"
-            >
-              {{ suggestion }}
-            </button>
-          </div>
-        </div>
-
-        <!-- Input Form -->
-        <form class="!flex !gap-2" @submit.prevent="sendMessage">
-          <textarea
-            ref="inputRef"
-            v-model="userInput"
-            placeholder="Ask something..."
-            :class="[
-              '!flex-1 !rounded-lg !p-2 !text-base !resize-none !leading-5 !overflow-y-auto',
-              '!border-0 !outline-none !focus:ring-0',
-              clientSideTheme && isDark
-                ? '!bg-gray-800 !text-gray-100 !placeholder-gray-400'
-                : '!bg-gray-100 !text-gray-800 !placeholder-gray-500',
-            ]"
-            :disabled="loading"
-            rows="1"
-            @keydown="handleKeyDown"
-          ></textarea>
+      <Transition name="chat-mode" mode="out-in">
+        <!-- Compact Mode -->
+        <div v-if="isCompactMode" key="compact" class="!relative !p-6 !pt-8">
+          <!-- Close button -->
           <button
-            type="submit"
             :class="[
-              '!rounded-lg !px-3 !transition-all !flex !items-center !justify-center !min-w-[48px]',
-              userInput.trim() && !loading
-                ? '!bg-indigo-600 hover:!bg-indigo-700 !text-white'
-                : clientSideTheme && isDark
-                  ? '!bg-gray-700 !text-gray-400 !cursor-not-allowed'
-                  : '!bg-gray-200 !text-gray-400 !cursor-not-allowed',
+              '!absolute !top-3 !right-3 !p-1.5 !rounded-full !transition-colors',
+              tc(
+                '!text-gray-400 hover:!text-gray-200 hover:!bg-gray-700',
+                '!text-gray-500 hover:!text-gray-700 hover:!bg-gray-100',
+              ),
             ]"
-            :disabled="loading || !userInput.trim()"
+            aria-label="Close chat"
+            @click="toggleMiniChat"
           >
-            <svg
-              v-if="!loading"
-              xmlns="http://www.w3.org/2000/svg"
-              class="!h-4 !w-4"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
+            <svg class="!w-4 !h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 stroke-linecap="round"
                 stroke-linejoin="round"
                 stroke-width="2"
-                d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
+                d="M6 18L18 6M6 6l12 12"
               />
             </svg>
-            <div
-              v-else
-              class="!h-4 !w-4 !border-2 !border-t-transparent !border-current !rounded-full !animate-spin"
-            ></div>
           </button>
-        </form>
-      </div>
 
-      <!-- Expanded Mode -->
-      <div v-else class="!flex !flex-col !h-full">
-        <!-- Header -->
-        <div
-          :class="[
-            '!p-3 !flex !items-center !justify-between !border-b',
-            clientSideTheme && isDark ? '!border-gray-700' : '!border-gray-200',
-          ]"
-        >
-          <div class="!flex !items-center !gap-2">
-            <div class="!h-2 !w-2 !rounded-full !bg-green-500"></div>
-            <h3
+          <!-- Welcome Header -->
+          <div class="!text-center !mb-6">
+            <div class="!flex !items-center !justify-center !mb-3">
+              <div class="!h-3 !w-3 !rounded-full !bg-green-500 !mr-2"></div>
+              <h3
+                :class="['!text-xl !font-bold', tc('!text-white', '!text-gray-900')]"
+              >
+                Chat with Advocado 🥑
+              </h3>
+            </div>
+            <p
               :class="[
-                '!text-base !font-medium',
-                clientSideTheme && isDark ? '!text-gray-100' : '!text-gray-800',
+                '!text-base !leading-relaxed',
+                tc('!text-gray-300', '!text-gray-600'),
               ]"
             >
-              Chat with Advocado 🥑
-            </h3>
+              {{ messages[0]?.content || INITIAL_GREETING }}
+            </p>
           </div>
-          <div class="!flex !items-center !gap-2">
-            <button
-              :class="[
-                '!p-1 !rounded hover:!bg-gray-100 dark:hover:!bg-gray-800',
-                clientSideTheme && isDark ? '!text-gray-300' : '!text-gray-600',
-              ]"
-              @click="toggleMiniChat"
-            >
-              <svg class="!w-4 !h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
-            </button>
-          </div>
-        </div>
 
-        <!-- Messages Area -->
-        <div ref="chatContainerRef" class="!flex-1 !overflow-y-auto !p-3 !space-y-3 !max-h-80">
-          <div
-            v-for="(msg, index) in messages"
-            :key="index"
-            class="!flex !w-full"
-            :class="[msg.role === 'user' ? '!justify-end' : '!justify-start']"
-          >
-            <div
-              v-if="msg.content.trim()"
-              :class="[
-                '!rounded-lg !px-3 !py-2 !max-w-[85%] !text-base !shadow-md',
-                msg.role === 'user'
-                  ? '!bg-indigo-600 !text-white'
-                  : clientSideTheme && isDark
-                    ? '!bg-gray-800 !text-gray-100 !border !border-gray-700'
-                    : '!bg-white !text-gray-800 !border !border-gray-200',
-              ]"
-            >
-              <div class="!flex !justify-between !items-center !mb-1">
-                <span
-                  :class="[
-                    '!text-sm',
-                    msg.role === 'user'
-                      ? '!text-gray-200'
-                      : clientSideTheme && isDark
-                        ? '!text-gray-400'
-                        : '!text-gray-500',
-                  ]"
-                >
-                  {{ msg.role === "user" ? "You" : "Advocado" }}
-                </span>
-                <span
-                  v-if="msg.timestamp"
-                  :class="[
-                    '!text-sm !ml-4',
-                    msg.role === 'user'
-                      ? '!text-gray-200'
-                      : clientSideTheme && isDark
-                        ? '!text-gray-400'
-                        : '!text-gray-500',
-                  ]"
-                >
-                  {{ formatTime(msg.timestamp) }}
-                </span>
-              </div>
-              <div
-                class="markdown-content"
-                v-html="parseMarkdown(msg.content)"
-              ></div>
+          <!-- Prompt Suggestions -->
+          <div class="!mb-6">
+            <div class="!flex !flex-col !gap-3">
+              <button
+                v-for="suggestion in PROMPT_SUGGESTIONS"
+                :key="suggestion"
+                type="button"
+                :class="[
+                  '!w-full !px-4 !py-3 !rounded-xl !text-base !font-medium !transition-all',
+                  '!border !text-left !shadow-sm',
+                  tc(
+                    '!bg-gray-800 !text-gray-200 !border-gray-600 hover:!bg-gray-700',
+                    '!bg-gray-50 !text-gray-700 !border-gray-200 hover:!bg-gray-100',
+                  ),
+                ]"
+                @click="setSuggestion(suggestion)"
+              >
+                {{ suggestion }}
+              </button>
             </div>
           </div>
 
-          <!-- Loading Indicator -->
-          <div v-if="loading" class="!flex !justify-start !w-full">
-            <div
-              :class="[
-                '!rounded-lg !px-3 !py-2 !max-w-[85%] !text-base !shadow-md',
-                clientSideTheme && isDark
-                  ? '!bg-gray-800 !text-gray-300 !border !border-gray-700'
-                  : '!bg-white !text-gray-600 !border !border-gray-200',
-              ]"
-            >
-              <div class="!flex !justify-between !items-center !mb-1">
-                <span
-                  :class="
-                    clientSideTheme && isDark
-                      ? '!text-sm !text-gray-400'
-                      : '!text-sm !text-gray-500'
-                  "
-                >
-                  Advocado
-                </span>
-                <span
-                  :class="
-                    clientSideTheme && isDark
-                      ? '!text-sm !text-gray-400 !ml-4'
-                      : '!text-sm !text-gray-500 !ml-4'
-                  "
-                >
-                  {{ formatTime(Date.now()) }}
-                </span>
-              </div>
-              <div class="!flex !items-center">
-                <span
-                  v-for="(_, i) in 3"
-                  :key="i"
-                  :class="[
-                    '!inline-block !h-1.5 !w-1.5 !rounded-full !animate-pulse',
-                    clientSideTheme && isDark ? '!bg-gray-400' : '!bg-gray-300',
-                  ]"
-                  :style="{
-                    marginLeft: i > 0 ? '0.25rem' : 0,
-                    marginRight: i < 2 ? '0.25rem' : 0,
-                    animationDelay: `${i * 0.2}s`,
-                  }"
-                ></span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Input Area -->
-        <div
-          :class="[
-            '!p-3 !border-t',
-            clientSideTheme && isDark ? '!border-gray-700' : '!border-gray-200',
-          ]"
-        >
+          <!-- Input Form -->
           <form class="!flex !gap-2" @submit.prevent="sendMessage">
             <textarea
               ref="inputRef"
               v-model="userInput"
-              placeholder="AMA about Steve! 🎤"
+              placeholder="Ask something..."
+              aria-label="Type your message"
               :class="[
                 '!flex-1 !rounded-lg !p-2 !text-base !resize-none !leading-5 !overflow-y-auto',
                 '!border-0 !outline-none !focus:ring-0',
-                clientSideTheme && isDark
-                  ? '!bg-gray-800 !text-gray-100 !placeholder-gray-400'
-                  : '!bg-gray-100 !text-gray-800 !placeholder-gray-500',
+                tc(
+                  '!bg-gray-800 !text-gray-100 !placeholder-gray-400',
+                  '!bg-gray-100 !text-gray-800 !placeholder-gray-500',
+                ),
               ]"
               :disabled="loading"
               rows="1"
@@ -587,13 +478,15 @@ watch(messages, () => scrollToBottom(), { deep: true });
             ></textarea>
             <button
               type="submit"
+              aria-label="Send message"
               :class="[
                 '!rounded-lg !px-3 !transition-all !flex !items-center !justify-center !min-w-[48px]',
                 userInput.trim() && !loading
                   ? '!bg-indigo-600 hover:!bg-indigo-700 !text-white'
-                  : clientSideTheme && isDark
-                    ? '!bg-gray-700 !text-gray-400 !cursor-not-allowed'
-                    : '!bg-gray-200 !text-gray-400 !cursor-not-allowed',
+                  : tc(
+                      '!bg-gray-700 !text-gray-400 !cursor-not-allowed',
+                      '!bg-gray-200 !text-gray-400 !cursor-not-allowed',
+                    ),
               ]"
               :disabled="loading || !userInput.trim()"
             >
@@ -619,7 +512,336 @@ watch(messages, () => scrollToBottom(), { deep: true });
             </button>
           </form>
         </div>
-      </div>
+
+        <!-- Expanded Mode -->
+        <div v-else key="expanded" class="!flex !flex-col !h-full">
+          <!-- Header -->
+          <div
+            :class="[
+              '!p-3 !flex !items-center !justify-between !border-b',
+              tc('!border-gray-700', '!border-gray-200'),
+            ]"
+          >
+            <div class="!flex !items-center !gap-2">
+              <div class="!h-2 !w-2 !rounded-full !bg-green-500"></div>
+              <h3
+                :class="['!text-base !font-medium', tc('!text-gray-100', '!text-gray-800')]"
+              >
+                Chat with Advocado 🥑
+              </h3>
+            </div>
+            <div class="!flex !items-center !gap-1">
+              <!-- New Chat -->
+              <button
+                :class="[
+                  '!p-1 !rounded !transition-colors',
+                  tc('!text-gray-300 hover:!bg-gray-800', '!text-gray-600 hover:!bg-gray-100'),
+                ]"
+                aria-label="New conversation"
+                @click="resetChat"
+              >
+                <svg class="!w-4 !h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.992 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182M20.015 4.356v4.992"
+                  />
+                </svg>
+              </button>
+              <!-- Full Screen Toggle -->
+              <button
+                :class="[
+                  '!p-1 !rounded !transition-colors',
+                  tc('!text-gray-300 hover:!bg-gray-800', '!text-gray-600 hover:!bg-gray-100'),
+                ]"
+                aria-label="Toggle full screen"
+                @click="toggleFullHeight"
+              >
+                <svg
+                  v-if="!isFullHeight"
+                  class="!w-4 !h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9m11.25-5.25v4.5m0-4.5h-4.5m4.5 0L15 9m-11.25 11.25v-4.5m0 4.5h4.5m-4.5 0L9 15m11.25 5.25v-4.5m0 4.5h-4.5m4.5 0L15 15"
+                  />
+                </svg>
+                <svg
+                  v-else
+                  class="!w-4 !h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M9 9V4.5M9 9H4.5M9 9L3.75 3.75M9 15v4.5M9 15H4.5M9 15l-5.25 5.25M15 9h4.5M15 9V4.5M15 9l5.25-5.25M15 15h4.5m-4.5 0v4.5m0-4.5l5.25 5.25"
+                  />
+                </svg>
+              </button>
+              <!-- Close -->
+              <button
+                :class="[
+                  '!p-1 !rounded !transition-colors',
+                  tc('!text-gray-300 hover:!bg-gray-800', '!text-gray-600 hover:!bg-gray-100'),
+                ]"
+                aria-label="Close chat"
+                @click="toggleMiniChat"
+              >
+                <svg class="!w-4 !h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- Messages Area -->
+          <div
+            ref="chatContainerRef"
+            role="log"
+            aria-live="polite"
+            :class="[
+              '!flex-1 !overflow-y-auto !p-3 !space-y-3',
+              isFullHeight ? '' : '!max-h-80',
+            ]"
+          >
+            <div
+              v-for="(msg, index) in messages"
+              :key="index"
+              class="!flex !w-full"
+              :class="[msg.role === 'user' ? '!justify-end' : '!justify-start']"
+            >
+              <div
+                v-if="msg.content.trim()"
+                class="group"
+                :class="[
+                  '!rounded-lg !px-3 !py-2 !max-w-[85%] !text-base !shadow-md',
+                  msg.role === 'user'
+                    ? '!bg-indigo-600 !text-white'
+                    : tc(
+                        '!bg-gray-800 !text-gray-100 !border !border-gray-700',
+                        '!bg-white !text-gray-800 !border !border-gray-200',
+                      ),
+                ]"
+              >
+                <div class="!flex !justify-between !items-center !mb-1">
+                  <span
+                    :class="[
+                      '!text-sm',
+                      msg.role === 'user'
+                        ? '!text-gray-200'
+                        : tc('!text-gray-400', '!text-gray-500'),
+                    ]"
+                  >
+                    {{ msg.role === "user" ? "You" : "Advocado" }}
+                  </span>
+                  <div class="!flex !items-center !gap-1">
+                    <span
+                      v-if="msg.timestamp"
+                      :class="[
+                        '!text-sm !ml-4',
+                        msg.role === 'user'
+                          ? '!text-gray-200'
+                          : tc('!text-gray-400', '!text-gray-500'),
+                      ]"
+                    >
+                      {{ formatTime(msg.timestamp) }}
+                    </span>
+                    <button
+                      v-if="msg.role === 'assistant'"
+                      class="!opacity-0 group-hover:!opacity-100 !transition-opacity !p-0.5 !rounded"
+                      :class="tc('hover:!bg-gray-700', 'hover:!bg-gray-100')"
+                      :aria-label="copiedIndex === index ? 'Copied' : 'Copy message'"
+                      @click="copyMessage(msg.content, index)"
+                    >
+                      <svg
+                        v-if="copiedIndex !== index"
+                        class="!w-3.5 !h-3.5"
+                        :class="tc('!text-gray-400', '!text-gray-500')"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                        />
+                      </svg>
+                      <svg
+                        v-else
+                        class="!w-3.5 !h-3.5 !text-green-500"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M5 13l4 4L19 7"
+                        />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+                <div
+                  class="markdown-content"
+                  v-html="parseMarkdown(msg.content)"
+                ></div>
+              </div>
+            </div>
+
+            <!-- Loading Indicator -->
+            <div v-if="loading" class="!flex !justify-start !w-full">
+              <div
+                :class="[
+                  '!rounded-lg !px-3 !py-2 !max-w-[85%] !text-base !shadow-md',
+                  tc(
+                    '!bg-gray-800 !text-gray-300 !border !border-gray-700',
+                    '!bg-white !text-gray-600 !border !border-gray-200',
+                  ),
+                ]"
+              >
+                <div class="!flex !justify-between !items-center !mb-1">
+                  <span :class="['!text-sm', tc('!text-gray-400', '!text-gray-500')]">
+                    Advocado
+                  </span>
+                  <span :class="['!text-sm !ml-4', tc('!text-gray-400', '!text-gray-500')]">
+                    {{ formatTime(Date.now()) }}
+                  </span>
+                </div>
+                <div class="!flex !items-center">
+                  <span
+                    v-for="(_, i) in 3"
+                    :key="i"
+                    :class="[
+                      '!inline-block !h-1.5 !w-1.5 !rounded-full !animate-pulse',
+                      tc('!bg-gray-400', '!bg-gray-300'),
+                    ]"
+                    :style="{
+                      marginLeft: i > 0 ? '0.25rem' : 0,
+                      marginRight: i < 2 ? '0.25rem' : 0,
+                      animationDelay: `${i * 0.2}s`,
+                    }"
+                  ></span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Retry Button -->
+            <div v-if="lastFailedMessage && !loading" class="!flex !justify-center !w-full">
+              <button
+                :class="[
+                  '!px-4 !py-1.5 !rounded-lg !text-sm !font-medium !transition-colors',
+                  '!bg-indigo-600 hover:!bg-indigo-700 !text-white',
+                ]"
+                @click="retryLastMessage"
+              >
+                Retry
+              </button>
+            </div>
+          </div>
+
+          <!-- Suggestion Carousel -->
+          <div
+            :class="[
+              '!px-3 !py-2 !border-t !overflow-x-auto !flex !gap-2 !flex-nowrap scrollbar-hide',
+              tc('!border-gray-700', '!border-gray-200'),
+            ]"
+          >
+            <button
+              v-for="suggestion in PROMPT_SUGGESTIONS"
+              :key="suggestion"
+              type="button"
+              :class="[
+                '!whitespace-nowrap !px-3 !py-1.5 !rounded-full !text-sm !font-medium !transition-colors !shrink-0 !border',
+                tc(
+                  '!bg-gray-800 !text-gray-300 !border-gray-600 hover:!bg-gray-700',
+                  '!bg-gray-50 !text-gray-600 !border-gray-200 hover:!bg-gray-100',
+                ),
+              ]"
+              :disabled="loading"
+              @click="setSuggestion(suggestion)"
+            >
+              {{ suggestion }}
+            </button>
+          </div>
+
+          <!-- Input Area -->
+          <div
+            :class="['!p-3 !border-t', tc('!border-gray-700', '!border-gray-200')]"
+          >
+            <form class="!flex !gap-2" @submit.prevent="sendMessage">
+              <textarea
+                ref="inputRef"
+                v-model="userInput"
+                placeholder="AMA about Steve! 🎤"
+                aria-label="Type your message"
+                :class="[
+                  '!flex-1 !rounded-lg !p-2 !text-base !resize-none !leading-5 !overflow-y-auto',
+                  '!border-0 !outline-none !focus:ring-0',
+                  tc(
+                    '!bg-gray-800 !text-gray-100 !placeholder-gray-400',
+                    '!bg-gray-100 !text-gray-800 !placeholder-gray-500',
+                  ),
+                ]"
+                :disabled="loading"
+                rows="1"
+                @keydown="handleKeyDown"
+              ></textarea>
+              <button
+                type="submit"
+                aria-label="Send message"
+                :class="[
+                  '!rounded-lg !px-3 !transition-all !flex !items-center !justify-center !min-w-[48px]',
+                  userInput.trim() && !loading
+                    ? '!bg-indigo-600 hover:!bg-indigo-700 !text-white'
+                    : tc(
+                        '!bg-gray-700 !text-gray-400 !cursor-not-allowed',
+                        '!bg-gray-200 !text-gray-400 !cursor-not-allowed',
+                      ),
+                ]"
+                :disabled="loading || !userInput.trim()"
+              >
+                <svg
+                  v-if="!loading"
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="!h-4 !w-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
+                  />
+                </svg>
+                <div
+                  v-else
+                  class="!h-4 !w-4 !border-2 !border-t-transparent !border-current !rounded-full !animate-spin"
+                ></div>
+              </button>
+            </form>
+          </div>
+        </div>
+      </Transition>
     </div>
   </div>
 </template>
@@ -627,6 +849,25 @@ watch(messages, () => scrollToBottom(), { deep: true });
 <style scoped>
 .chat-position {
   right: max(1rem, calc(50vw - 720px));
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.chat-mode-enter-active,
+.chat-mode-leave-active {
+  transition: opacity 0.15s ease;
+}
+
+.chat-mode-enter-from,
+.chat-mode-leave-to {
+  opacity: 0;
 }
 
 ::-webkit-scrollbar {
