@@ -152,9 +152,12 @@ const getItemKey = (item: Recommendation): string => item.id;
   gap: 1rem;
   margin-bottom: 2rem;
   padding: 1.5rem;
-  background-color: var(--vp-c-bg-soft);
-  border-radius: 8px;
-  border: 1px solid var(--vp-c-divider);
+  background: var(--glass-bg);
+  border-radius: var(--glass-radius);
+  border: 1px solid var(--glass-border);
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  backdrop-filter: blur(var(--glass-blur));
+  box-shadow: var(--glass-shadow);
 }
 
 .search-box {
@@ -225,16 +228,20 @@ const getItemKey = (item: Recommendation): string => item.id;
 }
 
 .recommendation-card {
-  background-color: var(--vp-c-bg-soft);
-  border: 1px solid var(--vp-c-divider);
-  border-radius: 8px;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--glass-radius);
   padding: 1.5rem;
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  backdrop-filter: blur(var(--glass-blur));
+  box-shadow: var(--glass-shadow);
   transition: all 0.3s ease;
 }
 
 .recommendation-card:hover {
-  border-color: var(--vp-c-brand-1);
-  box-shadow: 0 4px 12px var(--vp-c-brand-soft);
+  background: var(--glass-bg-strong);
+  border-color: rgba(255, 255, 255, 0.25);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
   transform: translateY(-2px);
 }
 
