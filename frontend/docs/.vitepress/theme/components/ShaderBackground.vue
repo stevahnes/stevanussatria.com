@@ -134,14 +134,14 @@ const fragmentShaderSource = `
     float focalDistB = distance(uvAspect, focalB);
     float focalInfluenceB = smoothstep(0.6, 0.0, focalDistB);
 
-    // Responsive text guard:
-    // Desktop (wide): suppress left side where text sits beside the image.
-    // Mobile  (tall): suppress lower 2/3 where text sits below the image.
-    // Blend between the two based on aspect ratio.
-    float isMobile = smoothstep(1.0, 0.7, aspect);
+    // Responsive text guard matched to VitePress hero layout:
+    //   >= 960px wide  → side-by-side (text left, image right) → horizontal guard
+    //   <  960px wide  → stacked (image top, text below)        → vertical guard
+    // u_resolution is in CSS pixels (canvas.width = offsetWidth).
+    float isStacked = smoothstep(960.0, 860.0, u_resolution.x);
     float hGuard = smoothstep(0.25, 0.55, uv.x);
     float vGuard = smoothstep(0.55, 0.85, uv.y);
-    float textGuard = mix(hGuard, vGuard, isMobile);
+    float textGuard = mix(hGuard, vGuard, isStacked);
 
     // Light/dark mode detection
     float bgLuma = dot(u_bgColor, vec3(0.299, 0.587, 0.114));
