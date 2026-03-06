@@ -23,7 +23,7 @@ const TIMELINE_CLASSES = {
   time: "mb-1 text-sm font-normal leading-none text-gray-400 dark:text-gray-500",
   title: "text-lg font-semibold text-gray-900 dark:text-white",
   description: "mb-4 text-base font-normal text-gray-500 dark:text-gray-400",
-  link: "inline-flex no-underline! hover:underline items-center px-4 py-2 text-sm font-medium text-gray-900 bg-white border border-gray-200 rounded-lg hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-4 focus:outline-none focus:ring-gray-100 focus:text-blue-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700 dark:focus:ring-gray-700",
+  link: "inline-flex no-underline! hover:underline items-center px-4 py-2 text-sm font-medium text-gray-900 bg-white/10 border border-white/15 rounded-2xl backdrop-blur-[20px] shadow-[0_8px_32px_rgba(0,0,0,0.08)] hover:bg-white/20 hover:text-blue-700 focus:z-10 focus:ring-4 focus:outline-none focus:ring-gray-100 focus:text-blue-700 dark:bg-white/6 dark:text-gray-400 dark:border-white/10 dark:shadow-[0_8px_32px_rgba(0,0,0,0.25)] dark:hover:text-white dark:hover:bg-white/12 dark:focus:ring-gray-700",
   icon: "w-3 h-3 ms-2 rtl:rotate-180",
 } as const;
 

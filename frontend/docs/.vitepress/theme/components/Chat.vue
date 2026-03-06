@@ -380,8 +380,12 @@ watch(
       role="dialog"
       aria-label="Chat with Advocado"
       :class="[
-        '!rounded-2xl !shadow-2xl !transition-all',
-        tc('!bg-gray-900 !border !border-gray-700', '!bg-white !border !border-gray-200'),
+        '!rounded-2xl !transition-all',
+        tc(
+          '!bg-gray-900/60 !border !border-white/10 !shadow-[0_8px_32px_rgba(0,0,0,0.3)]',
+          '!bg-white/60 !border !border-white/20 !shadow-[0_8px_32px_rgba(0,0,0,0.08)]'
+        ),
+        '!backdrop-blur-[20px]',
         '!flex !flex-col',
         isCompactMode
           ? '!h-auto !w-[calc(100vw-2rem)] sm:!w-[400px] !max-w-[400px]'
@@ -632,8 +636,8 @@ watch(
                   msg.role === 'user'
                     ? '!bg-indigo-600 !text-white'
                     : tc(
-                        '!bg-gray-800 !text-gray-100 !border !border-gray-700',
-                        '!bg-white !text-gray-800 !border !border-gray-200',
+                        '!bg-white/8 !text-gray-100 !border !border-white/10 !backdrop-blur-md',
+                        '!bg-white/60 !text-gray-800 !border !border-white/20 !backdrop-blur-md',
                       ),
                 ]"
               >
@@ -712,8 +716,8 @@ watch(
                 :class="[
                   '!rounded-lg !px-3 !py-2 !max-w-[85%] !text-base !shadow-md',
                   tc(
-                    '!bg-gray-800 !text-gray-300 !border !border-gray-700',
-                    '!bg-white !text-gray-600 !border !border-gray-200',
+                    '!bg-white/8 !text-gray-300 !border !border-white/10 !backdrop-blur-md',
+                    '!bg-white/60 !text-gray-600 !border !border-white/20 !backdrop-blur-md',
                   ),
                 ]"
               >
