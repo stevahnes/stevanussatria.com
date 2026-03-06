@@ -48,6 +48,7 @@ const lastFailedMessage = ref<string | null>(null);
 // --- DOM Refs ---
 const inputRef = ref<HTMLTextAreaElement | null>(null);
 const chatContainerRef = ref<HTMLDivElement | null>(null);
+const suggestionRef = ref<HTMLDivElement | null>(null);
 
 // --- Theme ---
 const { isDark } = useData();
@@ -301,8 +302,18 @@ const handleChatActivation = (event: ChatActivationEvent): void => {
   }
 };
 
-const setSuggestion = (suggestion: string): void => {
+const setSuggestion = (suggestion: string, event?: MouseEvent | PointerEvent): void => {
   userInput.value = suggestion;
+
+  // Add this block to handle the scroll-into-view
+  if (event?.currentTarget) {
+    (event.currentTarget as HTMLElement).scrollIntoView({
+      behavior: "smooth",
+      inline: "center",
+      block: "nearest",
+    });
+  }
+
   nextTick(() => {
     resizeTextarea();
     // Only focus on desktop — mobile focus triggers keyboard
@@ -352,6 +363,19 @@ onMounted(async () => {
     if (!isMobileDevice()) {
       inputRef.value.focus({ preventScroll: true });
     }
+  }
+
+  if (suggestionRef.value) {
+    suggestionRef.value.addEventListener(
+      "wheel",
+      (e: WheelEvent) => {
+        if (e.deltaY !== 0) {
+          e.preventDefault();
+          suggestionRef.value!.scrollLeft += e.deltaY;
+        }
+      },
+      { passive: false },
+    );
   }
 });
 
@@ -756,6 +780,7 @@ watch(
 
           <!-- Suggestion Carousel -->
           <div
+            ref="suggestionRef"
             :class="[
               '!px-3 !py-2 !border-t !overflow-x-auto !flex !gap-2 !flex-nowrap scrollbar-hide',
               tc('!border-gray-700', '!border-gray-200'),
@@ -766,14 +791,14 @@ watch(
               :key="suggestion"
               type="button"
               :class="[
-                '!whitespace-nowrap !px-3 !py-1.5 !rounded-full !text-sm !font-medium !transition-colors !shrink-0 !border',
+                '!whitespace-nowrap !px-3 !py-1.5 !rounded-full !text-sm !font-medium !transition-colors !shrink-0 !border touch-pan-x',
                 tc(
                   '!bg-gray-800 !text-gray-300 !border-gray-600 hover:!bg-gray-700',
                   '!bg-gray-50 !text-gray-600 !border-gray-200 hover:!bg-gray-100',
                 ),
               ]"
               :disabled="loading"
-              @click="setSuggestion(suggestion)"
+              @click="setSuggestion(suggestion, $event)"
             >
               {{ suggestion }}
             </button>
