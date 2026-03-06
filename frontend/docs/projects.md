@@ -31,28 +31,28 @@ features:
   - icon:
       src: /claire.webp
       alt: Cognitive Learning AI for Reasoning and Education
-    title: CLAIRE (Private Repo)
+    title: CLAIRE
     details: Cognitive Learning AI for Reasoning and Education
     link: https://github.com/stevahnes/edu-mentor
     target: _blank
   - icon:
       src: /vibe-chef-wiz.webp
       alt: Weekly Meal Inspiration and Planner
-    title: VibeChef Wiz (Private Repo)
+    title: VibeChef Wiz
     details: A weekly meal-prep planner with embedded AI for recipes inspiration
     link: https://github.com/stevahnes/vibe-chef-wiz
     target: _blank
   - icon:
       src: /frontend-markdown-renderer.webp
       alt: Simple Frontend Markdown Renderer
-    title: MarkView (Private Repo)
+    title: MarkView
     details: A simple purely browser-based markdown renderer with MermaidJS support
     link: https://markviewui.vercel.app
     target: _blank
   - icon:
       src: /llm-judge.webp
       alt: LLM Judge Documentation Evaluation Tool
-    title: docs-eval (Private Repo)
+    title: docs-eval
     details: A simple LLM-as-a-judge implementation for documentation agent output, hosted on Vercel
     link: https://github.com/stevahnes/docs-eval
     target: _blank
@@ -161,3 +161,4 @@ features:
     link: https://youtu.be/xLcHc-iailM
     target: _blank
 ---
+
