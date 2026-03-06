@@ -97,14 +97,144 @@
 }
 
 /**
- * Component: Custom Block
+ * Liquid Glass Design System
  * -------------------------------------------------------------------------- */
 
 :root {
-  --vp-custom-block-tip-border: transparent;
+  --glass-bg: rgba(255, 255, 255, 0.08);
+  --glass-bg-strong: rgba(255, 255, 255, 0.14);
+  --glass-border: rgba(255, 255, 255, 0.18);
+  --glass-blur: 20px;
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+  --glass-radius: 16px;
+}
+
+.dark {
+  --glass-bg: rgba(255, 255, 255, 0.06);
+  --glass-bg-strong: rgba(255, 255, 255, 0.10);
+  --glass-border: rgba(255, 255, 255, 0.10);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+}
+
+/**
+ * Ambient background: subtle animated gradient blobs that give glass
+ * elements something to refract. Keeps content contrast intact.
+ * -------------------------------------------------------------------------- */
+
+body {
+  background:
+    radial-gradient(ellipse 60% 50% at 15% 80%, rgba(0, 102, 178, 0.06) 0%, transparent 70%),
+    radial-gradient(ellipse 50% 60% at 85% 20%, rgba(0, 194, 168, 0.05) 0%, transparent 70%),
+    var(--vp-c-bg);
+  background-attachment: fixed;
+}
+
+.dark body {
+  background:
+    radial-gradient(ellipse 60% 50% at 15% 80%, rgba(0, 102, 178, 0.12) 0%, transparent 70%),
+    radial-gradient(ellipse 50% 60% at 85% 20%, rgba(0, 194, 168, 0.08) 0%, transparent 70%),
+    radial-gradient(ellipse 40% 40% at 50% 50%, rgba(0, 60, 120, 0.06) 0%, transparent 70%),
+    var(--vp-c-bg);
+  background-attachment: fixed;
+}
+
+/**
+ * Component: Home Feature Cards (liquid glass)
+ * -------------------------------------------------------------------------- */
+
+.VPFeatures .container,
+.vp-doc.container {
+  padding-top: 1rem;
+}
+
+.VPFeatures .VPFeature {
+  background: var(--glass-bg) !important;
+  border: 1px solid var(--glass-border) !important;
+  border-radius: var(--glass-radius) !important;
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  backdrop-filter: blur(var(--glass-blur));
+  box-shadow: var(--glass-shadow) !important;
+  transition: background 0.3s, border-color 0.3s, box-shadow 0.3s;
+}
+
+.VPFeatures .VPFeature:hover {
+  background: var(--glass-bg-strong) !important;
+  border-color: rgba(255, 255, 255, 0.25) !important;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15) !important;
+}
+
+.dark .VPFeatures .VPFeature:hover {
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35) !important;
+}
+
+.VPFeatures .VPFeature .box {
+  background: transparent !important;
+}
+
+.VPHome .VPFeatures .VPFeature .title {
+  font-size: 1.4em;
+  font-weight: 700;
+}
+
+/**
+ * Component: Nav Bar (liquid glass)
+ * -------------------------------------------------------------------------- */
+
+.VPNav .VPNavBar {
+  background: var(--glass-bg) !important;
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  backdrop-filter: blur(var(--glass-blur));
+  border-bottom: 1px solid var(--glass-border) !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+}
+
+.dark .VPNav .VPNavBar {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+.VPNav .VPNavBar .divider {
+  display: none;
+}
+
+.VPNavBar .content,
+.VPNavBar .content-body {
+  background: transparent !important;
+}
+
+.VPNavBar .curtain {
+  display: none !important;
+}
+
+/**
+ * Component: Sidebar (liquid glass)
+ * -------------------------------------------------------------------------- */
+
+.VPSidebar {
+  background: var(--glass-bg) !important;
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  backdrop-filter: blur(var(--glass-blur));
+  border-right: 1px solid var(--glass-border) !important;
+}
+
+/**
+ * Component: Custom Block (liquid glass)
+ * -------------------------------------------------------------------------- */
+
+:root {
+  --vp-custom-block-tip-border: var(--glass-border);
   --vp-custom-block-tip-text: var(--vp-c-text-1);
-  --vp-custom-block-tip-bg: var(--vp-c-brand-soft);
-  --vp-custom-block-tip-code-bg: var(--vp-c-brand-soft);
+  --vp-custom-block-tip-bg: var(--glass-bg);
+  --vp-custom-block-tip-code-bg: var(--glass-bg);
+}
+
+.custom-block.tip,
+.custom-block.info,
+.custom-block.warning,
+.custom-block.danger {
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--glass-radius);
 }
 
 /**
