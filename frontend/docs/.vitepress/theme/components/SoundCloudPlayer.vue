@@ -425,15 +425,11 @@ onUnmounted(() => {
 .sc-note-icon { width: 100%; height: 100%; }
 
 .sc-playing-indicator {
-  position: absolute;
-  /* Sits at the bottom centre of the circle, fully inside the overflow:hidden boundary */
-  bottom: 6px;
-  left: 50%;
-  transform: translateX(calc(-50%));
   display: flex;
   align-items: flex-end;
   gap: 2px;
   height: 10px;
+  margin-left: 4px;
 }
 
 .sc-wave {
