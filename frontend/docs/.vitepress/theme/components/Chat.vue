@@ -264,7 +264,7 @@ const sendMessage = async (): Promise<void> => {
     if (!assistantMessageAdded) {
       messages.value.push({
         role: "assistant",
-        content: "Something went wrong. Please try again or [read about Steve here](/about).",
+        content: "Something went wrong. Please try again or [read about Steve here](/).",
         timestamp: Date.now(),
       });
     }
