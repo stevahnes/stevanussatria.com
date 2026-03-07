@@ -429,7 +429,7 @@ onUnmounted(() => {
   /* Sits at the bottom centre of the circle, fully inside the overflow:hidden boundary */
   bottom: 6px;
   left: 50%;
-  transform: translateX(calc(-50% + 4px));
+  transform: translateX(calc(-50%));
   display: flex;
   align-items: flex-end;
   gap: 2px;
