@@ -429,7 +429,7 @@ onUnmounted(() => {
   align-items: flex-end;
   gap: 2px;
   height: 10px;
-  margin-left: 4px;
+  margin-left: 2px;
 }
 
 .sc-wave {
