@@ -427,9 +427,9 @@ onUnmounted(() => {
 .sc-playing-indicator {
   position: absolute;
   /* Sits at the bottom centre of the circle, fully inside the overflow:hidden boundary */
-  bottom: 8px;
+  bottom: 6px;
   left: 50%;
-  transform: translateX(-50%);
+  transform: translateX(calc(-50% + 4px));
   display: flex;
   align-items: flex-end;
   gap: 2px;
