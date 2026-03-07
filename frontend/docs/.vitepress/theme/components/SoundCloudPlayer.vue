@@ -352,19 +352,26 @@ onUnmounted(() => {
 }
 
 .sc-player-container {
-  background: var(--glass-bg);
-  border-radius: var(--glass-radius);
-  border: 1px solid var(--glass-border);
-  -webkit-backdrop-filter: blur(var(--glass-blur));
-  backdrop-filter: blur(var(--glass-blur));
+  /* Collapsed state: fully transparent so only the .sc-collapsed circle shows */
+  background: transparent;
+  border-radius: 50%;
+  border: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  overflow: hidden;
+  overflow: visible;
   color: var(--player-text);
 }
 
 .sc-player-container.expanded {
   width: 320px;
   height: 200px;
+  border-radius: var(--glass-radius);
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  backdrop-filter: blur(var(--glass-blur));
+  overflow: hidden;
 }
 
 /* ── Collapsed button — glass circle matching shader picker ── */
@@ -382,6 +389,7 @@ onUnmounted(() => {
   justify-content: center;
   cursor: pointer;
   position: relative;
+  overflow: hidden;
   transition: background 0.2s, border-color 0.2s, transform 0.15s, box-shadow 0.2s;
   color: rgba(255, 255, 255, 0.85);
 }
@@ -418,11 +426,13 @@ onUnmounted(() => {
 
 .sc-playing-indicator {
   position: absolute;
-  bottom: 6px;
-  right: 6px;
+  /* Sits at the bottom centre of the circle, fully inside the overflow:hidden boundary */
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%);
   display: flex;
   align-items: flex-end;
-  gap: 1px;
+  gap: 2px;
   height: 10px;
 }
 
