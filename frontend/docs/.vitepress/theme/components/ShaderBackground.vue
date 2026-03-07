@@ -82,7 +82,7 @@ const FRAG_AURORA = `
   }
   float fbm(vec2 p){
     float v=0.,a=.5,f=1.;
-    for(int i=0;i<5;i++){v+=a*snoise(p*f);f*=2.;a*=.5;}
+    for(int i=0;i<4;i++){v+=a*snoise(p*f);f*=2.;a*=.5;}
     return v;
   }
   void main(){
@@ -487,14 +487,16 @@ const showPicker = ref(false);
 // exactly the behaviour we want (random on refresh, stable while browsing).
 function pickInitialShader(): ShaderId {
   const stored = sessionStorage.getItem("activeShader") as ShaderId | null;
-  if (stored && stored in FRAG_MAP) return stored;
+  if (stored && (stored in FRAG_MAP)) return stored;
   const ids = SHADERS.map(s => s.id);
   const picked = ids[Math.floor(Math.random() * ids.length)];
   sessionStorage.setItem("activeShader", picked);
   return picked;
 }
 
-const activeShader = ref<ShaderId>(typeof window !== "undefined" ? pickInitialShader() : "aurora");
+const activeShader = ref<ShaderId>(
+  typeof window !== "undefined" ? pickInitialShader() : "aurora"
+);
 
 let animationId: number;
 let gl: WebGLRenderingContext | null = null;
@@ -510,6 +512,9 @@ let uniformLocs: {
   centerA: WebGLUniformLocation | null;
   centerB: WebGLUniformLocation | null;
 } = { res: null, time: null, bg: null, centerA: null, centerB: null };
+
+// Cache compiled programs so switching is instant after first compile
+const programCache = new Map<ShaderId, WebGLProgram>();
 
 function getBgColor(): [number, number, number] {
   const isDark = document.documentElement.classList.contains("dark");
@@ -556,8 +561,14 @@ function buildProgram(g: WebGLRenderingContext, fragSrc: string): WebGLProgram |
 
 function switchShader(id: ShaderId) {
   if (!gl) return;
-  const prog = buildProgram(gl, FRAG_MAP[id]);
-  if (!prog) return;
+
+  // Use cached program if available, otherwise compile now
+  let prog = programCache.get(id) ?? null;
+  if (!prog) {
+    prog = buildProgram(gl, FRAG_MAP[id]);
+    if (!prog) return;
+    programCache.set(id, prog);
+  }
 
   currentProgram = prog;
   gl.useProgram(prog);
@@ -576,11 +587,38 @@ function switchShader(id: ShaderId) {
 
   activeShader.value = id;
   showPicker.value = false;
-  // Keep sessionStorage in sync so SPA navigations don't reset the choice
   sessionStorage.setItem("activeShader", id);
 }
 
-watch(activeShader, id => switchShader(id));
+watch(activeShader, (id) => switchShader(id));
+
+// Pre-compile remaining shaders during browser idle time so switching feels instant.
+// Uses requestIdleCallback so it never competes with the initial render or user input.
+function precompileOthers(active: ShaderId) {
+  const rest = SHADERS.map(s => s.id).filter(id => id !== active);
+  let i = 0;
+  const step = (deadline: IdleDeadline) => {
+    while (i < rest.length && deadline.timeRemaining() > 4) {
+      const id = rest[i++];
+      if (gl && !programCache.has(id)) {
+        const prog = buildProgram(gl, FRAG_MAP[id]);
+        if (prog) programCache.set(id, prog);
+      }
+    }
+    if (i < rest.length) requestIdleCallback(step);
+  };
+  // Fallback for Safari which lacks requestIdleCallback
+  if (typeof requestIdleCallback !== "undefined") {
+    requestIdleCallback(step, { timeout: 4000 });
+  } else {
+    setTimeout(() => rest.forEach(id => {
+      if (gl && !programCache.has(id)) {
+        const prog = buildProgram(gl, FRAG_MAP[id]);
+        if (prog) programCache.set(id, prog);
+      }
+    }), 2000);
+  }
+}
 
 // ─────────────────────────────────────────────
 //  Lifecycle
@@ -611,8 +649,9 @@ onMounted(() => {
   gl.bindBuffer(gl.ARRAY_BUFFER, buf);
   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
 
-  // Build initial program
+  // Build initial program only — others are compiled during idle time
   switchShader(activeShader.value);
+  precompileOthers(activeShader.value);
 
   ro = new ResizeObserver(() => {
     if (!canvas || !gl) return;
@@ -709,7 +748,7 @@ onUnmounted(() => {
    * Sits just below the navbar (~64px) and hugs the
    * content column's right edge like the chat widget.
    */
-  position: absolute;
+  position: fixed;
   top: calc(64px + 0.75rem);
   right: max(1rem, calc(50vw - 720px + 1.5rem));
   z-index: 30;
@@ -731,28 +770,21 @@ onUnmounted(() => {
   background: rgba(255, 255, 255, 0.08);
   backdrop-filter: blur(20px) saturate(1.6);
   -webkit-backdrop-filter: blur(20px) saturate(1.6);
-  color: rgba(255, 255, 255, 0.8);
+  color: rgba(255, 255, 255, 0.80);
   font-size: 0.75rem;
   font-family: inherit;
   letter-spacing: 0.04em;
   cursor: pointer;
-  transition:
-    background 0.2s,
-    border-color 0.2s,
-    transform 0.15s;
-  box-shadow:
-    0 2px 12px rgba(0, 0, 0, 0.28),
-    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  transition: background 0.2s, border-color 0.2s, transform 0.15s;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255,255,255,0.08);
 }
 
 /* Light-mode variant */
 :root:not(.dark) .picker-toggle {
   background: rgba(255, 255, 255, 0.55);
-  border-color: rgba(255, 255, 255, 0.7);
+  border-color: rgba(255, 255, 255, 0.70);
   color: rgba(0, 60, 120, 0.85);
-  box-shadow:
-    0 2px 12px rgba(0, 102, 178, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  box-shadow: 0 2px 12px rgba(0, 102, 178, 0.10), inset 0 1px 0 rgba(255,255,255,0.6);
 }
 
 .picker-toggle:hover {
@@ -760,10 +792,9 @@ onUnmounted(() => {
   border-color: rgba(255, 255, 255, 0.28);
   transform: translateY(-1px);
 }
-
 :root:not(.dark) .picker-toggle:hover {
   background: rgba(255, 255, 255, 0.78);
-  border-color: rgba(255, 255, 255, 0.9);
+  border-color: rgba(255, 255, 255, 0.90);
 }
 
 .toggle-icon {
@@ -779,7 +810,6 @@ onUnmounted(() => {
   transform: rotate(90deg);
   opacity: 0.6;
 }
-
 .toggle-chevron.rotated {
   transform: rotate(-90deg);
 }
@@ -796,18 +826,14 @@ onUnmounted(() => {
   background: rgba(255, 255, 255, 0.08);
   backdrop-filter: blur(20px) saturate(1.6);
   -webkit-backdrop-filter: blur(20px) saturate(1.6);
-  box-shadow:
-    0 8px 32px rgba(0, 0, 0, 0.35),
-    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255,255,255,0.08);
   min-width: 130px;
 }
 
 :root:not(.dark) .picker-options {
   background: rgba(255, 255, 255, 0.55);
-  border-color: rgba(255, 255, 255, 0.7);
-  box-shadow:
-    0 8px 32px rgba(0, 102, 178, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  border-color: rgba(255, 255, 255, 0.70);
+  box-shadow: 0 8px 32px rgba(0, 102, 178, 0.10), inset 0 1px 0 rgba(255,255,255,0.6);
 }
 
 /* ── Option button ───────────────────────── */
@@ -824,32 +850,28 @@ onUnmounted(() => {
   font-family: inherit;
   letter-spacing: 0.025em;
   cursor: pointer;
-  transition:
-    background 0.15s,
-    color 0.15s;
+  transition: background 0.15s, color 0.15s;
   width: 100%;
   text-align: left;
 }
 
 :root:not(.dark) .picker-option {
-  color: rgba(0, 50, 100, 0.6);
+  color: rgba(0, 50, 100, 0.60);
 }
 
 .picker-option:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.10);
   color: rgba(255, 255, 255, 0.92);
 }
-
 :root:not(.dark) .picker-option:hover {
   background: rgba(0, 102, 178, 0.08);
-  color: rgba(0, 60, 130, 0.9);
+  color: rgba(0, 60, 130, 0.90);
 }
 
 .picker-option.active {
-  background: rgba(0, 102, 178, 0.3);
+  background: rgba(0, 102, 178, 0.30);
   color: rgba(180, 225, 255, 0.95);
 }
-
 :root:not(.dark) .picker-option.active {
   background: rgba(0, 102, 178, 0.12);
   color: rgba(0, 60, 140, 0.95);
@@ -870,24 +892,17 @@ onUnmounted(() => {
 .fade-leave-active {
   transition: opacity 0.4s;
 }
-
 .fade-enter-from,
 .fade-leave-to {
   opacity: 0;
 }
 
 .slide-enter-active {
-  transition:
-    opacity 0.2s ease,
-    transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: opacity 0.2s ease, transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
-
 .slide-leave-active {
-  transition:
-    opacity 0.15s ease,
-    transform 0.15s ease;
+  transition: opacity 0.15s ease, transform 0.15s ease;
 }
-
 .slide-enter-from,
 .slide-leave-to {
   opacity: 0;

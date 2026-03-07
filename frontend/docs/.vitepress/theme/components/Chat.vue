@@ -121,7 +121,6 @@ const toggleMiniChat = (): void => {
   localStorage.setItem("miniChatExpanded", isMiniChat.value.toString());
   if (isMiniChat.value) {
     nextTick(() => {
-      // Only focus on desktop — mobile focus triggers keyboard
       if (!isMobileDevice()) {
         inputRef.value?.focus({ preventScroll: true });
       }
@@ -265,14 +264,13 @@ const sendMessage = async (): Promise<void> => {
     if (!assistantMessageAdded) {
       messages.value.push({
         role: "assistant",
-        content: "Something went wrong. Please try again or [read about Steve here](/about).",
+        content: "Something went wrong. Please try again or [read about Steve here](/).",
         timestamp: Date.now(),
       });
     }
   } finally {
     loading.value = false;
     await nextTick();
-    // Only refocus on desktop — mobile focus triggers keyboard
     if (!isMobileDevice()) {
       inputRef.value?.focus({ preventScroll: true });
     }
@@ -294,7 +292,6 @@ const handleChatActivation = (event: ChatActivationEvent): void => {
     userInput.value = message;
     nextTick(() => {
       resizeTextarea();
-      // Only focus on desktop — mobile focus triggers keyboard
       if (!isMobileDevice()) {
         inputRef.value?.focus({ preventScroll: true });
       }
@@ -305,7 +302,6 @@ const handleChatActivation = (event: ChatActivationEvent): void => {
 const setSuggestion = (suggestion: string, event?: MouseEvent | PointerEvent): void => {
   userInput.value = suggestion;
 
-  // Add this block to handle the scroll-into-view
   if (event?.currentTarget) {
     (event.currentTarget as HTMLElement).scrollIntoView({
       behavior: "smooth",
@@ -316,7 +312,6 @@ const setSuggestion = (suggestion: string, event?: MouseEvent | PointerEvent): v
 
   nextTick(() => {
     resizeTextarea();
-    // Only focus on desktop — mobile focus triggers keyboard
     if (!isMobileDevice()) {
       inputRef.value?.focus({ preventScroll: true });
     }
@@ -359,7 +354,6 @@ onMounted(async () => {
   scrollToBottom();
   if (inputRef.value) {
     resizeTextarea();
-    // Only auto-focus on desktop — mobile focus triggers keyboard
     if (!isMobileDevice()) {
       inputRef.value.focus({ preventScroll: true });
     }
@@ -401,10 +395,10 @@ watch(
 
 <template>
   <div v-if="isClient" class="chat-position !fixed !bottom-4 !z-50">
-    <!-- Chat Toggle Button -->
+    <!-- Chat Toggle Button — glass FAB matching shader picker -->
     <button
       v-if="!isMiniChat"
-      class="!w-14 !h-14 !rounded-full !bg-indigo-600 !text-white !shadow-lg !flex !items-center !justify-center !transition-all hover:!bg-indigo-700"
+      class="chat-fab"
       aria-label="Open chat with Advocado"
       @click="toggleMiniChat"
     >
@@ -448,12 +442,7 @@ watch(
             @click="toggleMiniChat"
           >
             <svg class="!w-4 !h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M6 18L18 6M6 6l12 12"
-              />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
 
@@ -515,13 +504,9 @@ watch(
               type="submit"
               aria-label="Send message"
               :class="[
-                '!rounded-lg !px-3 !transition-all !flex !items-center !justify-center !min-w-[48px]',
-                userInput.trim() && !loading
-                  ? '!bg-indigo-600 hover:!bg-indigo-700 !text-white'
-                  : tc(
-                      '!bg-gray-700 !text-gray-400 !cursor-not-allowed',
-                      '!bg-gray-200 !text-gray-400 !cursor-not-allowed',
-                    ),
+                'send-btn',
+                userInput.trim() && !loading ? 'send-btn--active' : 'send-btn--disabled',
+                !loading || !userInput.trim() ? '' : '',
               ]"
               :disabled="loading || !userInput.trim()"
             >
@@ -533,17 +518,9 @@ watch(
                 viewBox="0 0 24 24"
                 stroke="currentColor"
               >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
-                />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
               </svg>
-              <div
-                v-else
-                class="!h-4 !w-4 !border-2 !border-t-transparent !border-current !rounded-full !animate-spin"
-              ></div>
+              <div v-else class="!h-4 !w-4 !border-2 !border-t-transparent !border-current !rounded-full !animate-spin"></div>
             </button>
           </form>
         </div>
@@ -574,12 +551,7 @@ watch(
                 @click="resetChat"
               >
                 <svg class="!w-4 !h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.992 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182M20.015 4.356v4.992"
-                  />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.992 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182M20.015 4.356v4.992" />
                 </svg>
               </button>
               <!-- Full Screen Toggle -->
@@ -591,27 +563,11 @@ watch(
                 aria-label="Toggle full screen"
                 @click="toggleFullHeight"
               >
-                <svg
-                  v-if="!isFullHeight"
-                  class="!w-4 !h-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9m11.25-5.25v4.5m0-4.5h-4.5m4.5 0L15 9m-11.25 11.25v-4.5m0 4.5h4.5m-4.5 0L9 15m11.25 5.25v-4.5m0 4.5h-4.5m4.5 0L15 15"
-                  />
+                <svg v-if="!isFullHeight" class="!w-4 !h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9m11.25-5.25v4.5m0-4.5h-4.5m4.5 0L15 9m-11.25 11.25v-4.5m0 4.5h4.5m-4.5 0L9 15m11.25 5.25v-4.5m0 4.5h-4.5m4.5 0L15 15" />
                 </svg>
                 <svg v-else class="!w-4 !h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M9 9V4.5M9 9H4.5M9 9L3.75 3.75M9 15v4.5M9 15H4.5M9 15l-5.25 5.25M15 9h4.5M15 9V4.5M15 9l5.25-5.25M15 15h4.5m-4.5 0v4.5m0-4.5l5.25 5.25"
-                  />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 9V4.5M9 9H4.5M9 9L3.75 3.75M9 15v4.5M9 15H4.5M9 15l-5.25 5.25M15 9h4.5M15 9V4.5M15 9l5.25-5.25M15 15h4.5m-4.5 0v4.5m0-4.5l5.25 5.25" />
                 </svg>
               </button>
               <!-- Close -->
@@ -624,12 +580,7 @@ watch(
                 @click="toggleMiniChat"
               >
                 <svg class="!w-4 !h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M6 18L18 6M6 6l12 12"
-                  />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
             </div>
@@ -654,7 +605,7 @@ watch(
                 :class="[
                   '!rounded-lg !px-3 !py-2 !max-w-[85%] !text-base !shadow-md',
                   msg.role === 'user'
-                    ? '!bg-indigo-600 !text-white'
+                    ? 'user-bubble'
                     : tc(
                         '!bg-white/8 !text-gray-100 !border !border-white/10 !backdrop-blur-md',
                         '!bg-white/60 !text-gray-800 !border !border-white/20 !backdrop-blur-md',
@@ -666,7 +617,7 @@ watch(
                     :class="[
                       '!text-sm',
                       msg.role === 'user'
-                        ? '!text-gray-200'
+                        ? '!text-blue-100'
                         : tc('!text-gray-400', '!text-gray-500'),
                     ]"
                   >
@@ -678,7 +629,7 @@ watch(
                       :class="[
                         '!text-sm !ml-4',
                         msg.role === 'user'
-                          ? '!text-gray-200'
+                          ? '!text-blue-100'
                           : tc('!text-gray-400', '!text-gray-500'),
                       ]"
                     >
@@ -691,34 +642,11 @@ watch(
                       :aria-label="copiedIndex === index ? 'Copied' : 'Copy message'"
                       @click="copyMessage(msg.content, index)"
                     >
-                      <svg
-                        v-if="copiedIndex !== index"
-                        class="!w-3.5 !h-3.5"
-                        :class="tc('!text-gray-400', '!text-gray-500')"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="2"
-                          d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
-                        />
+                      <svg v-if="copiedIndex !== index" class="!w-3.5 !h-3.5" :class="tc('!text-gray-400', '!text-gray-500')" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                       </svg>
-                      <svg
-                        v-else
-                        class="!w-3.5 !h-3.5 !text-green-500"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="2"
-                          d="M5 13l4 4L19 7"
-                        />
+                      <svg v-else class="!w-3.5 !h-3.5 !text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                       </svg>
                     </button>
                   </div>
@@ -739,26 +667,15 @@ watch(
                 ]"
               >
                 <div class="!flex !justify-between !items-center !mb-1">
-                  <span :class="['!text-sm', tc('!text-gray-400', '!text-gray-500')]">
-                    Advocado
-                  </span>
-                  <span :class="['!text-sm !ml-4', tc('!text-gray-400', '!text-gray-500')]">
-                    {{ formatTime(Date.now()) }}
-                  </span>
+                  <span :class="['!text-sm', tc('!text-gray-400', '!text-gray-500')]">Advocado</span>
+                  <span :class="['!text-sm !ml-4', tc('!text-gray-400', '!text-gray-500')]">{{ formatTime(Date.now()) }}</span>
                 </div>
                 <div class="!flex !items-center">
                   <span
                     v-for="(_, i) in 3"
                     :key="i"
-                    :class="[
-                      '!inline-block !h-1.5 !w-1.5 !rounded-full !animate-pulse',
-                      tc('!bg-gray-400', '!bg-gray-300'),
-                    ]"
-                    :style="{
-                      marginLeft: i > 0 ? '0.25rem' : 0,
-                      marginRight: i < 2 ? '0.25rem' : 0,
-                      animationDelay: `${i * 0.2}s`,
-                    }"
+                    :class="['!inline-block !h-1.5 !w-1.5 !rounded-full !animate-pulse', tc('!bg-gray-400', '!bg-gray-300')]"
+                    :style="{ marginLeft: i > 0 ? '0.25rem' : 0, marginRight: i < 2 ? '0.25rem' : 0, animationDelay: `${i * 0.2}s` }"
                   ></span>
                 </div>
               </div>
@@ -766,15 +683,7 @@ watch(
 
             <!-- Retry Button -->
             <div v-if="lastFailedMessage && !loading" class="!flex !justify-center !w-full">
-              <button
-                :class="[
-                  '!px-4 !py-1.5 !rounded-lg !text-sm !font-medium !transition-colors',
-                  '!bg-indigo-600 hover:!bg-indigo-700 !text-white',
-                ]"
-                @click="retryLastMessage"
-              >
-                Retry
-              </button>
+              <button class="retry-btn" @click="retryLastMessage">Retry</button>
             </div>
           </div>
 
@@ -828,35 +737,15 @@ watch(
                 type="submit"
                 aria-label="Send message"
                 :class="[
-                  '!rounded-lg !px-3 !transition-all !flex !items-center !justify-center !min-w-[48px]',
-                  userInput.trim() && !loading
-                    ? '!bg-indigo-600 hover:!bg-indigo-700 !text-white'
-                    : tc(
-                        '!bg-gray-700 !text-gray-400 !cursor-not-allowed',
-                        '!bg-gray-200 !text-gray-400 !cursor-not-allowed',
-                      ),
+                  'send-btn',
+                  userInput.trim() && !loading ? 'send-btn--active' : 'send-btn--disabled',
                 ]"
                 :disabled="loading || !userInput.trim()"
               >
-                <svg
-                  v-if="!loading"
-                  xmlns="http://www.w3.org/2000/svg"
-                  class="!h-4 !w-4"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
-                  />
+                <svg v-if="!loading" xmlns="http://www.w3.org/2000/svg" class="!h-4 !w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
                 </svg>
-                <div
-                  v-else
-                  class="!h-4 !w-4 !border-2 !border-t-transparent !border-current !rounded-full !animate-spin"
-                ></div>
+                <div v-else class="!h-4 !w-4 !border-2 !border-t-transparent !border-current !rounded-full !animate-spin"></div>
               </button>
             </form>
           </div>
@@ -871,118 +760,173 @@ watch(
   right: max(1rem, calc(50vw - 720px));
 }
 
-.scrollbar-hide::-webkit-scrollbar {
-  display: none;
+/* ── FAB — glass circle matching shader picker aesthetic ── */
+.chat-fab {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(20px) saturate(1.6);
+  -webkit-backdrop-filter: blur(20px) saturate(1.6);
+  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s, transform 0.15s, box-shadow 0.2s;
 }
 
-.scrollbar-hide {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
+.chat-fab:hover {
+  background: rgba(0, 102, 178, 0.25);
+  border-color: rgba(255, 255, 255, 0.28);
+  box-shadow: 0 4px 24px rgba(0, 102, 178, 0.30), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  transform: translateY(-1px);
 }
+
+:root:not(.dark) .chat-fab {
+  background: rgba(255, 255, 255, 0.55);
+  border-color: rgba(255, 255, 255, 0.70);
+  box-shadow: 0 2px 16px rgba(0, 102, 178, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+:root:not(.dark) .chat-fab:hover {
+  background: rgba(0, 102, 178, 0.10);
+  border-color: rgba(0, 102, 178, 0.25);
+  box-shadow: 0 4px 20px rgba(0, 102, 178, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+
+/* ── Send button ── */
+.send-btn {
+  border-radius: 8px;
+  padding: 0 12px;
+  min-width: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid transparent;
+  transition: background 0.2s, border-color 0.2s, box-shadow 0.2s, transform 0.15s;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.send-btn--active {
+  background: rgba(0, 102, 178, 0.75);
+  border-color: rgba(255, 255, 255, 0.18);
+  color: white;
+  backdrop-filter: blur(20px) saturate(1.6);
+  -webkit-backdrop-filter: blur(20px) saturate(1.6);
+  box-shadow: 0 2px 12px rgba(0, 102, 178, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+.send-btn--active:hover {
+  background: rgba(0, 102, 178, 0.90);
+  box-shadow: 0 4px 16px rgba(0, 102, 178, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  transform: translateY(-1px);
+}
+
+:root:not(.dark) .send-btn--active {
+  background: rgba(0, 102, 178, 0.85);
+  border-color: rgba(0, 102, 178, 0.3);
+  box-shadow: 0 2px 12px rgba(0, 102, 178, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.send-btn--disabled {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.30);
+  cursor: not-allowed;
+}
+
+:root:not(.dark) .send-btn--disabled {
+  background: rgba(0, 0, 0, 0.05);
+  border-color: rgba(0, 0, 0, 0.08);
+  color: rgba(0, 0, 0, 0.25);
+}
+
+/* ── User message bubble ── */
+.user-bubble {
+  background: rgba(0, 102, 178, 0.70);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: white;
+  box-shadow: 0 2px 12px rgba(0, 102, 178, 0.25);
+}
+
+:root:not(.dark) .user-bubble {
+  background: rgba(0, 102, 178, 0.82);
+  border-color: rgba(0, 102, 178, 0.25);
+  box-shadow: 0 2px 12px rgba(0, 102, 178, 0.20);
+}
+
+/* ── Retry button ── */
+.retry-btn {
+  padding: 6px 16px;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(0, 102, 178, 0.70);
+  backdrop-filter: blur(20px) saturate(1.6);
+  -webkit-backdrop-filter: blur(20px) saturate(1.6);
+  color: white;
+  box-shadow: 0 2px 12px rgba(0, 102, 178, 0.30), inset 0 1px 0 rgba(255, 255, 255, 0.10);
+  transition: background 0.2s, box-shadow 0.2s, transform 0.15s;
+}
+
+.retry-btn:hover {
+  background: rgba(0, 102, 178, 0.88);
+  box-shadow: 0 4px 16px rgba(0, 102, 178, 0.40), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  transform: translateY(-1px);
+}
+
+/* ── Scrollbar ── */
+.scrollbar-hide::-webkit-scrollbar { display: none; }
+.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
 
 .chat-mode-enter-active,
-.chat-mode-leave-active {
-  transition: opacity 0.15s ease;
-}
-
+.chat-mode-leave-active { transition: opacity 0.15s ease; }
 .chat-mode-enter-from,
-.chat-mode-leave-to {
-  opacity: 0;
-}
+.chat-mode-leave-to { opacity: 0; }
 
-::-webkit-scrollbar {
-  width: 6px;
-}
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--scrollbar-thumb-hover); }
+::-webkit-scrollbar-track { background: var(--scrollbar-track); }
 
-::-webkit-scrollbar-thumb {
-  background: var(--scrollbar-thumb);
-  border-radius: 3px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: var(--scrollbar-thumb-hover);
-}
-
-::-webkit-scrollbar-track {
-  background: var(--scrollbar-track);
-}
-
-:deep(.markdown-content) {
-  line-height: 1.4 !important;
-}
-
+:deep(.markdown-content) { line-height: 1.4 !important; }
 :deep(.markdown-content p),
 :deep(.markdown-content ul),
 :deep(.markdown-content ol),
 :deep(.markdown-content pre),
-:deep(.markdown-content blockquote) {
-  margin: 0 !important;
-  padding: 0 !important;
-}
-
-:deep(.markdown-content > * + *) {
-  margin-top: 0.4em !important;
-}
-
-:deep(.markdown-content p + p) {
-  margin-top: 0.4em !important;
-}
-
-:deep(.markdown-content li) {
-  margin: 0 !important;
-  padding: 0 !important;
-}
-
-:deep(.markdown-content li + li) {
-  margin-top: 0.15em !important;
-}
-
-:deep(.markdown-content li p) {
-  margin: 0 !important;
-  padding: 0 !important;
-}
-
+:deep(.markdown-content blockquote) { margin: 0 !important; padding: 0 !important; }
+:deep(.markdown-content > * + *) { margin-top: 0.4em !important; }
+:deep(.markdown-content p + p) { margin-top: 0.4em !important; }
+:deep(.markdown-content li) { margin: 0 !important; padding: 0 !important; }
+:deep(.markdown-content li + li) { margin-top: 0.15em !important; }
+:deep(.markdown-content li p) { margin: 0 !important; padding: 0 !important; }
 :deep(.markdown-content ul),
-:deep(.markdown-content ol) {
-  margin-left: 1rem !important;
-  padding: 0 !important;
-}
-
-:deep(.markdown-content ul) {
-  list-style-type: disc !important;
-}
-
-:deep(.markdown-content ol) {
-  list-style-type: decimal !important;
-}
-
-:deep(.markdown-content strong) {
-  font-weight: bold !important;
-}
-
-:deep(.markdown-content em) {
-  font-style: italic !important;
-}
-
+:deep(.markdown-content ol) { margin-left: 1rem !important; padding: 0 !important; }
+:deep(.markdown-content ul) { list-style-type: disc !important; }
+:deep(.markdown-content ol) { list-style-type: decimal !important; }
+:deep(.markdown-content strong) { font-weight: bold !important; }
+:deep(.markdown-content em) { font-style: italic !important; }
 :deep(.markdown-content code) {
   font-family: monospace !important;
   background-color: var(--code-bg-color) !important;
   padding: 0.1rem 0.3rem !important;
   border-radius: 0.25rem !important;
 }
-
 :deep(.markdown-content pre code) {
   display: block !important;
   padding: 0.75rem !important;
   margin-bottom: 0.5rem !important;
   overflow-x: auto !important;
 }
-
-:deep(.markdown-content a) {
-  color: var(--link-color) !important;
-  text-decoration: underline !important;
-}
-
+:deep(.markdown-content a) { color: var(--link-color) !important; text-decoration: underline !important; }
 :deep(.markdown-content blockquote) {
   border-left: 3px solid var(--blockquote-border-color) !important;
   padding-left: 1rem !important;
