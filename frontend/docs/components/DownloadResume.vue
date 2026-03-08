@@ -45,17 +45,37 @@ const resumeMarkdown = ref<string>("");
 // --- Theme ---
 const { isDark } = useData();
 
-// --- Computed ---
-const buttonClasses = computed(() => [
-  "!border-none !py-2.5 !px-6 !text-center !no-underline !inline-block !text-base !m-1 !cursor-pointer !rounded-full !font-medium !transition-all !duration-300 !shadow-sm",
-  "!font-sans !tracking-wide",
-  isDark.value ? "!bg-[#0059aa] hover:!bg-[#004c91]" : "!bg-[#3e94e8] hover:!bg-[#2a7fd1]",
-  "!text-white",
-]);
+const buttonStyle = computed(() => ({
+  display: "inline-block",
+  padding: "10px 24px",
+  borderRadius: "999px",
+  border: isDark.value
+    ? "1px solid rgba(255, 255, 255, 0.18)"
+    : "1px solid rgba(255, 255, 255, 0.70)",
+  background: isDark.value
+    ? "rgba(255, 255, 255, 0.08)"
+    : "rgba(255, 255, 255, 0.55)",
+  backdropFilter: "blur(20px) saturate(1.6)",
+  WebkitBackdropFilter: "blur(20px) saturate(1.6)",
+  boxShadow: isDark.value
+    ? "0 2px 12px rgba(0,0,0,0.10), inset 0 1px 0 rgba(255,255,255,0.12)"
+    : "0 2px 12px rgba(0,102,178,0.08), inset 0 1px 0 rgba(255,255,255,0.70)",
+  color: isDark.value ? "rgba(255,255,255,0.90)" : "var(--vp-c-text-1)",
+  fontSize: "14px",
+  fontWeight: "500",
+  fontFamily: "inherit",
+  letterSpacing: "0.01em",
+  cursor: "pointer",
+  transition: "background 0.25s, border-color 0.25s, box-shadow 0.25s, transform 0.15s",
+  textDecoration: "none",
+  margin: "4px",
+}));
 
-const loadingButtonClasses = [
-  "!border-none !py-2.5 !px-6 !text-center !no-underline !inline-block !text-base !m-1 !cursor-wait !rounded-full !font-medium !transition-all !duration-300 !shadow-sm !font-sans !tracking-wide !bg-gray-400 !text-white",
-];
+const loadingButtonStyle = computed(() => ({
+  ...buttonStyle.value,
+  cursor: "wait",
+  opacity: "0.6",
+}));
 
 // --- HTML to Markdown Processing ---
 const htmlTagProcessors: HTMLTagProcessor = {
@@ -218,10 +238,10 @@ onMounted(() => {
 </script>
 
 <template>
-  <button v-if="isReady" data-download-resume :class="buttonClasses" @click="downloadResume">
-    {{ props.buttonText }}
-  </button>
-  <button v-else :class="loadingButtonClasses">Loading...</button>
+   <button v-if="isReady" data-download-resume :style="buttonStyle" @click="downloadResume"
+           @mouseenter="e => (e.currentTarget as HTMLElement).style.transform = 'translateY(-1px)'"
+           @mouseleave="e => (e.currentTarget as HTMLElement).style.transform = ''">
+   <button v-else :style="loadingButtonStyle">
 </template>
 
 <style scoped>
