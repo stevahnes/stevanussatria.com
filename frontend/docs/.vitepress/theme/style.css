@@ -288,7 +288,7 @@ body {
 /* ── 1. Brand — light mode ── */
 :root:not(.dark) .VPHero .VPButton.brand {
   background: rgba(0, 102, 178, 0.82) !important;
-  border-color: rgba(0, 102, 178, 0.35) !important;
+  border: 1px solid rgba(0, 102, 178, 0.35) !important;
   box-shadow: 0 2px 16px rgba(0, 102, 178, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.30) !important;
 }
 
