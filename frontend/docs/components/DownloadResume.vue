@@ -238,15 +238,17 @@ onMounted(() => {
 </script>
 
 <template>
-   <button
-     v-if="isReady"
-     data-download-resume
-     :style="buttonStyle"
-     @click="downloadResume"
-     @mouseenter="e => (e.currentTarget as HTMLElement).style.transform = 'translateY(-1px)'"
-     @mouseleave="e => (e.currentTarget as HTMLElement).style.transform = ''"
-   >
-   <button v-else :style="loadingButtonStyle">
+  <button
+    v-if="isReady"
+    data-download-resume
+    :style="buttonStyle"
+    @click="downloadResume"
+    @mouseenter="e => (e.currentTarget as HTMLElement).style.transform = 'translateY(-1px)'"
+    @mouseleave="e => (e.currentTarget as HTMLElement).style.transform = ''"
+  >
+    {{ props.buttonText }}
+  </button>
+  <button v-else :style="loadingButtonStyle">Loading...</button>
 </template>
 
 <style scoped>
