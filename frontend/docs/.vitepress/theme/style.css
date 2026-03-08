@@ -261,7 +261,11 @@ body {
   border-radius: 999px !important;
   backdrop-filter: blur(var(--glass-blur)) saturate(1.6) !important;
   -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.6) !important;
-  transition: background 0.25s, border-color 0.25s, box-shadow 0.25s, transform 0.15s !important;
+  transition:
+    background 0.25s,
+    border-color 0.25s,
+    box-shadow 0.25s,
+    transform 0.15s !important;
   font-weight: 500 !important;
 }
 
@@ -273,36 +277,46 @@ body {
 /* ── 1. Brand — "Let's Chat" — dark (default) ── */
 .VPHero .VPButton.brand {
   background: rgba(0, 102, 178, 0.75) !important;
-  border: 1px solid rgba(59, 135, 204, 0.50) !important;
-  box-shadow: 0 2px 16px rgba(0, 102, 178, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.18) !important;
+  border: 1px solid rgba(59, 135, 204, 0.5) !important;
+  box-shadow:
+    0 2px 16px rgba(0, 102, 178, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18) !important;
   color: #ffffff !important;
 }
 
 /* Bug 1 fixed: added border-color on dark hover */
 .VPHero .VPButton.brand:hover {
-  background: rgba(0, 102, 178, 0.90) !important;
-  border-color: rgba(59, 135, 204, 0.70) !important;
-  box-shadow: 0 4px 24px rgba(0, 102, 178, 0.50), inset 0 1px 0 rgba(255, 255, 255, 0.22) !important;
+  background: rgba(0, 102, 178, 0.9) !important;
+  border-color: rgba(59, 135, 204, 0.7) !important;
+  box-shadow:
+    0 4px 24px rgba(0, 102, 178, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22) !important;
 }
 
 /* ── 1. Brand — light mode ── */
 :root:not(.dark) .VPHero .VPButton.brand {
   background: rgba(0, 102, 178, 0.82) !important;
   border: 1px solid rgba(0, 102, 178, 0.35) !important;
-  box-shadow: 0 2px 16px rgba(0, 102, 178, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.30) !important;
+  box-shadow:
+    0 2px 16px rgba(0, 102, 178, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3) !important;
 }
 
 :root:not(.dark) .VPHero .VPButton.brand:hover {
   background: rgba(0, 102, 178, 0.95) !important;
-  border-color: rgba(0, 80, 140, 0.50) !important;
-  box-shadow: 0 4px 24px rgba(0, 102, 178, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.35) !important;
+  border-color: rgba(0, 80, 140, 0.5) !important;
+  box-shadow:
+    0 4px 24px rgba(0, 102, 178, 0.38),
+    inset 0 1px 0 rgba(255, 255, 255, 0.35) !important;
 }
 
 /* ── 2. Alt — "Download Resume" hero — dark (default) ── */
 .VPHero .VPButton.alt {
   background: var(--glass-bg) !important;
   border: 1px solid var(--glass-border) !important;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.10), inset 0 1px 0 rgba(255, 255, 255, 0.12) !important;
+  box-shadow:
+    0 2px 12px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12) !important;
   color: var(--vp-c-text-1) !important;
 }
 
@@ -310,19 +324,48 @@ body {
 .dark .VPHero .VPButton.alt:hover {
   background: var(--glass-bg-strong) !important;
   border-color: rgba(255, 255, 255, 0.28) !important;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.18) !important;
+  box-shadow:
+    0 4px 20px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18) !important;
 }
 
 /* ── 2. Alt — light mode ── */
 :root:not(.dark) .VPHero .VPButton.alt {
   background: rgba(255, 255, 255, 0.55) !important;
   border-color: rgba(0, 102, 178, 0.18) !important;
-  box-shadow: 0 2px 12px rgba(0, 102, 178, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.70) !important;
+  box-shadow:
+    0 2px 12px rgba(0, 102, 178, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7) !important;
   color: var(--vp-c-text-1) !important;
 }
 
 :root:not(.dark) .VPHero .VPButton.alt:hover {
-  background: rgba(255, 255, 255, 0.80) !important;
-  border-color: rgba(0, 102, 178, 0.20) !important;
-  box-shadow: 0 4px 20px rgba(0, 102, 178, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.80) !important;
+  background: rgba(255, 255, 255, 0.8) !important;
+  border-color: rgba(0, 102, 178, 0.2) !important;
+  box-shadow:
+    0 4px 20px rgba(0, 102, 178, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8) !important;
+}
+
+:root:not(.dark) .VPFeatures .VPFeature {
+  border-color: rgba(0, 102, 178, 0.2) !important;
+}
+
+:root:not(.dark) .VPFeatures .VPFeature:hover {
+  border-color: rgba(0, 102, 178, 0.35) !important;
+}
+
+:root:not(.dark) .VPNav .VPNavBar {
+  border-bottom-color: rgba(0, 102, 178, 0.2) !important;
+}
+
+:root:not(.dark) .VPSidebar {
+  border-right-color: rgba(0, 102, 178, 0.2) !important;
+}
+
+:root:not(.dark) .custom-block.tip,
+:root:not(.dark) .custom-block.info,
+:root:not(.dark) .custom-block.warning,
+:root:not(.dark) .custom-block.danger {
+  border-color: rgba(0, 102, 178, 0.2) !important;
 }

@@ -1018,10 +1018,8 @@ onMounted(async () => {
     <div
       class="stats-panel"
       :class="[
-        '!border !shadow-lg !transition-all !duration-300 !ease-in-out',
-        clientSideTheme && isDark
-          ? '!bg-gray-900/95 !text-gray-100 !border-gray-600'
-          : '!bg-white/95 !text-gray-800 !border-gray-300',
+        '!shadow-lg !transition-all !duration-300 !ease-in-out',
+        clientSideTheme && isDark ? '!text-gray-100' : '!text-gray-800',
         isMobile && isStatsPanelCollapsed ? 'collapsed-mobile' : '',
       ]"
     >
@@ -1029,7 +1027,9 @@ onMounted(async () => {
       <button
         v-if="isMobile"
         class="mobile-collapse-btn !absolute !top-2 !right-2 !p-1 !rounded !transition-colors"
-        :class="clientSideTheme && isDark ? 'hover:!bg-gray-800' : 'hover:!bg-gray-100'"
+        :class="
+          clientSideTheme && isDark ? 'hover:!bg-white/10' : 'hover:!bg-[rgba(0,102,178,0.08)]'
+        "
         @click="toggleStatsPanel"
       >
         <svg
@@ -1153,10 +1153,8 @@ onMounted(async () => {
     <div
       class="legend-panel !hidden md:!block"
       :class="[
-        '!border !shadow-lg !transition-all !duration-300 !ease-in-out',
-        clientSideTheme && isDark
-          ? '!bg-gray-900/95 !text-gray-100 !border-gray-600'
-          : '!bg-white/95 !text-gray-800 !border-gray-300',
+        '!shadow-lg !transition-all !duration-300 !ease-in-out',
+        clientSideTheme && isDark ? '!text-gray-100' : '!text-gray-800',
       ]"
     >
       <div class="!mb-3">
@@ -1542,5 +1540,10 @@ onMounted(async () => {
 .flight-map-container.full-viewport {
   height: 100vh !important;
   min-height: 100vh;
+}
+
+:root:not(.dark) .stats-panel,
+:root:not(.dark) .legend-panel {
+  border-color: rgba(0, 102, 178, 0.2) !important;
 }
 </style>
