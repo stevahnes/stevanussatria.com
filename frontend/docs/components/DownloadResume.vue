@@ -52,11 +52,10 @@ const buttonStyle = computed(() => ({
   border: isDark.value
     ? "1px solid rgba(255, 255, 255, 0.18)"
     : "1px solid rgba(255, 255, 255, 0.70)",
+  // Solid glass-style bg — no backdropFilter since <button> can't blur behind itself
   background: isDark.value
-    ? "rgba(255, 255, 255, 0.08)"
-    : "rgba(255, 255, 255, 0.55)",
-  backdropFilter: "blur(20px) saturate(1.6)",
-  WebkitBackdropFilter: "blur(20px) saturate(1.6)",
+    ? "rgba(255, 255, 255, 0.10)"
+    : "rgba(255, 255, 255, 0.70)",
   boxShadow: isDark.value
     ? "0 2px 12px rgba(0,0,0,0.10), inset 0 1px 0 rgba(255,255,255,0.12)"
     : "0 2px 12px rgba(0,102,178,0.08), inset 0 1px 0 rgba(255,255,255,0.70)",
@@ -76,6 +75,7 @@ const loadingButtonStyle = computed(() => ({
   cursor: "wait",
   opacity: "0.6",
 }));
+
 
 // --- HTML to Markdown Processing ---
 const htmlTagProcessors: HTMLTagProcessor = {
@@ -238,9 +238,14 @@ onMounted(() => {
 </script>
 
 <template>
-   <button v-if="isReady" data-download-resume :style="buttonStyle" @click="downloadResume"
-           @mouseenter="e => (e.currentTarget as HTMLElement).style.transform = 'translateY(-1px)'"
-           @mouseleave="e => (e.currentTarget as HTMLElement).style.transform = ''">
+   <button
+     v-if="isReady"
+     data-download-resume
+     :style="buttonStyle"
+     @click="downloadResume"
+     @mouseenter="e => (e.currentTarget as HTMLElement).style.transform = 'translateY(-1px)'"
+     @mouseleave="e => (e.currentTarget as HTMLElement).style.transform = ''"
+   >
    <button v-else :style="loadingButtonStyle">
 </template>
 
