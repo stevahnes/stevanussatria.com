@@ -316,7 +316,7 @@ body {
 /* ── 2. Alt — light mode ── */
 :root:not(.dark) .VPHero .VPButton.alt {
   background: rgba(255, 255, 255, 0.55) !important;
-  border-color: rgba(255, 255, 255, 0.70) !important;
+  border-color: rgba(0, 102, 178, 0.18) !important;
   box-shadow: 0 2px 12px rgba(0, 102, 178, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.70) !important;
   color: var(--vp-c-text-1) !important;
 }
