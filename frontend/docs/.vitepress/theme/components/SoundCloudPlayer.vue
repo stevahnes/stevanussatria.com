@@ -39,6 +39,7 @@ const props = withDefaults(defineProps<Props>(), {
 const isExpanded = ref(false);
 const isPlaying = ref(false);
 const isLoading = ref(true);
+const isWidgetReady = ref(false);
 const currentTrack = ref(0);
 const currentPosition = ref(0);
 const currentDuration = ref(0);
@@ -99,21 +100,46 @@ const initializeWidget = async (): Promise<void> => {
   try {
     await loadSoundCloudAPI();
     widget = window.SC.Widget(iframeRef.value);
+
     widget.bind(window.SC.Widget.Events.READY, () => {
       loadTrackInfo();
-      startPositionTracking();
       widget!.getVolume((volume: number) => { isMuted.value = volume === 0; });
       isLoading.value = false;
+      // Silently warm up the widget so the internal audio context is ready.
+      // The PLAY handler will catch this, immediately pause, and mark isWidgetReady.
+      widget!.play();
     });
-    widget.bind(window.SC.Widget.Events.PLAY, () => { isPlaying.value = true; startPositionTracking(); });
-    widget.bind(window.SC.Widget.Events.PAUSE, () => { isPlaying.value = false; stopPositionTracking(); });
+
+    widget.bind(window.SC.Widget.Events.PLAY, () => {
+      if (!isWidgetReady.value) {
+        // This is the silent warm-up play — pause immediately and mark ready.
+        isWidgetReady.value = true;
+        widget!.pause();
+        return;
+      }
+      isPlaying.value = true;
+      startPositionTracking();
+    });
+
+    widget.bind(window.SC.Widget.Events.PAUSE, () => {
+      // Ignore the pause that follows the warm-up play.
+      if (!isWidgetReady.value) return;
+      isPlaying.value = false;
+      stopPositionTracking();
+    });
+
     widget.bind(window.SC.Widget.Events.FINISH, () => {
       isPlaying.value = false;
       stopPositionTracking();
       setTimeout(() => nextTrack(), 500);
     });
+
     widget.bind(window.SC.Widget.Events.SEEK, () => updatePosition());
-    widget.bind("error", () => { isPlaying.value = false; stopPositionTracking(); });
+
+    widget.bind("error", () => {
+      isPlaying.value = false;
+      stopPositionTracking();
+    });
   } catch (error) {
     console.error("Failed to initialize SoundCloud widget:", error);
     isLoading.value = false;
@@ -160,7 +186,7 @@ const stopPositionTracking = (): void => {
 };
 
 const togglePlay = (): void => {
-  if (!widget) return;
+  if (!widget || !isWidgetReady.value) return;
   widget.isPaused((paused: boolean) => { paused ? widget!.play() : widget!.pause(); });
 };
 
@@ -183,7 +209,7 @@ const prevTrack = (): void => {
 };
 
 const seek = (event: MouseEvent): void => {
-  if (!widget || !seekBarRef.value) return;
+  if (!widget || !seekBarRef.value || !isWidgetReady.value) return;
   const rect = seekBarRef.value.getBoundingClientRect();
   const percentage = (event.clientX - rect.left) / rect.width;
   widget.seekTo(percentage * currentDuration.value);
@@ -291,13 +317,13 @@ onUnmounted(() => {
         </div>
 
         <div class="sc-controls">
-          <button @click="prevTrack" class="sc-nav-btn" :disabled="isLoading" title="Previous track">
+          <button @click="prevTrack" class="sc-nav-btn" :disabled="isLoading || !isWidgetReady" title="Previous track">
             <svg class="sc-icon-small" viewBox="0 0 24 24" fill="currentColor">
               <path d="M6 6h2v12H6zm3.5 6l8.5 6V6z" />
             </svg>
           </button>
-          <button @click="togglePlay" class="sc-play-btn" :disabled="isLoading">
-            <svg v-if="isLoading" class="sc-spinner" viewBox="0 0 24 24">
+          <button @click="togglePlay" class="sc-play-btn" :disabled="isLoading || !isWidgetReady">
+            <svg v-if="isLoading || !isWidgetReady" class="sc-spinner" viewBox="0 0 24 24">
               <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none" opacity="0.25" />
               <path fill="currentColor" opacity="0.75" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
             </svg>
@@ -308,7 +334,7 @@ onUnmounted(() => {
               <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
             </svg>
           </button>
-          <button @click="nextTrack" class="sc-nav-btn" :disabled="isLoading" title="Next track">
+          <button @click="nextTrack" class="sc-nav-btn" :disabled="isLoading || !isWidgetReady" title="Next track">
             <svg class="sc-icon-small" viewBox="0 0 24 24" fill="currentColor">
               <path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z" />
             </svg>
@@ -352,7 +378,6 @@ onUnmounted(() => {
 }
 
 .sc-player-container {
-  /* Collapsed state: fully transparent so only the .sc-collapsed circle shows */
   background: transparent;
   border-radius: 50%;
   border: none;
@@ -374,7 +399,6 @@ onUnmounted(() => {
   overflow: hidden;
 }
 
-/* ── Collapsed button — glass circle matching shader picker ── */
 .sc-collapsed {
   width: 56px;
   height: 56px;
@@ -447,7 +471,6 @@ onUnmounted(() => {
   20% { transform: scaleY(1); }
 }
 
-/* Expanded View */
 .sc-expanded {
   padding: 20px;
   height: 100%;
@@ -526,7 +549,6 @@ onUnmounted(() => {
 .sc-nav-btn:hover:not(:disabled) { background: var(--button-hover-bg); color: var(--player-text); }
 .sc-nav-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
-/* ── Play button — glass circle matching shader picker ── */
 .sc-play-btn {
   width: 48px;
   height: 48px;
@@ -583,7 +605,6 @@ onUnmounted(() => {
   overflow: hidden;
 }
 
-/* ── Seek fill — brand blue ── */
 .sc-seek-fill {
   height: 100%;
   background: rgba(0, 102, 178, 0.80);
