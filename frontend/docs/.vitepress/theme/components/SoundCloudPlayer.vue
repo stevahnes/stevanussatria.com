@@ -16,8 +16,6 @@ interface SoundCloudWidget {
   isPaused: (callback: (paused: boolean) => void) => void;
   getPosition: (callback: (position: number) => void) => void;
   getDuration: (callback: (duration: number) => void) => void;
-  getVolume: (callback: (volume: number) => void) => void;
-  setVolume: (volume: number) => void;
   seekTo: (position: number) => void;
   next: () => void;
   prev: () => void;
@@ -102,9 +100,6 @@ const initializeWidget = async (): Promise<void> => {
 
     widget.bind(window.SC.Widget.Events.READY, () => {
       loadTrackInfo();
-      // Set volume to our known state before warm-up so it doesn't play silently
-      // at an unexpected level. Do NOT call getVolume() here — see comment above.
-      widget!.setVolume(lastVolume);
       isLoading.value = false;
       // Silently warm up the widget so the internal audio context is ready.
       // The PLAY handler will catch this, immediately pause, and mark isWidgetReady.
