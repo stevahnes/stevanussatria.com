@@ -244,7 +244,7 @@ onMounted(() => {
     :style="buttonStyle"
     @click="downloadResume"
     @mouseenter="e => (e.currentTarget as HTMLElement).style.transform = 'translateY(-1px)'"
-    @mouseleave="e => (e.currentTarget as HTMLElement).style.transform = ''"
+    @mouseleave="e => (e.currentTarget as HTMLElement).style.transform = 'translateY(0)'"
   >
     {{ props.buttonText }}
   </button>
