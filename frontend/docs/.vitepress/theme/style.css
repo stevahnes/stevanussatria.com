@@ -209,6 +209,16 @@ body {
   display: none !important;
 }
 
+/* Fix: collapse to hamburger on landscape phones & tablets */
+@media (max-width: 1200px) {
+  .VPNavBar .content .content-body .VPNavBarMenu {
+    display: none;
+  }
+  .VPNavBarHamburger {
+    display: flex !important;
+  }
+}
+
 /**
  * Component: Sidebar (liquid glass)
  * -------------------------------------------------------------------------- */
