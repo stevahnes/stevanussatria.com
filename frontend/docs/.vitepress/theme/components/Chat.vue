@@ -442,7 +442,12 @@ watch(
             @click="toggleMiniChat"
           >
             <svg class="!w-4 !h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
 
@@ -518,9 +523,17 @@ watch(
                 viewBox="0 0 24 24"
                 stroke="currentColor"
               >
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
+                />
               </svg>
-              <div v-else class="!h-4 !w-4 !border-2 !border-t-transparent !border-current !rounded-full !animate-spin"></div>
+              <div
+                v-else
+                class="!h-4 !w-4 !border-2 !border-t-transparent !border-current !rounded-full !animate-spin"
+              ></div>
             </button>
           </form>
         </div>
@@ -551,7 +564,12 @@ watch(
                 @click="resetChat"
               >
                 <svg class="!w-4 !h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.992 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182M20.015 4.356v4.992" />
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.992 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182M20.015 4.356v4.992"
+                  />
                 </svg>
               </button>
               <!-- Full Screen Toggle -->
@@ -563,11 +581,27 @@ watch(
                 aria-label="Toggle full screen"
                 @click="toggleFullHeight"
               >
-                <svg v-if="!isFullHeight" class="!w-4 !h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9m11.25-5.25v4.5m0-4.5h-4.5m4.5 0L15 9m-11.25 11.25v-4.5m0 4.5h4.5m-4.5 0L9 15m11.25 5.25v-4.5m0 4.5h-4.5m4.5 0L15 15" />
+                <svg
+                  v-if="!isFullHeight"
+                  class="!w-4 !h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9m11.25-5.25v4.5m0-4.5h-4.5m4.5 0L15 9m-11.25 11.25v-4.5m0 4.5h4.5m-4.5 0L9 15m11.25 5.25v-4.5m0 4.5h-4.5m4.5 0L15 15"
+                  />
                 </svg>
                 <svg v-else class="!w-4 !h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 9V4.5M9 9H4.5M9 9L3.75 3.75M9 15v4.5M9 15H4.5M9 15l-5.25 5.25M15 9h4.5M15 9V4.5M15 9l5.25-5.25M15 15h4.5m-4.5 0v4.5m0-4.5l5.25 5.25" />
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M9 9V4.5M9 9H4.5M9 9L3.75 3.75M9 15v4.5M9 15H4.5M9 15l-5.25 5.25M15 9h4.5M15 9V4.5M15 9l5.25-5.25M15 15h4.5m-4.5 0v4.5m0-4.5l5.25 5.25"
+                  />
                 </svg>
               </button>
               <!-- Close -->
@@ -580,7 +614,12 @@ watch(
                 @click="toggleMiniChat"
               >
                 <svg class="!w-4 !h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M6 18L18 6M6 6l12 12"
+                  />
                 </svg>
               </button>
             </div>
@@ -642,11 +681,34 @@ watch(
                       :aria-label="copiedIndex === index ? 'Copied' : 'Copy message'"
                       @click="copyMessage(msg.content, index)"
                     >
-                      <svg v-if="copiedIndex !== index" class="!w-3.5 !h-3.5" :class="tc('!text-gray-400', '!text-gray-500')" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                      <svg
+                        v-if="copiedIndex !== index"
+                        class="!w-3.5 !h-3.5"
+                        :class="tc('!text-gray-400', '!text-gray-500')"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                        />
                       </svg>
-                      <svg v-else class="!w-3.5 !h-3.5 !text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                      <svg
+                        v-else
+                        class="!w-3.5 !h-3.5 !text-green-500"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M5 13l4 4L19 7"
+                        />
                       </svg>
                     </button>
                   </div>
@@ -667,15 +729,26 @@ watch(
                 ]"
               >
                 <div class="!flex !justify-between !items-center !mb-1">
-                  <span :class="['!text-sm', tc('!text-gray-400', '!text-gray-500')]">Advocado</span>
-                  <span :class="['!text-sm !ml-4', tc('!text-gray-400', '!text-gray-500')]">{{ formatTime(Date.now()) }}</span>
+                  <span :class="['!text-sm', tc('!text-gray-400', '!text-gray-500')]"
+                    >Advocado</span
+                  >
+                  <span :class="['!text-sm !ml-4', tc('!text-gray-400', '!text-gray-500')]">{{
+                    formatTime(Date.now())
+                  }}</span>
                 </div>
                 <div class="!flex !items-center">
                   <span
                     v-for="(_, i) in 3"
                     :key="i"
-                    :class="['!inline-block !h-1.5 !w-1.5 !rounded-full !animate-pulse', tc('!bg-gray-400', '!bg-gray-300')]"
-                    :style="{ marginLeft: i > 0 ? '0.25rem' : 0, marginRight: i < 2 ? '0.25rem' : 0, animationDelay: `${i * 0.2}s` }"
+                    :class="[
+                      '!inline-block !h-1.5 !w-1.5 !rounded-full !animate-pulse',
+                      tc('!bg-gray-400', '!bg-gray-300'),
+                    ]"
+                    :style="{
+                      marginLeft: i > 0 ? '0.25rem' : 0,
+                      marginRight: i < 2 ? '0.25rem' : 0,
+                      animationDelay: `${i * 0.2}s`,
+                    }"
                   ></span>
                 </div>
               </div>
@@ -742,10 +815,25 @@ watch(
                 ]"
                 :disabled="loading || !userInput.trim()"
               >
-                <svg v-if="!loading" xmlns="http://www.w3.org/2000/svg" class="!h-4 !w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                <svg
+                  v-if="!loading"
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="!h-4 !w-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
+                  />
                 </svg>
-                <div v-else class="!h-4 !w-4 !border-2 !border-t-transparent !border-current !rounded-full !animate-spin"></div>
+                <div
+                  v-else
+                  class="!h-4 !w-4 !border-2 !border-t-transparent !border-current !rounded-full !animate-spin"
+                ></div>
               </button>
             </form>
           </div>
@@ -769,31 +857,43 @@ watch(
   background: rgba(255, 255, 255, 0.08);
   backdrop-filter: blur(20px) saturate(1.6);
   -webkit-backdrop-filter: blur(20px) saturate(1.6);
-  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  box-shadow:
+    0 2px 16px rgba(0, 0, 0, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: background 0.2s, border-color 0.2s, transform 0.15s, box-shadow 0.2s;
+  transition:
+    background 0.2s,
+    border-color 0.2s,
+    transform 0.15s,
+    box-shadow 0.2s;
 }
 
 .chat-fab:hover {
   background: rgba(0, 102, 178, 0.25);
   border-color: rgba(255, 255, 255, 0.28);
-  box-shadow: 0 4px 24px rgba(0, 102, 178, 0.30), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  box-shadow:
+    0 4px 24px rgba(0, 102, 178, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
   transform: translateY(-1px);
 }
 
 :root:not(.dark) .chat-fab {
   background: rgba(255, 255, 255, 0.55);
-  border-color: rgba(255, 255, 255, 0.70);
-  box-shadow: 0 2px 16px rgba(0, 102, 178, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  border-color: rgba(255, 255, 255, 0.7);
+  box-shadow:
+    0 2px 16px rgba(0, 102, 178, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
 }
 
 :root:not(.dark) .chat-fab:hover {
-  background: rgba(0, 102, 178, 0.10);
+  background: rgba(0, 102, 178, 0.1);
   border-color: rgba(0, 102, 178, 0.25);
-  box-shadow: 0 4px 20px rgba(0, 102, 178, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  box-shadow:
+    0 4px 20px rgba(0, 102, 178, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7);
 }
 
 /* ── Send button ── */
@@ -805,7 +905,11 @@ watch(
   align-items: center;
   justify-content: center;
   border: 1px solid transparent;
-  transition: background 0.2s, border-color 0.2s, box-shadow 0.2s, transform 0.15s;
+  transition:
+    background 0.2s,
+    border-color 0.2s,
+    box-shadow 0.2s,
+    transform 0.15s;
   font-family: inherit;
   cursor: pointer;
 }
@@ -816,25 +920,31 @@ watch(
   color: white;
   backdrop-filter: blur(20px) saturate(1.6);
   -webkit-backdrop-filter: blur(20px) saturate(1.6);
-  box-shadow: 0 2px 12px rgba(0, 102, 178, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  box-shadow:
+    0 2px 12px rgba(0, 102, 178, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
 }
 
 .send-btn--active:hover {
-  background: rgba(0, 102, 178, 0.90);
-  box-shadow: 0 4px 16px rgba(0, 102, 178, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  background: rgba(0, 102, 178, 0.9);
+  box-shadow:
+    0 4px 16px rgba(0, 102, 178, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
   transform: translateY(-1px);
 }
 
 :root:not(.dark) .send-btn--active {
   background: rgba(0, 102, 178, 0.85);
   border-color: rgba(0, 102, 178, 0.3);
-  box-shadow: 0 2px 12px rgba(0, 102, 178, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  box-shadow:
+    0 2px 12px rgba(0, 102, 178, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 
 .send-btn--disabled {
   background: rgba(255, 255, 255, 0.06);
   border-color: rgba(255, 255, 255, 0.08);
-  color: rgba(255, 255, 255, 0.30);
+  color: rgba(255, 255, 255, 0.3);
   cursor: not-allowed;
 }
 
@@ -846,7 +956,7 @@ watch(
 
 /* ── User message bubble ── */
 .user-bubble {
-  background: rgba(0, 102, 178, 0.70);
+  background: rgba(0, 102, 178, 0.7);
   border: 1px solid rgba(255, 255, 255, 0.15);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
@@ -857,7 +967,7 @@ watch(
 :root:not(.dark) .user-bubble {
   background: rgba(0, 102, 178, 0.82);
   border-color: rgba(0, 102, 178, 0.25);
-  box-shadow: 0 2px 12px rgba(0, 102, 178, 0.20);
+  box-shadow: 0 2px 12px rgba(0, 102, 178, 0.2);
 }
 
 /* ── Retry button ── */
@@ -869,51 +979,104 @@ watch(
   font-family: inherit;
   cursor: pointer;
   border: 1px solid rgba(255, 255, 255, 0.18);
-  background: rgba(0, 102, 178, 0.70);
+  background: rgba(0, 102, 178, 0.7);
   backdrop-filter: blur(20px) saturate(1.6);
   -webkit-backdrop-filter: blur(20px) saturate(1.6);
   color: white;
-  box-shadow: 0 2px 12px rgba(0, 102, 178, 0.30), inset 0 1px 0 rgba(255, 255, 255, 0.10);
-  transition: background 0.2s, box-shadow 0.2s, transform 0.15s;
+  box-shadow:
+    0 2px 12px rgba(0, 102, 178, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  transition:
+    background 0.2s,
+    box-shadow 0.2s,
+    transform 0.15s;
 }
 
 .retry-btn:hover {
   background: rgba(0, 102, 178, 0.88);
-  box-shadow: 0 4px 16px rgba(0, 102, 178, 0.40), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  box-shadow:
+    0 4px 16px rgba(0, 102, 178, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
   transform: translateY(-1px);
 }
 
 /* ── Scrollbar ── */
-.scrollbar-hide::-webkit-scrollbar { display: none; }
-.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
 
 .chat-mode-enter-active,
-.chat-mode-leave-active { transition: opacity 0.15s ease; }
+.chat-mode-leave-active {
+  transition: opacity 0.15s ease;
+}
 .chat-mode-enter-from,
-.chat-mode-leave-to { opacity: 0; }
+.chat-mode-leave-to {
+  opacity: 0;
+}
 
-::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: var(--scrollbar-thumb-hover); }
-::-webkit-scrollbar-track { background: var(--scrollbar-track); }
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
+}
+::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+}
 
-:deep(.markdown-content) { line-height: 1.4 !important; }
+:deep(.markdown-content) {
+  line-height: 1.4 !important;
+}
 :deep(.markdown-content p),
 :deep(.markdown-content ul),
 :deep(.markdown-content ol),
 :deep(.markdown-content pre),
-:deep(.markdown-content blockquote) { margin: 0 !important; padding: 0 !important; }
-:deep(.markdown-content > * + *) { margin-top: 0.4em !important; }
-:deep(.markdown-content p + p) { margin-top: 0.4em !important; }
-:deep(.markdown-content li) { margin: 0 !important; padding: 0 !important; }
-:deep(.markdown-content li + li) { margin-top: 0.15em !important; }
-:deep(.markdown-content li p) { margin: 0 !important; padding: 0 !important; }
+:deep(.markdown-content blockquote) {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+:deep(.markdown-content > * + *) {
+  margin-top: 0.4em !important;
+}
+:deep(.markdown-content p + p) {
+  margin-top: 0.4em !important;
+}
+:deep(.markdown-content li) {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+:deep(.markdown-content li + li) {
+  margin-top: 0.15em !important;
+}
+:deep(.markdown-content li p) {
+  margin: 0 !important;
+  padding: 0 !important;
+}
 :deep(.markdown-content ul),
-:deep(.markdown-content ol) { margin-left: 1rem !important; padding: 0 !important; }
-:deep(.markdown-content ul) { list-style-type: disc !important; }
-:deep(.markdown-content ol) { list-style-type: decimal !important; }
-:deep(.markdown-content strong) { font-weight: bold !important; }
-:deep(.markdown-content em) { font-style: italic !important; }
+:deep(.markdown-content ol) {
+  margin-left: 1rem !important;
+  padding: 0 !important;
+}
+:deep(.markdown-content ul) {
+  list-style-type: disc !important;
+}
+:deep(.markdown-content ol) {
+  list-style-type: decimal !important;
+}
+:deep(.markdown-content strong) {
+  font-weight: bold !important;
+}
+:deep(.markdown-content em) {
+  font-style: italic !important;
+}
 :deep(.markdown-content code) {
   font-family: monospace !important;
   background-color: var(--code-bg-color) !important;
@@ -926,7 +1089,10 @@ watch(
   margin-bottom: 0.5rem !important;
   overflow-x: auto !important;
 }
-:deep(.markdown-content a) { color: var(--link-color) !important; text-decoration: underline !important; }
+:deep(.markdown-content a) {
+  color: var(--link-color) !important;
+  text-decoration: underline !important;
+}
 :deep(.markdown-content blockquote) {
   border-left: 3px solid var(--blockquote-border-color) !important;
   padding-left: 1rem !important;

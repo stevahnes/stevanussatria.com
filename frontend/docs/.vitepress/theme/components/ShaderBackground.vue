@@ -487,16 +487,14 @@ const showPicker = ref(false);
 // exactly the behaviour we want (random on refresh, stable while browsing).
 function pickInitialShader(): ShaderId {
   const stored = sessionStorage.getItem("activeShader") as ShaderId | null;
-  if (stored && (stored in FRAG_MAP)) return stored;
+  if (stored && stored in FRAG_MAP) return stored;
   const ids = SHADERS.map(s => s.id);
   const picked = ids[Math.floor(Math.random() * ids.length)];
   sessionStorage.setItem("activeShader", picked);
   return picked;
 }
 
-const activeShader = ref<ShaderId>(
-  typeof window !== "undefined" ? pickInitialShader() : "aurora"
-);
+const activeShader = ref<ShaderId>(typeof window !== "undefined" ? pickInitialShader() : "aurora");
 
 let animationId: number;
 let gl: WebGLRenderingContext | null = null;
@@ -590,7 +588,7 @@ function switchShader(id: ShaderId) {
   sessionStorage.setItem("activeShader", id);
 }
 
-watch(activeShader, (id) => switchShader(id));
+watch(activeShader, id => switchShader(id));
 
 // Pre-compile remaining shaders during browser idle time so switching feels instant.
 // Uses requestIdleCallback so it never competes with the initial render or user input.
@@ -611,12 +609,16 @@ function precompileOthers(active: ShaderId) {
   if (typeof requestIdleCallback !== "undefined") {
     requestIdleCallback(step, { timeout: 4000 });
   } else {
-    setTimeout(() => rest.forEach(id => {
-      if (gl && !programCache.has(id)) {
-        const prog = buildProgram(gl, FRAG_MAP[id]);
-        if (prog) programCache.set(id, prog);
-      }
-    }), 2000);
+    setTimeout(
+      () =>
+        rest.forEach(id => {
+          if (gl && !programCache.has(id)) {
+            const prog = buildProgram(gl, FRAG_MAP[id]);
+            if (prog) programCache.set(id, prog);
+          }
+        }),
+      2000,
+    );
   }
 }
 
@@ -770,21 +772,28 @@ onUnmounted(() => {
   background: rgba(255, 255, 255, 0.08);
   backdrop-filter: blur(20px) saturate(1.6);
   -webkit-backdrop-filter: blur(20px) saturate(1.6);
-  color: rgba(255, 255, 255, 0.80);
+  color: rgba(255, 255, 255, 0.8);
   font-size: 0.75rem;
   font-family: inherit;
   letter-spacing: 0.04em;
   cursor: pointer;
-  transition: background 0.2s, border-color 0.2s, transform 0.15s;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255,255,255,0.08);
+  transition:
+    background 0.2s,
+    border-color 0.2s,
+    transform 0.15s;
+  box-shadow:
+    0 2px 12px rgba(0, 0, 0, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
 /* Light-mode variant */
 :root:not(.dark) .picker-toggle {
   background: rgba(255, 255, 255, 0.55);
-  border-color: rgba(255, 255, 255, 0.70);
+  border-color: rgba(255, 255, 255, 0.7);
   color: rgba(0, 60, 120, 0.85);
-  box-shadow: 0 2px 12px rgba(0, 102, 178, 0.10), inset 0 1px 0 rgba(255,255,255,0.6);
+  box-shadow:
+    0 2px 12px rgba(0, 102, 178, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
 }
 
 .picker-toggle:hover {
@@ -794,7 +803,7 @@ onUnmounted(() => {
 }
 :root:not(.dark) .picker-toggle:hover {
   background: rgba(255, 255, 255, 0.78);
-  border-color: rgba(255, 255, 255, 0.90);
+  border-color: rgba(255, 255, 255, 0.9);
 }
 
 .toggle-icon {
@@ -826,14 +835,18 @@ onUnmounted(() => {
   background: rgba(255, 255, 255, 0.08);
   backdrop-filter: blur(20px) saturate(1.6);
   -webkit-backdrop-filter: blur(20px) saturate(1.6);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255,255,255,0.08);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
   min-width: 130px;
 }
 
 :root:not(.dark) .picker-options {
   background: rgba(255, 255, 255, 0.55);
-  border-color: rgba(255, 255, 255, 0.70);
-  box-shadow: 0 8px 32px rgba(0, 102, 178, 0.10), inset 0 1px 0 rgba(255,255,255,0.6);
+  border-color: rgba(255, 255, 255, 0.7);
+  box-shadow:
+    0 8px 32px rgba(0, 102, 178, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
 }
 
 /* ── Option button ───────────────────────── */
@@ -850,26 +863,28 @@ onUnmounted(() => {
   font-family: inherit;
   letter-spacing: 0.025em;
   cursor: pointer;
-  transition: background 0.15s, color 0.15s;
+  transition:
+    background 0.15s,
+    color 0.15s;
   width: 100%;
   text-align: left;
 }
 
 :root:not(.dark) .picker-option {
-  color: rgba(0, 50, 100, 0.60);
+  color: rgba(0, 50, 100, 0.6);
 }
 
 .picker-option:hover {
-  background: rgba(255, 255, 255, 0.10);
+  background: rgba(255, 255, 255, 0.1);
   color: rgba(255, 255, 255, 0.92);
 }
 :root:not(.dark) .picker-option:hover {
   background: rgba(0, 102, 178, 0.08);
-  color: rgba(0, 60, 130, 0.90);
+  color: rgba(0, 60, 130, 0.9);
 }
 
 .picker-option.active {
-  background: rgba(0, 102, 178, 0.30);
+  background: rgba(0, 102, 178, 0.3);
   color: rgba(180, 225, 255, 0.95);
 }
 :root:not(.dark) .picker-option.active {
@@ -898,10 +913,14 @@ onUnmounted(() => {
 }
 
 .slide-enter-active {
-  transition: opacity 0.2s ease, transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition:
+    opacity 0.2s ease,
+    transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 .slide-leave-active {
-  transition: opacity 0.15s ease, transform 0.15s ease;
+  transition:
+    opacity 0.15s ease,
+    transform 0.15s ease;
 }
 .slide-enter-from,
 .slide-leave-to {
