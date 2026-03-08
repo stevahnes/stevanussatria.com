@@ -60,6 +60,12 @@ const { isDark } = useData();
 let widget: SoundCloudWidget | null = null;
 let positionInterval: number | null = null;
 
+// ── Volume — we own this state entirely ──────────────────────────────────────
+// Never call getVolume() to decide mute state. The SoundCloud widget resets
+// its internal volume during the warm-up play/pause cycle, making getVolume()
+// return stale/wrong values. We track it ourselves so toggleMute is reliable.
+let lastVolume = 100; // remembers pre-mute level so unmute restores correctly
+
 const formattedPosition = computed(() => formatTime(currentPosition.value));
 const formattedDuration = computed(() => formatTime(currentDuration.value));
 const progressPercentage = computed(() => {
@@ -103,7 +109,9 @@ const initializeWidget = async (): Promise<void> => {
 
     widget.bind(window.SC.Widget.Events.READY, () => {
       loadTrackInfo();
-      widget!.getVolume((volume: number) => { isMuted.value = volume === 0; });
+      // Set volume to our known state before warm-up so it doesn't play silently
+      // at an unexpected level. Do NOT call getVolume() here — see comment above.
+      widget!.setVolume(lastVolume);
       isLoading.value = false;
       // Silently warm up the widget so the internal audio context is ready.
       // The PLAY handler will catch this, immediately pause, and mark isWidgetReady.
@@ -215,13 +223,17 @@ const seek = (event: MouseEvent): void => {
   widget.seekTo(percentage * currentDuration.value);
 };
 
+// ── toggleMute — owns state, never queries getVolume() ──────────────────────
 const toggleMute = (): void => {
   if (!widget) return;
-  widget.getVolume((volume: number) => {
-    const newVolume = volume > 0 ? 0 : 100;
-    isMuted.value = newVolume === 0;
-    widget!.setVolume(newVolume);
-  });
+  if (isMuted.value) {
+    isMuted.value = false;
+    widget.setVolume(lastVolume > 0 ? lastVolume : 100);
+  } else {
+    lastVolume = 100; // we always operate at full volume unless muted
+    isMuted.value = true;
+    widget.setVolume(0);
+  }
 };
 
 const toggleExpanded = (): void => {
