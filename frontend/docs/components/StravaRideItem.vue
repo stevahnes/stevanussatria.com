@@ -301,10 +301,9 @@ onMounted(async () => {
     class="ride-accordion-item"
     :class="[
       '!border !rounded-lg !transition-all !duration-300 !ease-in-out !overflow-hidden',
-      clientSideTheme && isDark
-        ? '!bg-gray-900/50 !border-gray-700'
-        : '!bg-white/50 !border-gray-200',
+      clientSideTheme && isDark ? '!bg-gray-900/50 !border-gray-700' : '!bg-white/50',
     ]"
+    :style="!(clientSideTheme && isDark) ? { borderColor: 'rgba(0, 102, 178, 0.20)' } : {}"
   >
     <!-- Accordion Header (Summary) -->
     <button
@@ -504,8 +503,9 @@ onMounted(async () => {
               '!border !shadow-lg !rounded-lg !p-3 md:!p-4',
               clientSideTheme && isDark
                 ? '!bg-gray-900/95 !text-gray-100 !border-gray-600'
-                : '!bg-white/95 !text-gray-800 !border-gray-300',
+                : '!bg-white/95 !text-gray-800',
             ]"
+            :style="!(clientSideTheme && isDark) ? { borderColor: 'rgba(0, 102, 178, 0.20)' } : {}"
           >
             <div class="!mb-2 md:!mb-3">
               <h4
@@ -661,8 +661,11 @@ onMounted(async () => {
               }"
               :class="[
                 'map-instance !w-full !h-full !rounded-lg !border',
-                clientSideTheme && isDark ? '!border-gray-700' : '!border-gray-200',
+                clientSideTheme && isDark ? '!border-gray-700' : '',
               ]"
+              :style="
+                !(clientSideTheme && isDark) ? { borderColor: 'rgba(0, 102, 178, 0.20)' } : {}
+              "
               @ready="onMapReady"
             >
               <LTileLayer

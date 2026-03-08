@@ -53,9 +53,7 @@ const buttonStyle = computed(() => ({
     ? "1px solid rgba(255, 255, 255, 0.18)"
     : "1px solid rgba(0, 102, 178, 0.20)",
   // Solid glass-style bg — no backdropFilter since <button> can't blur behind itself
-  background: isDark.value
-    ? "rgba(255, 255, 255, 0.10)"
-    : "rgba(255, 255, 255, 0.70)",
+  background: isDark.value ? "rgba(255, 255, 255, 0.10)" : "rgba(255, 255, 255, 0.70)",
   boxShadow: isDark.value
     ? "0 2px 12px rgba(0,0,0,0.10), inset 0 1px 0 rgba(255,255,255,0.12)"
     : "0 2px 12px rgba(0,102,178,0.08), inset 0 1px 0 rgba(255,255,255,0.70)",
@@ -242,8 +240,8 @@ onMounted(() => {
     data-download-resume
     :style="buttonStyle"
     @click="downloadResume"
-    @mouseenter="e => (e.currentTarget as HTMLElement).style.transform = 'translateY(-1px)'"
-    @mouseleave="e => (e.currentTarget as HTMLElement).style.transform = 'translateY(0)'"
+    @mouseenter="e => ((e.currentTarget as HTMLElement).style.transform = 'translateY(-1px)')"
+    @mouseleave="e => ((e.currentTarget as HTMLElement).style.transform = 'translateY(0)')"
   >
     {{ props.buttonText }}
   </button>

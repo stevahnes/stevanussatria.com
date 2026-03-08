@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed } from "vue";
+import { useData } from "vitepress";
 
 // --- Types ---
 interface Recommendation {
@@ -19,6 +20,9 @@ interface Props {
 const props = withDefaults(defineProps<Props>(), {
   recommendations: () => [],
 });
+
+// --- Theme ---
+const { isDark } = useData();
 
 // --- State ---
 const searchQuery = ref("");
@@ -77,7 +81,7 @@ const getItemKey = (item: Recommendation): string => item.id;
 <template>
   <div class="recommendations-container">
     <!-- Filters Section -->
-    <div class="filters-section">
+    <div class="filters-section" :style="!isDark ? { borderColor: 'rgba(0, 102, 178, 0.20)' } : {}">
       <div class="search-box">
         <input
           v-model="searchQuery"
@@ -110,6 +114,7 @@ const getItemKey = (item: Recommendation): string => item.id;
         v-for="item in filteredRecommendations"
         :key="getItemKey(item)"
         class="recommendation-card"
+        :style="!isDark ? { borderColor: 'rgba(0, 102, 178, 0.20)' } : {}"
       >
         <div class="card-header">
           <div class="card-avatar">
@@ -243,6 +248,12 @@ const getItemKey = (item: Recommendation): string => item.id;
   border-color: rgba(255, 255, 255, 0.25);
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
   transform: translateY(-2px);
+}
+
+/* Light mode hover — blue tint border instead of white */
+:root:not(.dark) .recommendation-card:hover {
+  border-color: rgba(0, 102, 178, 0.35);
+  box-shadow: 0 12px 40px rgba(0, 102, 178, 0.12);
 }
 
 /* Card Header */

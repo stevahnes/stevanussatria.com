@@ -26,10 +26,18 @@ interface SoundCloudWidgetConstructor {
   (iframe: HTMLIFrameElement): SoundCloudWidget;
   Events: { READY: string; PLAY: string; PAUSE: string; FINISH: string; SEEK: string };
 }
-interface SoundCloudAPI { Widget: SoundCloudWidgetConstructor }
-declare global { interface Window { SC: SoundCloudAPI } }
+interface SoundCloudAPI {
+  Widget: SoundCloudWidgetConstructor;
+}
+declare global {
+  interface Window {
+    SC: SoundCloudAPI;
+  }
+}
 
-interface Props { playlistUrl?: string }
+interface Props {
+  playlistUrl?: string;
+}
 const props = withDefaults(defineProps<Props>(), {
   playlistUrl: "https://soundcloud.com/stevanus-satria/sets/piano-covers",
 });
@@ -66,10 +74,12 @@ const progressPercentage = computed(() => {
 
 const cssVars = computed(() => ({
   "--player-bg": clientSideTheme.value && isDark.value ? "rgba(17, 24, 39, 0.95)" : "white",
-  "--player-border": clientSideTheme.value && isDark.value ? "rgba(75, 85, 99, 0.3)" : "rgba(0, 0, 0, 0.08)",
+  "--player-border":
+    clientSideTheme.value && isDark.value ? "rgba(75, 85, 99, 0.3)" : "rgba(0, 0, 0, 0.08)",
   "--player-text": clientSideTheme.value && isDark.value ? "#f9fafb" : "#111827",
   "--player-text-secondary": clientSideTheme.value && isDark.value ? "#9ca3af" : "#6b7280",
-  "--button-hover-bg": clientSideTheme.value && isDark.value ? "rgba(156, 163, 175, 0.1)" : "rgba(107, 114, 128, 0.1)",
+  "--button-hover-bg":
+    clientSideTheme.value && isDark.value ? "rgba(156, 163, 175, 0.1)" : "rgba(107, 114, 128, 0.1)",
   "--seek-bg": clientSideTheme.value && isDark.value ? "#374151" : "#e5e7eb",
 }));
 
@@ -82,8 +92,14 @@ const formatTime = (ms: number): string => {
 
 const loadSoundCloudAPI = (): Promise<void> => {
   return new Promise((resolve, reject) => {
-    if (typeof window === "undefined") { reject(new Error("Not in browser")); return; }
-    if (window.SC) { resolve(); return; }
+    if (typeof window === "undefined") {
+      reject(new Error("Not in browser"));
+      return;
+    }
+    if (window.SC) {
+      resolve();
+      return;
+    }
     const script = document.createElement("script");
     script.src = "https://w.soundcloud.com/player/api.js";
     script.onload = () => resolve();
@@ -152,8 +168,12 @@ const loadTrackInfo = (): void => {
       setTimeout(checkTextOverflow, 100);
     }
   });
-  widget.getCurrentSoundIndex((index: number) => { currentTrack.value = index; });
-  widget.getSounds((sounds: SoundCloudSound[]) => { totalTracks.value = sounds.length; });
+  widget.getCurrentSoundIndex((index: number) => {
+    currentTrack.value = index;
+  });
+  widget.getSounds((sounds: SoundCloudSound[]) => {
+    totalTracks.value = sounds.length;
+  });
 };
 
 const updatePosition = (): void => {
@@ -162,7 +182,10 @@ const updatePosition = (): void => {
     currentPosition.value = position;
     if (isPlaying.value && position > 0) {
       widget!.isPaused((paused: boolean) => {
-        if (paused && isPlaying.value) { isPlaying.value = false; stopPositionTracking(); }
+        if (paused && isPlaying.value) {
+          isPlaying.value = false;
+          stopPositionTracking();
+        }
       });
     }
   });
@@ -183,7 +206,9 @@ const stopPositionTracking = (): void => {
 
 const togglePlay = (): void => {
   if (!widget || !isWidgetReady.value) return;
-  widget.isPaused((paused: boolean) => { paused ? widget!.play() : widget!.pause(); });
+  widget.isPaused((paused: boolean) => {
+    paused ? widget!.play() : widget!.pause();
+  });
 };
 
 const nextTrack = (): void => {
@@ -191,7 +216,9 @@ const nextTrack = (): void => {
   widget.next();
   setTimeout(() => {
     loadTrackInfo();
-    widget!.isPaused((paused: boolean) => { if (paused) widget!.play(); });
+    widget!.isPaused((paused: boolean) => {
+      if (paused) widget!.play();
+    });
   }, 200);
 };
 
@@ -200,7 +227,9 @@ const prevTrack = (): void => {
   widget.prev();
   setTimeout(() => {
     loadTrackInfo();
-    widget!.isPaused((paused: boolean) => { if (paused) widget!.play(); });
+    widget!.isPaused((paused: boolean) => {
+      if (paused) widget!.play();
+    });
   }, 200);
 };
 
@@ -248,7 +277,11 @@ onMounted(() => {
 onUnmounted(() => {
   stopPositionTracking();
   if (widget && typeof window !== "undefined") {
-    try { widget = null; } catch (error) { console.error("Error cleaning up widget:", error); }
+    try {
+      widget = null;
+    } catch (error) {
+      console.error("Error cleaning up widget:", error);
+    }
   }
 });
 </script>
@@ -264,12 +297,18 @@ onUnmounted(() => {
       allow="autoplay"
     />
 
-    <div ref="playerRef" :class="['sc-player-container', { expanded: isExpanded }]" :style="cssVars">
+    <div
+      ref="playerRef"
+      :class="['sc-player-container', { expanded: isExpanded }]"
+      :style="cssVars"
+    >
       <!-- Collapsed View -->
       <div v-if="!isExpanded" class="sc-collapsed" @click="toggleExpanded">
         <div class="sc-music-note">
           <svg viewBox="0 0 24 24" fill="currentColor" class="sc-note-icon">
-            <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" />
+            <path
+              d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"
+            />
           </svg>
         </div>
         <div v-if="isPlaying" class="sc-playing-indicator">
@@ -289,22 +328,44 @@ onUnmounted(() => {
           <div class="sc-header-controls">
             <button @click="toggleExpanded" class="sc-header-btn">
               <svg class="sc-icon-small" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" />
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M20 12H4"
+                />
               </svg>
             </button>
           </div>
         </div>
 
         <div class="sc-controls">
-          <button @click="prevTrack" class="sc-nav-btn" :disabled="isLoading || !isWidgetReady" title="Previous track">
+          <button
+            @click="prevTrack"
+            class="sc-nav-btn"
+            :disabled="isLoading || !isWidgetReady"
+            title="Previous track"
+          >
             <svg class="sc-icon-small" viewBox="0 0 24 24" fill="currentColor">
               <path d="M6 6h2v12H6zm3.5 6l8.5 6V6z" />
             </svg>
           </button>
           <button @click="togglePlay" class="sc-play-btn" :disabled="isLoading || !isWidgetReady">
             <svg v-if="isLoading || !isWidgetReady" class="sc-spinner" viewBox="0 0 24 24">
-              <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none" opacity="0.25" />
-              <path fill="currentColor" opacity="0.75" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+              <circle
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                stroke-width="4"
+                fill="none"
+                opacity="0.25"
+              />
+              <path
+                fill="currentColor"
+                opacity="0.75"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+              />
             </svg>
             <svg v-else-if="!isPlaying" class="sc-icon" viewBox="0 0 24 24" fill="currentColor">
               <path d="M8 5v14l11-7z" />
@@ -313,7 +374,12 @@ onUnmounted(() => {
               <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
             </svg>
           </button>
-          <button @click="nextTrack" class="sc-nav-btn" :disabled="isLoading || !isWidgetReady" title="Next track">
+          <button
+            @click="nextTrack"
+            class="sc-nav-btn"
+            :disabled="isLoading || !isWidgetReady"
+            title="Next track"
+          >
             <svg class="sc-icon-small" viewBox="0 0 24 24" fill="currentColor">
               <path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z" />
             </svg>
@@ -342,7 +408,8 @@ onUnmounted(() => {
   bottom: 20px;
   left: max(20px, calc(50vw - 720px));
   z-index: 30;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
 .sc-iframe {
@@ -386,35 +453,47 @@ onUnmounted(() => {
   background: rgba(255, 255, 255, 0.08);
   backdrop-filter: blur(20px) saturate(1.6);
   -webkit-backdrop-filter: blur(20px) saturate(1.6);
-  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  box-shadow:
+    0 2px 16px rgba(0, 0, 0, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   position: relative;
   overflow: hidden;
-  transition: background 0.2s, border-color 0.2s, transform 0.15s, box-shadow 0.2s;
+  transition:
+    background 0.2s,
+    border-color 0.2s,
+    transform 0.15s,
+    box-shadow 0.2s;
   color: rgba(255, 255, 255, 0.85);
 }
 
 .sc-collapsed:hover {
   background: rgba(0, 102, 178, 0.25);
   border-color: rgba(255, 255, 255, 0.28);
-  box-shadow: 0 4px 24px rgba(0, 102, 178, 0.30), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  box-shadow:
+    0 4px 24px rgba(0, 102, 178, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
   transform: translateY(-1px);
 }
 
 :root:not(.dark) .sc-collapsed {
   background: rgba(255, 255, 255, 0.55);
-  border-color: rgba(255, 255, 255, 0.70);
-  box-shadow: 0 2px 16px rgba(0, 102, 178, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  border-color: rgba(255, 255, 255, 0.7);
+  box-shadow:
+    0 2px 16px rgba(0, 102, 178, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
   color: rgba(0, 60, 120, 0.85);
 }
 
 :root:not(.dark) .sc-collapsed:hover {
-  background: rgba(0, 102, 178, 0.10);
+  background: rgba(0, 102, 178, 0.1);
   border-color: rgba(0, 102, 178, 0.25);
-  box-shadow: 0 4px 20px rgba(0, 102, 178, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  box-shadow:
+    0 4px 20px rgba(0, 102, 178, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7);
 }
 
 .sc-music-note {
@@ -425,7 +504,10 @@ onUnmounted(() => {
   justify-content: center;
 }
 
-.sc-note-icon { width: 100%; height: 100%; }
+.sc-note-icon {
+  width: 100%;
+  height: 100%;
+}
 
 .sc-playing-indicator {
   display: flex;
@@ -440,14 +522,31 @@ onUnmounted(() => {
   border-radius: 1px;
   animation: wave 1.2s ease-in-out infinite;
 }
-:root:not(.dark) .sc-wave { background: rgba(0, 102, 178, 0.7); }
-.sc-wave:nth-child(1) { height: 4px; animation-delay: 0s; }
-.sc-wave:nth-child(2) { height: 10px; animation-delay: 0.2s; }
-.sc-wave:nth-child(3) { height: 6px; animation-delay: 0.4s; }
+:root:not(.dark) .sc-wave {
+  background: rgba(0, 102, 178, 0.7);
+}
+.sc-wave:nth-child(1) {
+  height: 4px;
+  animation-delay: 0s;
+}
+.sc-wave:nth-child(2) {
+  height: 10px;
+  animation-delay: 0.2s;
+}
+.sc-wave:nth-child(3) {
+  height: 6px;
+  animation-delay: 0.4s;
+}
 
 @keyframes wave {
-  0%, 40%, 100% { transform: scaleY(0.4); }
-  20% { transform: scaleY(1); }
+  0%,
+  40%,
+  100% {
+    transform: scaleY(0.4);
+  }
+  20% {
+    transform: scaleY(1);
+  }
 }
 
 .sc-expanded {
@@ -458,8 +557,17 @@ onUnmounted(() => {
   gap: 16px;
 }
 
-.sc-header { display: flex; justify-content: space-between; align-items: flex-start; }
-.sc-header-info { flex: 1; min-width: 0; overflow: hidden; position: relative; }
+.sc-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+.sc-header-info {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  position: relative;
+}
 
 .sc-title {
   font-size: 16px;
@@ -482,16 +590,31 @@ onUnmounted(() => {
   animation: scroll-text 8s linear infinite;
   animation-delay: 1s;
 }
-.sc-scrolling-text:hover { animation-play-state: paused; }
-
-@keyframes scroll-text {
-  0% { transform: translateX(0); }
-  15% { transform: translateX(0); }
-  85% { transform: translateX(var(--translate-distance, -100px)); }
-  100% { transform: translateX(var(--translate-distance, -100px)); }
+.sc-scrolling-text:hover {
+  animation-play-state: paused;
 }
 
-.sc-header-controls { display: flex; align-items: center; gap: 8px; margin-left: 12px; }
+@keyframes scroll-text {
+  0% {
+    transform: translateX(0);
+  }
+  15% {
+    transform: translateX(0);
+  }
+  85% {
+    transform: translateX(var(--translate-distance, -100px));
+  }
+  100% {
+    transform: translateX(var(--translate-distance, -100px));
+  }
+}
+
+.sc-header-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: 12px;
+}
 
 .sc-header-btn {
   width: 32px;
@@ -507,10 +630,20 @@ onUnmounted(() => {
   transition: all 0.2s;
   flex-shrink: 0;
 }
-.sc-header-btn:hover:not(:disabled) { background: var(--button-hover-bg); }
-.sc-header-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.sc-header-btn:hover:not(:disabled) {
+  background: var(--button-hover-bg);
+}
+.sc-header-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
 
-.sc-controls { display: flex; justify-content: center; align-items: center; gap: 16px; }
+.sc-controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+}
 
 .sc-nav-btn {
   width: 40px;
@@ -525,8 +658,14 @@ onUnmounted(() => {
   cursor: pointer;
   transition: all 0.2s;
 }
-.sc-nav-btn:hover:not(:disabled) { background: var(--button-hover-bg); color: var(--player-text); }
-.sc-nav-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.sc-nav-btn:hover:not(:disabled) {
+  background: var(--button-hover-bg);
+  color: var(--player-text);
+}
+.sc-nav-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
 
 .sc-play-btn {
   width: 48px;
@@ -541,25 +680,42 @@ onUnmounted(() => {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: background 0.2s, border-color 0.2s, box-shadow 0.2s, transform 0.15s;
-  box-shadow: 0 2px 12px rgba(0, 102, 178, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  transition:
+    background 0.2s,
+    border-color 0.2s,
+    box-shadow 0.2s,
+    transform 0.15s;
+  box-shadow:
+    0 2px 12px rgba(0, 102, 178, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
 }
 
 .sc-play-btn:hover:not(:disabled) {
   background: rgba(0, 102, 178, 0.92);
-  box-shadow: 0 4px 20px rgba(0, 102, 178, 0.50), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  box-shadow:
+    0 4px 20px rgba(0, 102, 178, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
   transform: translateY(-1px);
 }
 
 :root:not(.dark) .sc-play-btn {
   background: rgba(0, 102, 178, 0.85);
   border-color: rgba(0, 102, 178, 0.3);
-  box-shadow: 0 2px 12px rgba(0, 102, 178, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  box-shadow:
+    0 2px 12px rgba(0, 102, 178, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 
-.sc-play-btn:disabled { opacity: 0.7; cursor: not-allowed; }
+.sc-play-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
 
-.sc-progress { display: flex; align-items: center; gap: 12px; }
+.sc-progress {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
 
 .sc-time {
   font-size: 12px;
@@ -586,24 +742,51 @@ onUnmounted(() => {
 
 .sc-seek-fill {
   height: 100%;
-  background: rgba(0, 102, 178, 0.80);
+  background: rgba(0, 102, 178, 0.8);
   border-radius: 2px;
   transition: width 0.1s linear;
 }
 
 :root:not(.dark) .sc-seek-fill {
-  background: rgba(0, 102, 178, 0.90);
+  background: rgba(0, 102, 178, 0.9);
 }
 
-.sc-track-counter { text-align: center; font-size: 12px; color: var(--player-text-secondary); }
-.sc-icon { width: 20px; height: 20px; }
-.sc-icon-small { width: 16px; height: 16px; }
+.sc-track-counter {
+  text-align: center;
+  font-size: 12px;
+  color: var(--player-text-secondary);
+}
+.sc-icon {
+  width: 20px;
+  height: 20px;
+}
+.sc-icon-small {
+  width: 16px;
+  height: 16px;
+}
 
-.sc-spinner { width: 20px; height: 20px; animation: spin 1s linear infinite; }
-@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+.sc-spinner {
+  width: 20px;
+  height: 20px;
+  animation: spin 1s linear infinite;
+}
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
 
 @media (max-width: 768px) {
-  .sc-player { bottom: 16px; left: 16px; }
-  .sc-player-container.expanded { width: calc(100vw - 32px); max-width: 320px; }
+  .sc-player {
+    bottom: 16px;
+    left: 16px;
+  }
+  .sc-player-container.expanded {
+    width: calc(100vw - 32px);
+    max-width: 320px;
+  }
 }
 </style>
