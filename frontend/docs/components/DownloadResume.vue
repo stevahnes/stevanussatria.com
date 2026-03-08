@@ -51,7 +51,7 @@ const buttonStyle = computed(() => ({
   borderRadius: "999px",
   border: isDark.value
     ? "1px solid rgba(255, 255, 255, 0.18)"
-    : "1px solid rgba(255, 255, 255, 0.70)",
+    : "1px solid rgba(0, 102, 178, 0.20)",
   // Solid glass-style bg — no backdropFilter since <button> can't blur behind itself
   background: isDark.value
     ? "rgba(255, 255, 255, 0.10)"
@@ -75,7 +75,6 @@ const loadingButtonStyle = computed(() => ({
   cursor: "wait",
   opacity: "0.6",
 }));
-
 
 // --- HTML to Markdown Processing ---
 const htmlTagProcessors: HTMLTagProcessor = {
