@@ -182,6 +182,10 @@ main .gsc-loading-image {
 
 .gsc-homepage-bg { background: transparent; }
 
+/* Force transparent background — Giscus sets background-color directly on
+   main as a non-variable property which would override our canvas token */
+main { background: transparent !important; }
+
 .gsc-comment-box {
   background: rgba(255,255,255,0.04);
   border: 1px solid rgba(255,255,255,0.10);
@@ -384,15 +388,19 @@ main .gsc-loading-image {
   background-image: url(https://github.githubassets.com/images/mona-loading-default.gif);
 }
 
-.gsc-homepage-bg { background: transparent; }
+/* Force transparent background — Giscus sets background-color directly on
+   main as a non-variable property which would override our canvas token */
+main, .gsc-homepage-bg {
+  background: transparent !important;
+}
 
 .gsc-comment-box {
-  background: rgba(255,255,255,0.55);
-  border: 1px solid rgba(255,255,255,0.70);
+  background: rgba(255,255,255,0.70);
+  border: 1px solid rgba(0,102,178,0.15);
   border-radius: 12px;
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  box-shadow: 0 2px 12px rgba(0,102,178,0.06), inset 0 1px 0 rgba(255,255,255,0.60);
+  box-shadow: 0 2px 12px rgba(0,102,178,0.08), inset 0 1px 0 rgba(255,255,255,0.80);
 }
 .gsc-comment-box-tabs {
   border-bottom-color: rgba(0,0,0,0.06);
@@ -418,16 +426,16 @@ main .gsc-loading-image {
 }
 
 .gsc-comment {
-  background: rgba(255,255,255,0.50);
-  border: 1px solid rgba(255,255,255,0.65);
+  background: rgba(255,255,255,0.70);
+  border: 1px solid rgba(0,102,178,0.12);
   border-radius: 12px;
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
-  box-shadow: 0 1px 8px rgba(0,102,178,0.05), inset 0 1px 0 rgba(255,255,255,0.55);
+  box-shadow: 0 1px 8px rgba(0,102,178,0.08), inset 0 1px 0 rgba(255,255,255,0.80);
 }
 .gsc-comment-header {
-  background: rgba(255,255,255,0.40);
-  border-bottom-color: rgba(0,0,0,0.05);
+  background: rgba(0,102,178,0.04);
+  border-bottom-color: rgba(0,102,178,0.08);
   border-radius: 12px 12px 0 0;
 }
 .gsc-comment-content { color: #1f2937; }
