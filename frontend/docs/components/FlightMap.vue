@@ -848,8 +848,9 @@ onMounted(async () => {
       }"
       :class="[
         'map-instance !w-full !h-full !rounded-lg !border',
-        clientSideTheme && isDark ? '!border-gray-700' : '!border-gray-200',
+        clientSideTheme && isDark ? '!border-gray-700' : '',
       ]"
+      :style="!(clientSideTheme && isDark) ? { borderColor: 'rgba(0, 102, 178, 0.20)' } : {}"
       @ready="onMapReady"
     >
       <!-- Tile Layer -->
