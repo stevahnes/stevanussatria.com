@@ -402,7 +402,7 @@ watch(
       aria-label="Open chat with Advocado"
       @click="toggleMiniChat"
     >
-      <img src="/advocado.webp" alt="Advocado" class="!w-8 !h-8 !rounded-full" />
+      <img src="/advocado.webp" alt="Advocado" width="32" height="32" loading="lazy" decoding="async" class="!w-8 !h-8 !rounded-full" />
     </button>
 
     <!-- Mini Chat Window -->

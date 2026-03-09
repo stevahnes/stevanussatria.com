@@ -14,7 +14,7 @@ export default defineConfig({
       "link",
       {
         rel: "icon",
-        type: "image/png",
+        type: "image/webp",
         sizes: "32x32",
         href: "/small-logo-white-circle-bg.webp",
       },
@@ -23,7 +23,7 @@ export default defineConfig({
       "link",
       {
         rel: "icon",
-        type: "image/png",
+        type: "image/webp",
         sizes: "16x16",
         href: "/small-logo-white-circle-bg.webp",
       },
@@ -101,17 +101,20 @@ export default defineConfig({
     // Canonical URL
     ["link", { rel: "canonical", href: "https://stevanussatria.com" }],
 
-    // DNS prefetch for external resources
-    ["link", { rel: "dns-prefetch", href: "https://fonts.googleapis.com" }],
-    ["link", { rel: "dns-prefetch", href: "https://fonts.gstatic.com" }],
-    ["link", { rel: "dns-prefetch", href: "https://api.github.com" }],
+    // Preload LCP hero image
+    [
+      "link",
+      {
+        rel: "preload",
+        as: "image",
+        type: "image/webp",
+        href: "/me.webp",
+        fetchpriority: "high",
+      },
+    ],
 
-    // Preconnect to external domains
-    ["link", { rel: "preconnect", href: "https://fonts.googleapis.com" }],
-    ["link", { rel: "preconnect", href: "https://fonts.gstatic.com", crossorigin: "" }],
-    ["link", { rel: "preconnect", href: "https://www.google-analytics.com" }],
-    ["link", { rel: "preconnect", href: "https://www.googletagmanager.com" }],
-    ["link", { rel: "preconnect", href: "https://giscus.app" }],
+    // DNS prefetch for external resources
+    ["link", { rel: "dns-prefetch", href: "https://api.github.com" }],
 
     // Structured Data
     [
@@ -585,17 +588,8 @@ export default defineConfig({
     ] as any,
     build: {
       cssMinify: true,
-      sourcemap: false,
+      sourcemap: true,
       chunkSizeWarningLimit: 500,
-      rollupOptions: {
-        output: {
-          manualChunks: {
-            chat: ["./docs/.vitepress/theme/components/Chat.vue"],
-            "soundcloud-player": ["./docs/.vitepress/theme/components/SoundCloudPlayer.vue"],
-            "download-resume": ["./docs/components/DownloadResume.vue"],
-          },
-        },
-      },
     },
     optimizeDeps: {
       include: ["vue", "marked", "jspdf"],

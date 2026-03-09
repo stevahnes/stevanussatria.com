@@ -46,6 +46,7 @@ const isExpanded = ref(false);
 const isPlaying = ref(false);
 const isLoading = ref(true);
 const isWidgetReady = ref(false);
+const iframeLoaded = ref(false);
 const currentTrack = ref(0);
 const currentPosition = ref(0);
 const currentDuration = ref(0);
@@ -64,6 +65,12 @@ const artistRef = ref<HTMLDivElement | null>(null);
 const { isDark } = useData();
 let widget: SoundCloudWidget | null = null;
 let positionInterval: number | null = null;
+
+const iframeSrc = computed(() =>
+  iframeLoaded.value
+    ? `https://w.soundcloud.com/player/?url=${encodeURIComponent(props.playlistUrl)}&auto_play=false&buying=false&liking=false&download=false&sharing=false&show_artwork=false&show_comments=false&show_playcount=false&show_user=false&hide_related=true&visual=false&start_track=0&single_active=false`
+    : undefined,
+);
 
 const formattedPosition = computed(() => formatTime(currentPosition.value));
 const formattedDuration = computed(() => formatTime(currentDuration.value));
@@ -242,7 +249,13 @@ const seek = (event: MouseEvent): void => {
 
 const toggleExpanded = (): void => {
   isExpanded.value = !isExpanded.value;
-  if (isExpanded.value) setTimeout(checkTextOverflow, 100);
+  if (isExpanded.value) {
+    if (!iframeLoaded.value) {
+      iframeLoaded.value = true;
+      nextTick(() => initializeWidget());
+    }
+    setTimeout(checkTextOverflow, 100);
+  }
 };
 
 const applyScrollingIfOverflowing = (element: HTMLElement | null): void => {
@@ -271,7 +284,6 @@ const checkTextOverflow = (): void => {
 onMounted(() => {
   isClient.value = true;
   clientSideTheme.value = true;
-  nextTick(() => initializeWidget());
 });
 
 onUnmounted(() => {
@@ -289,12 +301,13 @@ onUnmounted(() => {
 <template>
   <div v-if="isClient" class="sc-player">
     <iframe
+      v-if="iframeLoaded"
       ref="iframeRef"
-      :src="`https://w.soundcloud.com/player/?url=${encodeURIComponent(props.playlistUrl)}&auto_play=false&buying=false&liking=false&download=false&sharing=false&show_artwork=false&show_comments=false&show_playcount=false&show_user=false&hide_related=true&visual=false&start_track=0&single_active=false`"
+      :src="iframeSrc"
       class="sc-iframe"
       width="100"
       height="100"
-      allow="autoplay"
+      allow="autoplay; encrypted-media"
     />
 
     <div

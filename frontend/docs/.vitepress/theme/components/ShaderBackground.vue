@@ -640,48 +640,54 @@ onMounted(() => {
   });
   themeObserver.observe(document.documentElement, { attributes: true });
 
-  const canvas = canvasRef.value;
-  if (!canvas) return;
+  const initGL = () => {
+    const canvas = canvasRef.value;
+    if (!canvas) return;
 
-  gl = canvas.getContext("webgl");
-  if (!gl) return;
+    gl = canvas.getContext("webgl");
+    if (!gl) return;
 
-  // Full-screen quad buffer (shared)
-  const buf = gl.createBuffer();
-  gl.bindBuffer(gl.ARRAY_BUFFER, buf);
-  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
+    const buf = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
 
-  // Build initial program only — others are compiled during idle time
-  switchShader(activeShader.value);
-  precompileOthers(activeShader.value);
+    switchShader(activeShader.value);
+    precompileOthers(activeShader.value);
 
-  ro = new ResizeObserver(() => {
-    if (!canvas || !gl) return;
+    ro = new ResizeObserver(() => {
+      if (!canvas || !gl) return;
+      canvas.width = canvas.offsetWidth;
+      canvas.height = canvas.offsetHeight;
+      gl.viewport(0, 0, canvas.width, canvas.height);
+    });
+    ro.observe(canvas);
     canvas.width = canvas.offsetWidth;
     canvas.height = canvas.offsetHeight;
     gl.viewport(0, 0, canvas.width, canvas.height);
-  });
-  ro.observe(canvas);
-  canvas.width = canvas.offsetWidth;
-  canvas.height = canvas.offsetHeight;
-  gl.viewport(0, 0, canvas.width, canvas.height);
 
-  startTime = performance.now();
+    startTime = performance.now();
 
-  const render = () => {
-    if (!gl || !currentProgram) return;
-    const t = (performance.now() - startTime) / 1000;
-    const [cx, cy] = getHeroImageCenter();
-    gl.uniform2f(uniformLocs.centerA, cx + 0.01, cy - 0.1);
-    gl.uniform2f(uniformLocs.centerB, cx - 0.01, cy);
-    gl.uniform2f(uniformLocs.res, canvas.width, canvas.height);
-    gl.uniform1f(uniformLocs.time, t);
-    gl.uniform3f(uniformLocs.bg, ...bgColorUniform.value);
-    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
-    animationId = requestAnimationFrame(render);
+    const render = () => {
+      if (!gl || !currentProgram) return;
+      const t = (performance.now() - startTime) / 1000;
+      const [cx, cy] = getHeroImageCenter();
+      gl.uniform2f(uniformLocs.centerA, cx + 0.01, cy - 0.1);
+      gl.uniform2f(uniformLocs.centerB, cx - 0.01, cy);
+      gl.uniform2f(uniformLocs.res, canvas.width, canvas.height);
+      gl.uniform1f(uniformLocs.time, t);
+      gl.uniform3f(uniformLocs.bg, ...bgColorUniform.value);
+      gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+      animationId = requestAnimationFrame(render);
+    };
+
+    render();
   };
 
-  render();
+  if ("requestIdleCallback" in window) {
+    (window as any).requestIdleCallback(initGL, { timeout: 3000 });
+  } else {
+    setTimeout(initGL, 100);
+  }
 });
 
 onUnmounted(() => {
