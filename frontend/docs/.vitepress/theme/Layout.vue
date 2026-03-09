@@ -1,13 +1,19 @@
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, defineAsyncComponent } from "vue";
 import { useData } from "vitepress";
 import DefaultTheme from "vitepress/theme";
-import FloatingMusicPlayer from "./components/SoundCloudPlayer.vue";
-import UnifiedChat from "./components/Chat.vue";
-import ShaderBackground from "./components/ShaderBackground.vue";
-// Only show shader on the home page hero
+
+const FloatingMusicPlayer = defineAsyncComponent(
+  () => import("./components/SoundCloudPlayer.vue"),
+);
+const UnifiedChat = defineAsyncComponent(
+  () => import("./components/Chat.vue"),
+);
+const ShaderBackground = defineAsyncComponent(
+  () => import("./components/ShaderBackground.vue"),
+);
+
 const { page } = useData();
-// True only when the frontmatter layout is 'home' AND it's the root index
 const isHome = computed(() => page.value.relativePath === "index.md");
 </script>
 
