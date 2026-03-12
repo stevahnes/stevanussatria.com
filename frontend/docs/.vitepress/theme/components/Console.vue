@@ -99,8 +99,10 @@ const close = () => {
   isOpen.value = false;
   bootPhase.value = 0;
 };
-const toggleDock = () => {
+const toggleDock = async () => {
   dockPosition.value = dockPosition.value === "bottom" ? "right" : "bottom";
+  await nextTick();
+  scrollToBottom();
 };
 
 // ─────────────────────────────────────────────
@@ -153,11 +155,21 @@ const COMMANDS: Record<
   play: {
     description: "Open SoundCloud player and start playing",
     fn: async () => {
-      // Step 1: open/expand the player
       window.dispatchEvent(new CustomEvent("openSoundCloud"));
-      // Step 2: wait for widget ready, then trigger play
-      // We poll for the custom event the player fires, or just delay generously
-      await new Promise(r => setTimeout(r, 800));
+
+      // Wait for the player to signal it's ready, with a 5s timeout fallback
+      await new Promise<void>(resolve => {
+        const onReady = () => {
+          window.removeEventListener("soundCloudReady", onReady);
+          clearTimeout(timer);
+          resolve();
+        };
+        const timer = setTimeout(() => {
+          window.removeEventListener("soundCloudReady", onReady);
+          resolve(); // give up waiting, try play anyway
+        }, 5000);
+        window.addEventListener("soundCloudReady", onReady);
+      });
       window.dispatchEvent(new CustomEvent("playSoundCloud"));
       return ["> SoundCloud player opened.", "> Playback started — 30 piano covers 🎹"];
     },
@@ -493,11 +505,6 @@ onUnmounted(() => {
 
         <!-- Title bar -->
         <div class="console-titlebar">
-          <div class="titlebar-dots">
-            <span class="dot dot-red" @click.stop="close" title="Close"></span>
-            <span class="dot dot-yellow" @click.stop="toggleDock" title="Toggle dock"></span>
-            <span class="dot dot-green"></span>
-          </div>
           <span class="titlebar-title">
             stevanussatria.com — terminal
             <span class="titlebar-hint">{{

@@ -127,6 +127,8 @@ const initializeWidget = async (): Promise<void> => {
       // Silently warm up the widget so the internal audio context is ready.
       // The PLAY handler will catch this, immediately pause, and mark isWidgetReady.
       widget!.play();
+      // Signal to the terminal console that the widget is ready
+      window.dispatchEvent(new CustomEvent("soundCloudReady"));
     });
 
     widget.bind(window.SC.Widget.Events.PLAY, () => {
@@ -286,11 +288,14 @@ const handleOpenSoundCloud = () => {
 };
 
 const handlePlaySoundCloud = () => {
-  // Only fires play if widget is ready; safe to call speculatively
   if (isWidgetReady.value && widget) {
     widget.isPaused((paused: boolean) => {
       if (paused) widget!.play();
     });
+  } else if (widget) {
+    isWidgetReady.value = true;
+    widget!.pause();
+    handlePlaySoundCloud();
   }
 };
 
