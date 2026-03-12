@@ -501,6 +501,7 @@ let gl: WebGLRenderingContext | null = null;
 let currentProgram: WebGLProgram | null = null;
 let themeObserver: MutationObserver | null = null;
 let ro: ResizeObserver | null = null;
+let shaderSwitchHandler: ((e: Event) => void) | null = null;
 
 const bgColorUniform = ref<[number, number, number]>([0.094, 0.094, 0.102]);
 let uniformLocs: {
@@ -688,6 +689,12 @@ onMounted(() => {
   } else {
     setTimeout(initGL, 100);
   }
+
+  shaderSwitchHandler = (e: Event) => {
+    const id = (e as CustomEvent<{ id: ShaderId }>).detail.id;
+    switchShader(id);
+  };
+  window.addEventListener("switchShader", shaderSwitchHandler);
 });
 
 onUnmounted(() => {
@@ -695,6 +702,9 @@ onUnmounted(() => {
   ro?.disconnect();
   cancelAnimationFrame(animationId);
   gl = null;
+  if (shaderSwitchHandler) {
+    window.removeEventListener("switchShader", shaderSwitchHandler);
+  }
 });
 </script>
 
@@ -807,6 +817,7 @@ onUnmounted(() => {
   border-color: rgba(255, 255, 255, 0.28);
   transform: translateY(-1px);
 }
+
 :root:not(.dark) .picker-toggle:hover {
   background: rgba(255, 255, 255, 0.78);
   border-color: rgba(255, 255, 255, 0.9);
@@ -825,6 +836,7 @@ onUnmounted(() => {
   transform: rotate(90deg);
   opacity: 0.6;
 }
+
 .toggle-chevron.rotated {
   transform: rotate(-90deg);
 }
@@ -884,6 +896,7 @@ onUnmounted(() => {
   background: rgba(255, 255, 255, 0.1);
   color: rgba(255, 255, 255, 0.92);
 }
+
 :root:not(.dark) .picker-option:hover {
   background: rgba(0, 102, 178, 0.08);
   color: rgba(0, 60, 130, 0.9);
@@ -893,6 +906,7 @@ onUnmounted(() => {
   background: rgba(0, 102, 178, 0.3);
   color: rgba(180, 225, 255, 0.95);
 }
+
 :root:not(.dark) .picker-option.active {
   background: rgba(0, 102, 178, 0.12);
   color: rgba(0, 60, 140, 0.95);
@@ -913,6 +927,7 @@ onUnmounted(() => {
 .fade-leave-active {
   transition: opacity 0.4s;
 }
+
 .fade-enter-from,
 .fade-leave-to {
   opacity: 0;
@@ -923,11 +938,13 @@ onUnmounted(() => {
     opacity 0.2s ease,
     transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
+
 .slide-leave-active {
   transition:
     opacity 0.15s ease,
     transform 0.15s ease;
 }
+
 .slide-enter-from,
 .slide-leave-to {
   opacity: 0;

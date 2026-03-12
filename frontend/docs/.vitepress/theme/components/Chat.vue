@@ -13,6 +13,7 @@ interface ChatMessage {
 interface ChatActivationEvent extends CustomEvent {
   detail: {
     message: string;
+    autoSend?: boolean;
   };
 }
 
@@ -279,20 +280,21 @@ const sendMessage = async (): Promise<void> => {
 };
 
 const handleChatActivation = (event: ChatActivationEvent): void => {
-  const { message } = event.detail;
+  const { message, autoSend } = event.detail;
 
   if (!isMiniChat.value) {
     isMiniChat.value = true;
-    if (isClient.value) {
-      localStorage.setItem("miniChatExpanded", "true");
-    }
+    if (isClient.value) localStorage.setItem("miniChatExpanded", "true");
   }
 
   if (message && typeof message === "string") {
     userInput.value = message;
     nextTick(() => {
       resizeTextarea();
-      if (!isMobileDevice()) {
+      // ← ADD THIS: auto-submit if requested
+      if (autoSend) {
+        sendMessage();
+      } else if (!isMobileDevice()) {
         inputRef.value?.focus({ preventScroll: true });
       }
     });
@@ -402,7 +404,15 @@ watch(
       aria-label="Open chat with Advocado"
       @click="toggleMiniChat"
     >
-      <img src="/advocado.webp" alt="Advocado" width="32" height="32" loading="lazy" decoding="async" class="!w-8 !h-8 !rounded-full" />
+      <img
+        src="/advocado.webp"
+        alt="Advocado"
+        width="32"
+        height="32"
+        loading="lazy"
+        decoding="async"
+        class="!w-8 !h-8 !rounded-full"
+      />
     </button>
 
     <!-- Mini Chat Window -->
@@ -1004,6 +1014,7 @@ watch(
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
 }
+
 .scrollbar-hide {
   -ms-overflow-style: none;
   scrollbar-width: none;
@@ -1013,6 +1024,7 @@ watch(
 .chat-mode-leave-active {
   transition: opacity 0.15s ease;
 }
+
 .chat-mode-enter-from,
 .chat-mode-leave-to {
   opacity: 0;
@@ -1021,13 +1033,16 @@ watch(
 ::-webkit-scrollbar {
   width: 6px;
 }
+
 ::-webkit-scrollbar-thumb {
   background: var(--scrollbar-thumb);
   border-radius: 3px;
 }
+
 ::-webkit-scrollbar-thumb:hover {
   background: var(--scrollbar-thumb-hover);
 }
+
 ::-webkit-scrollbar-track {
   background: var(--scrollbar-track);
 }
@@ -1035,6 +1050,7 @@ watch(
 :deep(.markdown-content) {
   line-height: 1.4 !important;
 }
+
 :deep(.markdown-content p),
 :deep(.markdown-content ul),
 :deep(.markdown-content ol),
@@ -1043,56 +1059,70 @@ watch(
   margin: 0 !important;
   padding: 0 !important;
 }
+
 :deep(.markdown-content > * + *) {
   margin-top: 0.4em !important;
 }
+
 :deep(.markdown-content p + p) {
   margin-top: 0.4em !important;
 }
+
 :deep(.markdown-content li) {
   margin: 0 !important;
   padding: 0 !important;
 }
+
 :deep(.markdown-content li + li) {
   margin-top: 0.15em !important;
 }
+
 :deep(.markdown-content li p) {
   margin: 0 !important;
   padding: 0 !important;
 }
+
 :deep(.markdown-content ul),
 :deep(.markdown-content ol) {
   margin-left: 1rem !important;
   padding: 0 !important;
 }
+
 :deep(.markdown-content ul) {
   list-style-type: disc !important;
 }
+
 :deep(.markdown-content ol) {
   list-style-type: decimal !important;
 }
+
 :deep(.markdown-content strong) {
   font-weight: bold !important;
 }
+
 :deep(.markdown-content em) {
   font-style: italic !important;
 }
+
 :deep(.markdown-content code) {
   font-family: monospace !important;
   background-color: var(--code-bg-color) !important;
   padding: 0.1rem 0.3rem !important;
   border-radius: 0.25rem !important;
 }
+
 :deep(.markdown-content pre code) {
   display: block !important;
   padding: 0.75rem !important;
   margin-bottom: 0.5rem !important;
   overflow-x: auto !important;
 }
+
 :deep(.markdown-content a) {
   color: var(--link-color) !important;
   text-decoration: underline !important;
 }
+
 :deep(.markdown-content blockquote) {
   border-left: 3px solid var(--blockquote-border-color) !important;
   padding-left: 1rem !important;

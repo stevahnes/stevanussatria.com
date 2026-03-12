@@ -127,6 +127,8 @@ const initializeWidget = async (): Promise<void> => {
       // Silently warm up the widget so the internal audio context is ready.
       // The PLAY handler will catch this, immediately pause, and mark isWidgetReady.
       widget!.play();
+      // Signal to the terminal console that the widget is ready
+      window.dispatchEvent(new CustomEvent("soundCloudReady"));
     });
 
     widget.bind(window.SC.Widget.Events.PLAY, () => {
@@ -281,9 +283,27 @@ const checkTextOverflow = (): void => {
   });
 };
 
+const handleOpenSoundCloud = () => {
+  if (!isExpanded.value) toggleExpanded();
+};
+
+const handlePlaySoundCloud = () => {
+  if (isWidgetReady.value && widget) {
+    widget.isPaused((paused: boolean) => {
+      if (paused) widget!.play();
+    });
+  } else if (widget) {
+    isWidgetReady.value = true;
+    widget!.pause();
+    handlePlaySoundCloud();
+  }
+};
+
 onMounted(() => {
   isClient.value = true;
   clientSideTheme.value = true;
+  window.addEventListener("openSoundCloud", handleOpenSoundCloud);
+  window.addEventListener("playSoundCloud", handlePlaySoundCloud);
 });
 
 onUnmounted(() => {
@@ -295,6 +315,8 @@ onUnmounted(() => {
       console.error("Error cleaning up widget:", error);
     }
   }
+  window.removeEventListener("openSoundCloud", handleOpenSoundCloud);
+  window.removeEventListener("playSoundCloud", handlePlaySoundCloud);
 });
 </script>
 
@@ -535,17 +557,21 @@ onUnmounted(() => {
   border-radius: 1px;
   animation: wave 1.2s ease-in-out infinite;
 }
+
 :root:not(.dark) .sc-wave {
   background: rgba(0, 102, 178, 0.7);
 }
+
 .sc-wave:nth-child(1) {
   height: 4px;
   animation-delay: 0s;
 }
+
 .sc-wave:nth-child(2) {
   height: 10px;
   animation-delay: 0.2s;
 }
+
 .sc-wave:nth-child(3) {
   height: 6px;
   animation-delay: 0.4s;
@@ -557,6 +583,7 @@ onUnmounted(() => {
   100% {
     transform: scaleY(0.4);
   }
+
   20% {
     transform: scaleY(1);
   }
@@ -575,6 +602,7 @@ onUnmounted(() => {
   justify-content: space-between;
   align-items: flex-start;
 }
+
 .sc-header-info {
   flex: 1;
   min-width: 0;
@@ -603,6 +631,7 @@ onUnmounted(() => {
   animation: scroll-text 8s linear infinite;
   animation-delay: 1s;
 }
+
 .sc-scrolling-text:hover {
   animation-play-state: paused;
 }
@@ -611,12 +640,15 @@ onUnmounted(() => {
   0% {
     transform: translateX(0);
   }
+
   15% {
     transform: translateX(0);
   }
+
   85% {
     transform: translateX(var(--translate-distance, -100px));
   }
+
   100% {
     transform: translateX(var(--translate-distance, -100px));
   }
@@ -643,9 +675,11 @@ onUnmounted(() => {
   transition: all 0.2s;
   flex-shrink: 0;
 }
+
 .sc-header-btn:hover:not(:disabled) {
   background: var(--button-hover-bg);
 }
+
 .sc-header-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
@@ -671,10 +705,12 @@ onUnmounted(() => {
   cursor: pointer;
   transition: all 0.2s;
 }
+
 .sc-nav-btn:hover:not(:disabled) {
   background: var(--button-hover-bg);
   color: var(--player-text);
 }
+
 .sc-nav-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
@@ -769,10 +805,12 @@ onUnmounted(() => {
   font-size: 12px;
   color: var(--player-text-secondary);
 }
+
 .sc-icon {
   width: 20px;
   height: 20px;
 }
+
 .sc-icon-small {
   width: 16px;
   height: 16px;
@@ -783,10 +821,12 @@ onUnmounted(() => {
   height: 20px;
   animation: spin 1s linear infinite;
 }
+
 @keyframes spin {
   from {
     transform: rotate(0deg);
   }
+
   to {
     transform: rotate(360deg);
   }
@@ -797,6 +837,7 @@ onUnmounted(() => {
     bottom: 16px;
     left: 16px;
   }
+
   .sc-player-container.expanded {
     width: calc(100vw - 32px);
     max-width: 320px;
