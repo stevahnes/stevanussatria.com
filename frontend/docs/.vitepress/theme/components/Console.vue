@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, nextTick, computed } from "vue";
+import { useRouter } from "vitepress";
 
 // ─────────────────────────────────────────────
 //  Types
@@ -34,6 +35,8 @@ const isResizing = ref(false);
 // Slash command buffer (typed anywhere outside inputs)
 const slashBuffer = ref("");
 let slashTimeout: ReturnType<typeof setTimeout> | null = null;
+
+const router = useRouter();
 
 const SHADERS = ["aurora", "velodrome", "keys", "signal", "topology"] as const;
 type ShaderId = (typeof SHADERS)[number];
@@ -111,9 +114,9 @@ const COMMANDS: Record<
   help: {
     description: "List commands",
     fn: () => [
-      "┌──────────────────────────────────────────────────┐",
-      "│  AVAILABLE COMMANDS                               │",
-      "├──────────────────────────────────────────────────┤",
+      "┌───────────────────────────────────────────────────┐",
+      "│  AVAILABLE COMMANDS                              │",
+      "├───────────────────────────────────────────────────┤",
       "│  chat <message>  — Send a message to Advocado    │",
       "│  play            — Open & play SoundCloud        │",
       "│  shader <name>   — Switch background shader      │",
@@ -124,10 +127,11 @@ const COMMANDS: Record<
       "│  skills          — Steve's skills                │",
       "│  contact         — Get contact info              │",
       "│  help            — Show this message             │",
-      "└──────────────────────────────────────────────────┘",
+      "└───────────────────────────────────────────────────┘",
       "",
       "  Shaders: aurora · velodrome · keys · signal · topology",
-      "  Pages:   home · projects · blog · resume",
+      "  Pages:   home · resume · projects · milestones · recommendations",
+      "           ama · stack · gear · loops · skyline",
     ],
   },
 
@@ -180,9 +184,15 @@ const COMMANDS: Record<
     fn: args => {
       const PAGE_MAP: Record<string, string> = {
         home: "/",
-        projects: "/projects",
-        blog: "/blog",
         resume: "/resume",
+        projects: "/projects",
+        milestones: "/milestones",
+        recommendations: "/recommendations",
+        ama: "/ama",
+        stack: "/stack",
+        gear: "/gear",
+        loops: "/loops",
+        skyline: "/skyline",
       };
       const dest = args[0]?.toLowerCase();
       const path = PAGE_MAP[dest];
@@ -191,7 +201,9 @@ const COMMANDS: Record<
           `  Error: unknown page "${dest || ""}"`,
           `  Available: ${Object.keys(PAGE_MAP).join(" · ")}`,
         ];
-      setTimeout(() => (window.location.href = path), 400);
+      router.go(path).then(() => {
+        nextTick(() => inputRef.value?.focus({ preventScroll: true }));
+      });
       return [`> Navigating to ${path}…`];
     },
   },
@@ -275,6 +287,9 @@ const execute = async (raw: string) => {
 
   addLine("output", "");
   await scrollToBottom();
+  // Always return focus to the terminal input after a command
+  await nextTick();
+  inputRef.value?.focus({ preventScroll: true });
 };
 
 const submit = () => {
