@@ -11,22 +11,7 @@ interface TerminalLine {
   id: number;
 }
 
-// ─────────────────────────────────────────────
-//  Konami sequence
-// ─────────────────────────────────────────────
-
-const KONAMI = [
-  "ArrowUp",
-  "ArrowUp",
-  "ArrowDown",
-  "ArrowDown",
-  "ArrowLeft",
-  "ArrowRight",
-  "ArrowLeft",
-  "ArrowRight",
-  "b",
-  "a",
-];
+type DockPosition = "bottom" | "right";
 
 // ─────────────────────────────────────────────
 //  State
@@ -40,44 +25,106 @@ const historyIndex = ref(-1);
 const lineCounter = ref(0);
 const inputRef = ref<HTMLInputElement | null>(null);
 const outputRef = ref<HTMLDivElement | null>(null);
-const konamiProgress = ref(0);
 const isClient = ref(false);
-const bootPhase = ref(0); // 0 = idle, 1 = booting, 2 = ready
+const bootPhase = ref(0); // 0=idle 1=booting 2=ready
+const dockPosition = ref<DockPosition>("bottom");
+const panelSize = ref(320); // px — height when bottom, width when right
+const isResizing = ref(false);
 
-let konamiTimeout: ReturnType<typeof setTimeout> | null = null;
-
-// ─────────────────────────────────────────────
-//  Commands registry
-// ─────────────────────────────────────────────
+// Slash command buffer (typed anywhere outside inputs)
+const slashBuffer = ref("");
+let slashTimeout: ReturnType<typeof setTimeout> | null = null;
 
 const SHADERS = ["aurora", "velodrome", "keys", "signal", "topology"] as const;
 type ShaderId = (typeof SHADERS)[number];
 
+// ─────────────────────────────────────────────
+//  Line helpers
+// ─────────────────────────────────────────────
+
+const addLine = (type: TerminalLine["type"], text: string) => {
+  lines.value.push({ type, text, id: lineCounter.value++ });
+};
+const addLines = (type: TerminalLine["type"], texts: string[]) => {
+  texts.forEach(t => addLine(type, t));
+};
+const scrollToBottom = async () => {
+  await nextTick();
+  if (outputRef.value) outputRef.value.scrollTop = outputRef.value.scrollHeight;
+};
+
+// ─────────────────────────────────────────────
+//  Boot sequence
+// ─────────────────────────────────────────────
+
+const BOOT_LINES = [
+  "SATRIA OS v2.0.25 — stevanussatria.com",
+  "Initializing kernel modules…",
+  "Mounting glassmorphism subsystem… [OK]",
+  "Loading WebGL shader pipeline… [OK]",
+  "Connecting to Advocado chat backend… [OK]",
+  "Starting SoundCloud audio daemon… [OK]",
+  "All systems nominal.",
+  "",
+  'Type "help" to list commands.',
+];
+
+const bootTerminal = async () => {
+  bootPhase.value = 1;
+  lines.value = [];
+  for (let i = 0; i < BOOT_LINES.length; i++) {
+    await new Promise(r => setTimeout(r, i === 0 ? 0 : 55 + Math.random() * 55));
+    addLine(i === 0 ? "banner" : i === BOOT_LINES.length - 1 ? "system" : "output", BOOT_LINES[i]);
+    await scrollToBottom();
+  }
+  bootPhase.value = 2;
+  await nextTick();
+  inputRef.value?.focus();
+};
+
+// ─────────────────────────────────────────────
+//  Open / close / toggle dock
+// ─────────────────────────────────────────────
+
+const open = async () => {
+  if (isOpen.value) return;
+  isOpen.value = true;
+  await nextTick();
+  await bootTerminal();
+};
+const close = () => {
+  isOpen.value = false;
+  bootPhase.value = 0;
+};
+const toggleDock = () => {
+  dockPosition.value = dockPosition.value === "bottom" ? "right" : "bottom";
+};
+
+// ─────────────────────────────────────────────
+//  Commands
+// ─────────────────────────────────────────────
+
 const COMMANDS: Record<
   string,
-  {
-    description: string;
-    usage?: string;
-    fn: (args: string[]) => string | string[];
-  }
+  { description: string; fn: (args: string[]) => string | string[] | Promise<string[]> }
 > = {
   help: {
-    description: "List all available commands",
+    description: "List commands",
     fn: () => [
-      "┌─────────────────────────────────────────────────┐",
-      "│  AVAILABLE COMMANDS                              │",
-      "├─────────────────────────────────────────────────┤",
-      "│  chat [message]  — Open Advocado chat widget    │",
-      "│  play            — Open SoundCloud player       │",
-      "│  shader <name>   — Switch background shader     │",
-      "│  goto <page>     — Navigate to a page           │",
-      "│  clear           — Clear terminal               │",
-      "│  whoami          — About this site              │",
-      "│  skills          — List Steve's skills          │",
-      "│  contact         — Get contact info             │",
-      "│  konami          — ???                          │",
-      "│  help            — Show this message            │",
-      "└─────────────────────────────────────────────────┘",
+      "┌──────────────────────────────────────────────────┐",
+      "│  AVAILABLE COMMANDS                               │",
+      "├──────────────────────────────────────────────────┤",
+      "│  chat <message>  — Send a message to Advocado    │",
+      "│  play            — Open & play SoundCloud        │",
+      "│  shader <name>   — Switch background shader      │",
+      "│  goto <page>     — Navigate to a page            │",
+      "│  dock            — Toggle bottom/right panel     │",
+      "│  clear           — Clear terminal                │",
+      "│  whoami          — About this site               │",
+      "│  skills          — Steve's skills                │",
+      "│  contact         — Get contact info              │",
+      "│  help            — Show this message             │",
+      "└──────────────────────────────────────────────────┘",
       "",
       "  Shaders: aurora · velodrome · keys · signal · topology",
       "  Pages:   home · projects · blog · resume",
@@ -85,51 +132,51 @@ const COMMANDS: Record<
   },
 
   chat: {
-    description: "Open Advocado chat widget",
-    usage: "chat [optional message]",
+    description: "Send a message to Advocado (auto-submits)",
     fn: args => {
       const message = args.join(" ").trim();
+      if (!message) return ['  Usage: chat <message>  e.g. chat "Tell me about Steve"'];
+      // autoSend: true tells Chat.vue to submit immediately
       window.dispatchEvent(
         new CustomEvent("activateChat", {
-          detail: { message: message || "" },
+          detail: { message, autoSend: true },
         }),
       );
-      return message
-        ? [`> Advocado is listening. Pre-filled: "${message}"`]
-        : ["> Advocado chat opened. Say hi 🥑"];
+      return [`> Sent to Advocado: "${message}"`];
     },
   },
 
   play: {
-    description: "Open the SoundCloud piano covers player",
-    fn: () => {
+    description: "Open SoundCloud player and start playing",
+    fn: async () => {
+      // Step 1: open/expand the player
       window.dispatchEvent(new CustomEvent("openSoundCloud"));
-      return [
-        "> SoundCloud player opened.",
-        "> 30 piano covers — stevanussatria.com's soundtrack.",
-      ];
+      // Step 2: wait for widget ready, then trigger play
+      // We poll for the custom event the player fires, or just delay generously
+      await new Promise(r => setTimeout(r, 800));
+      window.dispatchEvent(new CustomEvent("playSoundCloud"));
+      return ["> SoundCloud player opened.", "> Playback started — 30 piano covers 🎹"];
     },
   },
 
   shader: {
     description: "Switch the hero background shader",
-    usage: "shader <aurora|velodrome|keys|signal|topology>",
     fn: args => {
       const id = args[0]?.toLowerCase() as ShaderId;
       if (!id || !SHADERS.includes(id)) {
         return [`  Error: unknown shader "${id || ""}"`, `  Available: ${SHADERS.join(" · ")}`];
       }
-      // Write to sessionStorage — ShaderBackground.vue reads this on next pick
       sessionStorage.setItem("activeShader", id);
-      // Dispatch event for live switching if on home page
+      const handler = (e: Event) => {
+        // no-op placeholder — ShaderBackground listens for this
+      };
       window.dispatchEvent(new CustomEvent("switchShader", { detail: { id } }));
-      return [`> Shader switched to "${id}". Reload homepage to confirm.`];
+      return [`> Shader switched to "${id}".`];
     },
   },
 
   goto: {
     description: "Navigate to a page",
-    usage: "goto <home|projects|blog|resume>",
     fn: args => {
       const PAGE_MAP: Record<string, string> = {
         home: "/",
@@ -139,21 +186,26 @@ const COMMANDS: Record<
       };
       const dest = args[0]?.toLowerCase();
       const path = PAGE_MAP[dest];
-      if (!path) {
+      if (!path)
         return [
           `  Error: unknown page "${dest || ""}"`,
           `  Available: ${Object.keys(PAGE_MAP).join(" · ")}`,
         ];
-      }
-      setTimeout(() => {
-        window.location.href = path;
-      }, 400);
+      setTimeout(() => (window.location.href = path), 400);
       return [`> Navigating to ${path}…`];
     },
   },
 
+  dock: {
+    description: "Toggle panel between bottom and right",
+    fn: () => {
+      toggleDock();
+      return [`> Panel docked to ${dockPosition.value}.`];
+    },
+  },
+
   clear: {
-    description: "Clear the terminal",
+    description: "Clear terminal output",
     fn: () => {
       lines.value = [];
       return [];
@@ -171,115 +223,31 @@ const COMMANDS: Record<
       "  Cyclist · Pianist · Builder",
       "",
       "  Built with VitePress · Vue 3 · WebGL · TypeScript",
-      "  Glassmorphism design system, shaders hand-coded in GLSL.",
     ],
   },
 
   skills: {
-    description: "List Steve's key skills",
+    description: "Steve's key skills",
     fn: () => [
-      "  Product          — Strategy · Roadmapping · GTM · OKRs",
-      "  Engineering      — TypeScript · Vue · Python · WebGL",
-      "  Design           — Figma · Design Systems · UX Research",
-      "  Data             — SQL · Analytics · A/B Testing",
-      "  Leadership       — 0→1 products · Cross-functional teams",
+      "  Product     — Strategy · Roadmapping · GTM · OKRs",
+      "  Engineering — TypeScript · Vue · Python · WebGL",
+      "  Design      — Figma · Design Systems · UX Research",
+      "  Data        — SQL · Analytics · A/B Testing",
     ],
   },
 
   contact: {
-    description: "Get contact information",
+    description: "Get contact info",
     fn: () => [
       "  LinkedIn  → linkedin.com/in/stevanussatria",
       "  GitHub    → github.com/stevanussatria",
-      "  Email     → hello@stevanussatria.com",
-      "",
-      '  Or just type: chat "hi Steve!"',
-    ],
-  },
-
-  konami: {
-    description: "???",
-    fn: () => [
-      "  You already know about the code.",
-      "  ↑ ↑ ↓ ↓ ← → ← → B A",
-      "",
-      "  Congratulations on finding this console.",
-      "  Most visitors never see it.",
-      "",
-      "  Steve hid it here for people like you.",
-      "  Curious. Persistent. Technically inclined.",
-      "",
-      "  If you're reading this and you'd like to work",
-      "  with someone who builds easter eggs into their",
-      "  portfolio — you know where to find him.",
+      '  Or type:  chat "hi Steve!"',
     ],
   },
 };
 
 // ─────────────────────────────────────────────
-//  Terminal helpers
-// ─────────────────────────────────────────────
-
-const addLine = (type: TerminalLine["type"], text: string) => {
-  lines.value.push({ type, text, id: lineCounter.value++ });
-};
-
-const addLines = (type: TerminalLine["type"], texts: string[]) => {
-  texts.forEach(t => addLine(type, t));
-};
-
-const scrollToBottom = async () => {
-  await nextTick();
-  if (outputRef.value) {
-    outputRef.value.scrollTop = outputRef.value.scrollHeight;
-  }
-};
-
-const BOOT_LINES = [
-  "SATRIA OS v2.0.25 — stevanussatria.com",
-  "Initializing kernel modules…",
-  "Mounting glassmorphism subsystem… [OK]",
-  "Loading WebGL shader pipeline… [OK]",
-  "Connecting to Advocado chat backend… [OK]",
-  "Starting SoundCloud audio daemon… [OK]",
-  "All systems nominal.",
-  "",
-  'Type "help" to list commands.',
-];
-
-const bootTerminal = async () => {
-  bootPhase.value = 1;
-  lines.value = [];
-
-  for (let i = 0; i < BOOT_LINES.length; i++) {
-    await new Promise(r => setTimeout(r, i === 0 ? 0 : 60 + Math.random() * 60));
-    addLine(i === 0 ? "banner" : i === BOOT_LINES.length - 1 ? "system" : "output", BOOT_LINES[i]);
-    await scrollToBottom();
-  }
-
-  bootPhase.value = 2;
-  await nextTick();
-  inputRef.value?.focus();
-};
-
-// ─────────────────────────────────────────────
-//  Open / close
-// ─────────────────────────────────────────────
-
-const open = async () => {
-  isOpen.value = true;
-  await nextTick();
-  await bootTerminal();
-};
-
-const close = () => {
-  isOpen.value = false;
-  bootPhase.value = 0;
-  konamiProgress.value = 0;
-};
-
-// ─────────────────────────────────────────────
-//  Command execution
+//  Execute
 // ─────────────────────────────────────────────
 
 const execute = async (raw: string) => {
@@ -293,19 +261,19 @@ const execute = async (raw: string) => {
   addLine("input", `$ ${trimmed}`);
 
   const [cmd, ...args] = trimmed.toLowerCase().split(/\s+/);
-  const command = COMMANDS[cmd];
+  // Re-join args respecting original casing for message content
+  const rawArgs = trimmed.split(/\s+/).slice(1);
 
+  const command = COMMANDS[cmd];
   if (!command) {
     addLine("error", `  command not found: ${cmd}. Type "help" for commands.`);
   } else {
-    const result = command.fn(args);
+    const result = await Promise.resolve(command.fn(rawArgs));
     const outputs = Array.isArray(result) ? result : [result];
-    if (outputs.length > 0) {
-      addLines("output", outputs);
-    }
+    if (outputs.length > 0) addLines("output", outputs);
   }
 
-  addLine("output", ""); // spacer
+  addLine("output", "");
   await scrollToBottom();
 };
 
@@ -340,7 +308,6 @@ const handleInputKey = (e: KeyboardEvent) => {
     }
   } else if (e.key === "Tab") {
     e.preventDefault();
-    // Autocomplete
     const partial = input.value.toLowerCase();
     const match = Object.keys(COMMANDS).find(c => c.startsWith(partial) && c !== partial);
     if (match) input.value = match;
@@ -351,65 +318,123 @@ const handleInputKey = (e: KeyboardEvent) => {
 };
 
 // ─────────────────────────────────────────────
-//  Global Konami code listener
+//  Slash command detection (global keydown)
+//  Type "/terminal" anywhere outside inputs
 // ─────────────────────────────────────────────
 
-const handleGlobalKey = (e: KeyboardEvent) => {
-  // Don't hijack when user is typing in an input
-  if (
-    document.activeElement?.tagName === "INPUT" ||
-    document.activeElement?.tagName === "TEXTAREA"
-  ) {
-    // Exception: allow Escape to close console
-    if (e.key === "Escape" && isOpen.value) {
-      close();
-      return;
-    }
-    // Exception: Escape closes, but don't advance konami from inputs
-    if (!isOpen.value) return;
-  }
+const TRIGGER = "/terminal";
 
-  if (isOpen.value) {
-    if (e.key === "Escape") close();
+const handleGlobalKey = (e: KeyboardEvent) => {
+  const tag = (document.activeElement?.tagName ?? "").toLowerCase();
+  const isTyping =
+    tag === "input" ||
+    tag === "textarea" ||
+    document.activeElement?.getAttribute("contenteditable");
+
+  // Escape always closes
+  if (e.key === "Escape" && isOpen.value) {
+    close();
     return;
   }
 
-  const expected = KONAMI[konamiProgress.value];
-  if (e.key === expected) {
-    konamiProgress.value++;
-    if (konamiTimeout) clearTimeout(konamiTimeout);
-    konamiTimeout = setTimeout(() => {
-      konamiProgress.value = 0;
-    }, 2000);
+  if (isOpen.value) return; // terminal is open — don't intercept page keys
+  if (isTyping) return; // user is typing somewhere else
 
-    if (konamiProgress.value === KONAMI.length) {
-      konamiProgress.value = 0;
-      open();
-    }
+  if (e.key === "Escape") {
+    slashBuffer.value = "";
+    return;
+  }
+
+  // Ignore modifier-only or special keys
+  if (e.key.length > 1 && e.key !== "Backspace") return;
+
+  if (e.key === "Backspace") {
+    slashBuffer.value = slashBuffer.value.slice(0, -1);
   } else {
-    konamiProgress.value = 0;
-    if (konamiTimeout) clearTimeout(konamiTimeout);
+    slashBuffer.value += e.key;
+  }
+
+  if (slashTimeout) clearTimeout(slashTimeout);
+  slashTimeout = setTimeout(() => (slashBuffer.value = ""), 2500);
+
+  if (slashBuffer.value === TRIGGER) {
+    slashBuffer.value = "";
+    if (slashTimeout) clearTimeout(slashTimeout);
+    open();
   }
 };
 
-// Focus terminal on click anywhere in it
+// ─────────────────────────────────────────────
+//  Resize drag (panel size)
+// ─────────────────────────────────────────────
+
+const startResize = (e: MouseEvent | TouchEvent) => {
+  e.preventDefault();
+  isResizing.value = true;
+
+  const startPos = "touches" in e ? e.touches[0].clientY : e.clientY;
+  const startPosX = "touches" in e ? e.touches[0].clientX : e.clientX;
+  const startSize = panelSize.value;
+
+  const onMove = (ev: MouseEvent | TouchEvent) => {
+    const clientY = "touches" in ev ? ev.touches[0].clientY : (ev as MouseEvent).clientY;
+    const clientX = "touches" in ev ? ev.touches[0].clientX : (ev as MouseEvent).clientX;
+    if (dockPosition.value === "bottom") {
+      const delta = startPos - clientY;
+      panelSize.value = Math.max(180, Math.min(window.innerHeight * 0.85, startSize + delta));
+    } else {
+      const delta = startPosX - clientX;
+      panelSize.value = Math.max(260, Math.min(window.innerWidth * 0.6, startSize + delta));
+    }
+  };
+
+  const onUp = () => {
+    isResizing.value = false;
+    window.removeEventListener("mousemove", onMove as EventListener);
+    window.removeEventListener("mouseup", onUp);
+    window.removeEventListener("touchmove", onMove as EventListener);
+    window.removeEventListener("touchend", onUp);
+  };
+
+  window.addEventListener("mousemove", onMove as EventListener);
+  window.addEventListener("mouseup", onUp);
+  window.addEventListener("touchmove", onMove as EventListener, { passive: false });
+  window.addEventListener("touchend", onUp);
+};
+
 const focusInput = () => {
-  if (bootPhase.value === 2) {
-    inputRef.value?.focus();
+  if (bootPhase.value === 2) inputRef.value?.focus();
+};
+
+// ─────────────────────────────────────────────
+//  Computed panel styles
+// ─────────────────────────────────────────────
+
+const panelStyle = computed(() => {
+  if (dockPosition.value === "bottom") {
+    return {
+      height: `${panelSize.value}px`,
+      width: "100%",
+      bottom: "0",
+      left: "0",
+      right: "0",
+      top: "auto",
+    };
+  } else {
+    return {
+      width: `${panelSize.value}px`,
+      height: "100%",
+      right: "0",
+      top: "0",
+      bottom: "0",
+      left: "auto",
+    };
   }
-};
+});
 
-// ─────────────────────────────────────────────
-//  SoundCloud open event handler
-// ─────────────────────────────────────────────
-// SoundCloudPlayer listens for this and calls toggleExpanded()
-// We also wire up switchShader for live shader switching
-
-const handleSwitchShader = (e: CustomEvent<{ id: string }>) => {
-  // ShaderBackground.vue doesn't currently listen for events —
-  // sessionStorage write alone handles it on next page load.
-  // If you add an event listener to ShaderBackground.vue in the future, it'll work live.
-};
+const slashVisible = computed(
+  () => slashBuffer.value.length > 0 && slashBuffer.value.startsWith("/"),
+);
 
 // ─────────────────────────────────────────────
 //  Lifecycle
@@ -418,80 +443,84 @@ const handleSwitchShader = (e: CustomEvent<{ id: string }>) => {
 onMounted(() => {
   isClient.value = true;
   window.addEventListener("keydown", handleGlobalKey);
-  window.addEventListener("switchShader", handleSwitchShader as EventListener);
 });
-
 onUnmounted(() => {
   window.removeEventListener("keydown", handleGlobalKey);
-  window.removeEventListener("switchShader", handleSwitchShader as EventListener);
-  if (konamiTimeout) clearTimeout(konamiTimeout);
+  if (slashTimeout) clearTimeout(slashTimeout);
 });
-
-// Konami progress indicator (optional visual hint — remove if you want it fully hidden)
-const progressDots = computed(() =>
-  KONAMI.map((_, i) => (i < konamiProgress.value ? "●" : "○")).join(""),
-);
-const showProgress = computed(
-  () => konamiProgress.value > 0 && konamiProgress.value < KONAMI.length,
-);
 </script>
 
 <template>
   <ClientOnly>
-    <!-- Konami progress indicator — subtle, bottom-center, auto-hides -->
-    <Transition name="konami-hint">
-      <div v-if="showProgress" class="konami-hint" aria-hidden="true">
-        {{ progressDots }}
+    <!-- Slash command ghost text (bottom center, non-blocking) -->
+    <Transition name="slash-hint">
+      <div v-if="slashVisible && !isOpen" class="slash-hint" aria-hidden="true">
+        {{ slashBuffer }}<span class="slash-cursor">▋</span>
       </div>
     </Transition>
 
-    <!-- Console overlay -->
-    <Transition name="console">
-      <div v-if="isOpen" class="console-overlay" @click.self="close">
-        <div class="console-window" @click="focusInput">
-          <!-- Title bar -->
-          <div class="console-titlebar">
-            <div class="titlebar-dots">
-              <span class="dot dot-red" @click.stop="close" title="Close"></span>
-              <span class="dot dot-yellow"></span>
-              <span class="dot dot-green"></span>
-            </div>
-            <span class="titlebar-title">stevanussatria.com — terminal</span>
-            <span class="titlebar-esc" @click.stop="close">ESC</span>
+    <!-- Non-blocking docked panel -->
+    <Transition :name="dockPosition === 'bottom' ? 'slide-up' : 'slide-right'">
+      <div
+        v-if="isOpen"
+        class="console-panel"
+        :class="`dock-${dockPosition}`"
+        :style="panelStyle"
+        @click="focusInput"
+      >
+        <!-- Resize handle -->
+        <div
+          class="resize-handle"
+          :class="`resize-${dockPosition}`"
+          @mousedown="startResize"
+          @touchstart.prevent="startResize"
+        ></div>
+
+        <!-- Title bar -->
+        <div class="console-titlebar">
+          <div class="titlebar-dots">
+            <span class="dot dot-red" @click.stop="close" title="Close"></span>
+            <span class="dot dot-yellow" @click.stop="toggleDock" title="Toggle dock"></span>
+            <span class="dot dot-green"></span>
+          </div>
+          <span class="titlebar-title">
+            stevanussatria.com — terminal
+            <span class="titlebar-hint">{{
+              dockPosition === "bottom" ? "⊡ bottom" : "⊞ right"
+            }}</span>
+          </span>
+          <div class="titlebar-actions">
+            <button class="titlebar-btn" @click.stop="toggleDock" title="Toggle dock position">
+              {{ dockPosition === "bottom" ? "⇥" : "⇩" }}
+            </button>
+            <button class="titlebar-btn" @click.stop="close" title="Close (Esc)">✕</button>
+          </div>
+        </div>
+
+        <!-- Scanlines -->
+        <div class="scanlines" aria-hidden="true"></div>
+
+        <!-- Output -->
+        <div ref="outputRef" class="console-output">
+          <div v-for="line in lines" :key="line.id" :class="['console-line', `line-${line.type}`]">
+            {{ line.text }}
           </div>
 
-          <!-- Scanline overlay -->
-          <div class="scanlines" aria-hidden="true"></div>
-
-          <!-- Output area -->
-          <div ref="outputRef" class="console-output">
-            <div
-              v-for="line in lines"
-              :key="line.id"
-              :class="['console-line', `line-${line.type}`]"
-            >
-              {{ line.text }}
-            </div>
-
-            <!-- Input row (only after boot) -->
-            <div v-if="bootPhase === 2" class="console-input-row">
-              <span class="prompt">$&nbsp;</span>
-              <input
-                ref="inputRef"
-                v-model="input"
-                class="console-input"
-                autocomplete="off"
-                autocorrect="off"
-                autocapitalize="off"
-                spellcheck="false"
-                placeholder="type a command…"
-                @keydown="handleInputKey"
-              />
-            </div>
-
-            <!-- Boot cursor -->
-            <div v-else-if="bootPhase === 1" class="boot-cursor">▋</div>
+          <div v-if="bootPhase === 2" class="console-input-row">
+            <span class="prompt">$&nbsp;</span>
+            <input
+              ref="inputRef"
+              v-model="input"
+              class="console-input"
+              autocomplete="off"
+              autocorrect="off"
+              autocapitalize="off"
+              spellcheck="false"
+              placeholder="type a command…"
+              @keydown="handleInputKey"
+            />
           </div>
+          <div v-else-if="bootPhase === 1" class="boot-cursor">▋</div>
         </div>
       </div>
     </Transition>
@@ -499,99 +528,147 @@ const showProgress = computed(
 </template>
 
 <style scoped>
-/* ── Fonts ──────────────────────────────────────────── */
 @import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;700&display=swap");
 
-/* ── Konami progress hint ───────────────────────────── */
-.konami-hint {
+/* ── Slash hint ───────────────────────────── */
+.slash-hint {
   position: fixed;
-  bottom: 1.25rem;
+  bottom: 1rem;
   left: 50%;
   transform: translateX(-50%);
-  z-index: 999;
-  font-family: "IBM Plex Mono", monospace;
-  font-size: 0.6rem;
-  letter-spacing: 0.3em;
-  color: rgba(0, 194, 168, 0.7);
-  pointer-events: none;
-  text-shadow: 0 0 8px rgba(0, 194, 168, 0.5);
-}
-
-.konami-hint-enter-active {
-  transition: opacity 0.2s;
-}
-
-.konami-hint-leave-active {
-  transition: opacity 0.4s;
-}
-
-.konami-hint-enter-from,
-.konami-hint-leave-to {
-  opacity: 0;
-}
-
-/* ── Console overlay ─────────────────────────────────── */
-.console-overlay {
-  position: fixed;
-  inset: 0;
   z-index: 9999;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(0, 0, 0, 0.72);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-  padding: 1rem;
+  pointer-events: none;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.78rem;
+  color: rgba(0, 194, 168, 0.85);
+  background: rgba(10, 14, 20, 0.82);
+  border: 1px solid rgba(0, 194, 168, 0.2);
+  border-radius: 6px;
+  padding: 0.25rem 0.65rem;
+  letter-spacing: 0.05em;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  text-shadow: 0 0 10px rgba(0, 194, 168, 0.5);
 }
 
-.console-enter-active {
+.slash-cursor {
+  animation: blink 1s step-end infinite;
+}
+
+.slash-hint-enter-active {
   transition:
-    opacity 0.18s ease,
-    transform 0.22s cubic-bezier(0.34, 1.4, 0.64, 1);
+    opacity 0.15s,
+    transform 0.15s;
 }
 
-.console-leave-active {
+.slash-hint-leave-active {
   transition:
-    opacity 0.15s ease,
-    transform 0.15s ease;
+    opacity 0.25s,
+    transform 0.25s;
 }
 
-.console-enter-from {
+.slash-hint-enter-from,
+.slash-hint-leave-to {
   opacity: 0;
-  transform: scale(0.95) translateY(10px);
+  transform: translateX(-50%) translateY(4px);
 }
 
-.console-leave-to {
-  opacity: 0;
-  transform: scale(0.97);
-}
-
-/* ── Window chrome ───────────────────────────────────── */
-.console-window {
-  position: relative;
-  width: min(760px, 100%);
-  height: min(520px, 85vh);
+/* ── Panel — NON-BLOCKING (pointer-events only on panel itself) ── */
+.console-panel {
+  position: fixed;
+  z-index: 9000;
   display: flex;
   flex-direction: column;
-  border-radius: 12px;
-  overflow: hidden;
   background: #0a0e14;
-  border: 1px solid rgba(0, 194, 168, 0.25);
-  box-shadow:
-    0 0 0 1px rgba(0, 102, 178, 0.15),
-    0 24px 80px rgba(0, 0, 0, 0.7),
-    0 0 60px rgba(0, 102, 178, 0.08),
-    inset 0 1px 0 rgba(255, 255, 255, 0.04);
   font-family: "IBM Plex Mono", "Cascadia Code", "Fira Code", monospace;
-  cursor: text;
+  /* pointer-events scoped to the panel — page behind is fully clickable */
+  pointer-events: auto;
+  overflow: hidden;
 }
 
-/* ── Titlebar ────────────────────────────────────────── */
+.dock-bottom {
+  border-top: 1px solid rgba(0, 194, 168, 0.25);
+  box-shadow:
+    0 -8px 40px rgba(0, 0, 0, 0.5),
+    0 0 60px rgba(0, 102, 178, 0.06);
+}
+
+.dock-right {
+  border-left: 1px solid rgba(0, 194, 168, 0.25);
+  box-shadow:
+    -8px 0 40px rgba(0, 0, 0, 0.5),
+    0 0 60px rgba(0, 102, 178, 0.06);
+}
+
+/* ── Transitions ─────────────────────────── */
+.slide-up-enter-active {
+  transition:
+    transform 0.25s cubic-bezier(0.34, 1.4, 0.64, 1),
+    opacity 0.2s;
+}
+
+.slide-up-leave-active {
+  transition:
+    transform 0.18s ease,
+    opacity 0.15s;
+}
+
+.slide-up-enter-from,
+.slide-up-leave-to {
+  transform: translateY(100%);
+  opacity: 0;
+}
+
+.slide-right-enter-active {
+  transition:
+    transform 0.25s cubic-bezier(0.34, 1.4, 0.64, 1),
+    opacity 0.2s;
+}
+
+.slide-right-leave-active {
+  transition:
+    transform 0.18s ease,
+    opacity 0.15s;
+}
+
+.slide-right-enter-from,
+.slide-right-leave-to {
+  transform: translateX(100%);
+  opacity: 0;
+}
+
+/* ── Resize handle ───────────────────────── */
+.resize-handle {
+  flex-shrink: 0;
+  background: transparent;
+  transition: background 0.15s;
+}
+
+.resize-handle:hover {
+  background: rgba(0, 194, 168, 0.15);
+}
+
+.resize-bottom {
+  height: 5px;
+  width: 100%;
+  cursor: ns-resize;
+}
+
+.resize-right {
+  width: 5px;
+  height: 100%;
+  cursor: ew-resize;
+  position: absolute;
+  left: 0;
+  top: 0;
+}
+
+/* ── Titlebar ────────────────────────────── */
 .console-titlebar {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.55rem 1rem;
+  padding: 0.45rem 0.85rem;
   background: #0d1117;
   border-bottom: 1px solid rgba(0, 194, 168, 0.12);
   flex-shrink: 0;
@@ -613,7 +690,7 @@ const showProgress = computed(
 }
 
 .dot:hover {
-  filter: brightness(1.3);
+  filter: brightness(1.35);
 }
 
 .dot-red {
@@ -631,30 +708,43 @@ const showProgress = computed(
 .titlebar-title {
   flex: 1;
   text-align: center;
-  font-size: 0.72rem;
-  color: rgba(255, 255, 255, 0.35);
+  font-size: 0.68rem;
+  color: rgba(255, 255, 255, 0.3);
   letter-spacing: 0.05em;
 }
 
-.titlebar-esc {
-  font-size: 0.62rem;
-  color: rgba(255, 255, 255, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 4px;
-  padding: 1px 5px;
-  cursor: pointer;
-  transition:
-    color 0.15s,
-    border-color 0.15s;
+.titlebar-hint {
+  margin-left: 0.5rem;
+  font-size: 0.6rem;
+  color: rgba(0, 194, 168, 0.4);
+}
+
+.titlebar-actions {
+  display: flex;
+  gap: 4px;
   flex-shrink: 0;
 }
 
-.titlebar-esc:hover {
-  color: rgba(255, 255, 255, 0.5);
+.titlebar-btn {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  padding: 1px 6px;
+  font-size: 0.65rem;
+  color: rgba(255, 255, 255, 0.25);
+  cursor: pointer;
+  font-family: inherit;
+  transition:
+    color 0.15s,
+    border-color 0.15s;
+}
+
+.titlebar-btn:hover {
+  color: rgba(255, 255, 255, 0.6);
   border-color: rgba(255, 255, 255, 0.25);
 }
 
-/* ── Scanlines ───────────────────────────────────────── */
+/* ── Scanlines ───────────────────────────── */
 .scanlines {
   position: absolute;
   inset: 0;
@@ -664,16 +754,16 @@ const showProgress = computed(
     to bottom,
     transparent 0px,
     transparent 2px,
-    rgba(0, 0, 0, 0.06) 2px,
-    rgba(0, 0, 0, 0.06) 4px
+    rgba(0, 0, 0, 0.055) 2px,
+    rgba(0, 0, 0, 0.055) 4px
   );
 }
 
-/* ── Output area ─────────────────────────────────────── */
+/* ── Output area ─────────────────────────── */
 .console-output {
   flex: 1;
   overflow-y: auto;
-  padding: 1rem 1.2rem;
+  padding: 0.75rem 1rem;
   position: relative;
   z-index: 2;
   scroll-behavior: smooth;
@@ -692,10 +782,10 @@ const showProgress = computed(
   border-radius: 2px;
 }
 
-/* ── Line types ──────────────────────────────────────── */
+/* ── Lines ───────────────────────────────── */
 .console-line {
-  font-size: 0.82rem;
-  line-height: 1.65;
+  font-size: 0.8rem;
+  line-height: 1.6;
   white-space: pre;
   font-family: inherit;
 }
@@ -703,18 +793,17 @@ const showProgress = computed(
 .line-banner {
   color: #00c2a8;
   font-weight: 700;
-  font-size: 0.88rem;
-  text-shadow: 0 0 12px rgba(0, 194, 168, 0.6);
-  margin-bottom: 0.15rem;
+  font-size: 0.85rem;
+  text-shadow: 0 0 12px rgba(0, 194, 168, 0.55);
 }
 
 .line-output {
-  color: rgba(220, 230, 240, 0.78);
+  color: rgba(220, 230, 240, 0.75);
 }
 
 .line-input {
   color: #7ab5e5;
-  margin-top: 0.3rem;
+  margin-top: 0.25rem;
 }
 
 .line-error {
@@ -725,19 +814,19 @@ const showProgress = computed(
   color: #28c840;
 }
 
-/* ── Input row ───────────────────────────────────────── */
+/* ── Input row ───────────────────────────── */
 .console-input-row {
   display: flex;
   align-items: center;
-  margin-top: 0.25rem;
+  margin-top: 0.2rem;
 }
 
 .prompt {
   color: #00c2a8;
-  font-size: 0.82rem;
+  font-size: 0.8rem;
   font-family: inherit;
   flex-shrink: 0;
-  text-shadow: 0 0 8px rgba(0, 194, 168, 0.5);
+  text-shadow: 0 0 8px rgba(0, 194, 168, 0.45);
 }
 
 .console-input {
@@ -746,23 +835,23 @@ const showProgress = computed(
   border: none;
   outline: none;
   font-family: inherit;
-  font-size: 0.82rem;
+  font-size: 0.8rem;
   color: #e8f0f8;
   caret-color: #00c2a8;
   padding: 0;
-  line-height: 1.65;
+  line-height: 1.6;
 }
 
 .console-input::placeholder {
-  color: rgba(255, 255, 255, 0.14);
+  color: rgba(255, 255, 255, 0.12);
 }
 
-/* ── Boot cursor blink ───────────────────────────────── */
+/* ── Boot cursor ─────────────────────────── */
 .boot-cursor {
   color: #00c2a8;
-  font-size: 0.88rem;
+  font-size: 0.85rem;
   animation: blink 1s step-end infinite;
-  text-shadow: 0 0 8px rgba(0, 194, 168, 0.6);
+  text-shadow: 0 0 8px rgba(0, 194, 168, 0.55);
 }
 
 @keyframes blink {
@@ -776,18 +865,17 @@ const showProgress = computed(
   }
 }
 
-/* ── Mobile adjustments ──────────────────────────────── */
 @media (max-width: 640px) {
-  .console-window {
-    width: 100%;
-    height: 80vh;
-    border-radius: 12px;
+  .console-panel {
+    width: 100% !important;
+    right: 0 !important;
+    left: 0 !important;
   }
 
   .console-line,
   .console-input,
   .prompt {
-    font-size: 0.75rem;
+    font-size: 0.72rem;
   }
 }
 </style>

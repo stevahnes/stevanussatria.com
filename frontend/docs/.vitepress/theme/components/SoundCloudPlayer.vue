@@ -281,10 +281,24 @@ const checkTextOverflow = (): void => {
   });
 };
 
+const handleOpenSoundCloud = () => {
+  if (!isExpanded.value) toggleExpanded();
+};
+
+const handlePlaySoundCloud = () => {
+  // Only fires play if widget is ready; safe to call speculatively
+  if (isWidgetReady.value && widget) {
+    widget.isPaused((paused: boolean) => {
+      if (paused) widget!.play();
+    });
+  }
+};
+
 onMounted(() => {
   isClient.value = true;
   clientSideTheme.value = true;
-  window.addEventListener("openSoundCloud", toggleExpanded);
+  window.addEventListener("openSoundCloud", handleOpenSoundCloud);
+  window.addEventListener("playSoundCloud", handlePlaySoundCloud);
 });
 
 onUnmounted(() => {
@@ -296,7 +310,8 @@ onUnmounted(() => {
       console.error("Error cleaning up widget:", error);
     }
   }
-  window.removeEventListener("openSoundCloud", toggleExpanded);
+  window.removeEventListener("openSoundCloud", handleOpenSoundCloud);
+  window.removeEventListener("playSoundCloud", handlePlaySoundCloud);
 });
 </script>
 

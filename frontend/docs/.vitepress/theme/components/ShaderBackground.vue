@@ -501,6 +501,7 @@ let gl: WebGLRenderingContext | null = null;
 let currentProgram: WebGLProgram | null = null;
 let themeObserver: MutationObserver | null = null;
 let ro: ResizeObserver | null = null;
+let shaderSwitchHandler: ((e: Event) => void) | null = null;
 
 const bgColorUniform = ref<[number, number, number]>([0.094, 0.094, 0.102]);
 let uniformLocs: {
@@ -689,10 +690,11 @@ onMounted(() => {
     setTimeout(initGL, 100);
   }
 
-  window.addEventListener("switchShader", (e: Event) => {
+  shaderSwitchHandler = (e: Event) => {
     const id = (e as CustomEvent<{ id: ShaderId }>).detail.id;
     switchShader(id);
-  });
+  };
+  window.addEventListener("switchShader", shaderSwitchHandler);
 });
 
 onUnmounted(() => {
@@ -700,10 +702,9 @@ onUnmounted(() => {
   ro?.disconnect();
   cancelAnimationFrame(animationId);
   gl = null;
-  window.removeEventListener("switchShader", (e: Event) => {
-    const id = (e as CustomEvent<{ id: ShaderId }>).detail.id;
-    switchShader(id);
-  });
+  if (shaderSwitchHandler) {
+    window.removeEventListener("switchShader", shaderSwitchHandler);
+  }
 });
 </script>
 
