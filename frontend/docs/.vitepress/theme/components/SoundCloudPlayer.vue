@@ -283,6 +283,8 @@ const checkTextOverflow = (): void => {
   });
 };
 
+// ─── Terminal console event handlers ─────────────────────────────────────────
+
 const handleOpenSoundCloud = () => {
   if (!isExpanded.value) toggleExpanded();
 };
@@ -299,11 +301,20 @@ const handlePlaySoundCloud = () => {
   }
 };
 
+const handlePauseSoundCloud = () => {
+  if (isWidgetReady.value && widget) {
+    widget.isPaused((paused: boolean) => {
+      if (!paused) widget!.pause();
+    });
+  }
+};
+
 onMounted(() => {
   isClient.value = true;
   clientSideTheme.value = true;
   window.addEventListener("openSoundCloud", handleOpenSoundCloud);
   window.addEventListener("playSoundCloud", handlePlaySoundCloud);
+  window.addEventListener("pauseSoundCloud", handlePauseSoundCloud);
 });
 
 onUnmounted(() => {
@@ -317,6 +328,7 @@ onUnmounted(() => {
   }
   window.removeEventListener("openSoundCloud", handleOpenSoundCloud);
   window.removeEventListener("playSoundCloud", handlePlaySoundCloud);
+  window.removeEventListener("pauseSoundCloud", handlePauseSoundCloud);
 });
 </script>
 

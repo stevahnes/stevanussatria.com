@@ -19,7 +19,6 @@ type DockPosition = "bottom" | "right";
 // ─────────────────────────────────────────────
 
 const isOpen = ref(false);
-const isExecuting = ref(false); // New: Guard state
 const input = ref("");
 const lines = ref<TerminalLine[]>([]);
 const history = ref<string[]>([]);
@@ -33,7 +32,7 @@ const dockPosition = ref<DockPosition>("bottom");
 const panelSize = ref(320); // px — height when bottom, width when right
 const isResizing = ref(false);
 
-// Slash command buffer
+// Slash command buffer (typed anywhere outside inputs)
 const slashBuffer = ref("");
 let slashTimeout: ReturnType<typeof setTimeout> | null = null;
 
@@ -117,24 +116,23 @@ const COMMANDS: Record<
   help: {
     description: "List commands",
     fn: () => [
-      "┌──────────────────────────────────────────────────┐",
-      "│  AVAILABLE COMMANDS                               │",
-      "├──────────────────────────────────────────────────┤",
-      "│  chat <message>  — Send a message to Advocado    │",
-      "│  play            — Open & play SoundCloud         │",
-      "│  shader <name>   — Switch background shader       │",
-      "│  goto <page>     — Navigate to a page             │",
-      "│  dock            — Toggle bottom/right panel      │",
-      "│  clear           — Clear terminal                 │",
-      "│  whoami          — About this site                │",
-      "│  skills          — Steve's skills                 │",
-      "│  contact         — Get contact info               │",
-      "│  help            — Show this message              │",
-      "└──────────────────────────────────────────────────┘",
-      "",
+      "  AVAILABLE COMMANDS",
+      "  ─────────────────────────────────────────────────",
+      "  chat <message>   — Send a message to Advocado",
+      "  play             — Open & play SoundCloud",
+      "  pause            — Pause SoundCloud playback",
+      "  shader <n>       — Switch background shader",
+      "  goto <page>      — Navigate to a page",
+      "  dock             — Toggle bottom/right panel",
+      "  clear            — Clear terminal",
+      "  whoami           — About this site",
+      "  skills           — Steve's skills",
+      "  contact          — Get contact info",
+      "  help             — Show this message",
+      "  ─────────────────────────────────────────────────",
       "  Shaders: aurora · velodrome · keys · signal · topology",
-      "  Pages:   home · resume · projects · milestones · recommendations",
-      "           ama · stack · gear · loops · skyline",
+      "  Pages:   home · resume · projects · milestones",
+      "           recommendations · ama · stack · gear · loops · skyline",
     ],
   },
 
@@ -143,6 +141,7 @@ const COMMANDS: Record<
     fn: args => {
       const message = args.join(" ").trim();
       if (!message) return ['  Usage: chat <message>  e.g. chat "Tell me about Steve"'];
+      // autoSend: true tells Chat.vue to submit immediately
       window.dispatchEvent(
         new CustomEvent("activateChat", {
           detail: { message, autoSend: true },
@@ -156,6 +155,8 @@ const COMMANDS: Record<
     description: "Open SoundCloud player and start playing",
     fn: async () => {
       window.dispatchEvent(new CustomEvent("openSoundCloud"));
+
+      // Wait for the player to signal it's ready, with a 5s timeout fallback
       await new Promise<void>(resolve => {
         const onReady = () => {
           window.removeEventListener("soundCloudReady", onReady);
@@ -164,13 +165,21 @@ const COMMANDS: Record<
         };
         const timer = setTimeout(() => {
           window.removeEventListener("soundCloudReady", onReady);
-          resolve();
+          resolve(); // give up waiting, try play anyway
         }, 5000);
         window.addEventListener("soundCloudReady", onReady);
       });
 
       window.dispatchEvent(new CustomEvent("playSoundCloud"));
       return ["> SoundCloud player opened.", "> Playback started — 30 piano covers 🎹"];
+    },
+  },
+
+  pause: {
+    description: "Pause SoundCloud playback",
+    fn: () => {
+      window.dispatchEvent(new CustomEvent("pauseSoundCloud"));
+      return ["> SoundCloud paused."];
     },
   },
 
@@ -182,6 +191,9 @@ const COMMANDS: Record<
         return [`  Error: unknown shader "${id || ""}"`, `  Available: ${SHADERS.join(" · ")}`];
       }
       sessionStorage.setItem("activeShader", id);
+      const handler = (e: Event) => {
+        // no-op placeholder — ShaderBackground listens for this
+      };
       window.dispatchEvent(new CustomEvent("switchShader", { detail: { id } }));
       return [`> Shader switched to "${id}".`];
     },
@@ -272,38 +284,32 @@ const COMMANDS: Record<
 
 const execute = async (raw: string) => {
   const trimmed = raw.trim();
-  if (!trimmed || isExecuting.value) return;
+  if (!trimmed) return;
 
-  isExecuting.value = true; // Lock the terminal
+  history.value.unshift(trimmed);
+  historyIndex.value = -1;
+  if (history.value.length > 50) history.value.pop();
 
-  try {
-    history.value.unshift(trimmed);
-    historyIndex.value = -1;
-    if (history.value.length > 50) history.value.pop();
+  addLine("input", `$ ${trimmed}`);
 
-    addLine("input", `$ ${trimmed}`);
+  const [cmd, ...args] = trimmed.toLowerCase().split(/\s+/);
+  // Re-join args respecting original casing for message content
+  const rawArgs = trimmed.split(/\s+/).slice(1);
 
-    const [cmd, ...args] = trimmed.toLowerCase().split(/\s+/);
-    const rawArgs = trimmed.split(/\s+/).slice(1);
-
-    const command = COMMANDS[cmd];
-    if (!command) {
-      addLine("error", `  command not found: ${cmd}. Type "help" for commands.`);
-    } else {
-      const result = await Promise.resolve(command.fn(rawArgs));
-      const outputs = Array.isArray(result) ? result : [result];
-      if (outputs.length > 0) addLines("output", outputs);
-    }
-    addLine("output", "");
-  } catch (err) {
-    addLine("error", "  An internal execution error occurred.");
-    console.error(err);
-  } finally {
-    isExecuting.value = false; // Unlock
-    await scrollToBottom();
-    await nextTick();
-    inputRef.value?.focus({ preventScroll: true });
+  const command = COMMANDS[cmd];
+  if (!command) {
+    addLine("error", `  command not found: ${cmd}. Type "help" for commands.`);
+  } else {
+    const result = await Promise.resolve(command.fn(rawArgs));
+    const outputs = Array.isArray(result) ? result : [result];
+    if (outputs.length > 0) addLines("output", outputs);
   }
+
+  addLine("output", "");
+  await scrollToBottom();
+  // Always return focus to the terminal input after a command
+  await nextTick();
+  inputRef.value?.focus({ preventScroll: true });
 };
 
 const submit = () => {
@@ -317,8 +323,6 @@ const submit = () => {
 // ─────────────────────────────────────────────
 
 const handleInputKey = (e: KeyboardEvent) => {
-  if (isExecuting.value) return; // Ignore keys while busy
-
   if (e.key === "Enter") {
     e.preventDefault();
     submit();
@@ -349,7 +353,8 @@ const handleInputKey = (e: KeyboardEvent) => {
 };
 
 // ─────────────────────────────────────────────
-//  Slash command detection
+//  Slash command detection (global keydown)
+//  Type "/terminal" anywhere outside inputs
 // ─────────────────────────────────────────────
 
 const TRIGGER = "/terminal";
@@ -361,39 +366,46 @@ const handleGlobalKey = (e: KeyboardEvent) => {
     tag === "textarea" ||
     document.activeElement?.getAttribute("contenteditable");
 
+  // Escape always closes
   if (e.key === "Escape" && isOpen.value) {
     close();
     return;
   }
 
-  if (isOpen.value) return;
-  if (isTyping) return;
+  if (isOpen.value) return; // terminal is open — don't intercept page keys
+  if (isTyping) return; // user is typing somewhere else
 
   if (e.key === "Escape") {
     slashBuffer.value = "";
     return;
   }
 
-  if (e.key.length > 1 && e.key !== "Backspace") return;
+  // Ignore modifier-only or special keys — except Enter and Backspace
+  if (e.key.length > 1 && e.key !== "Backspace" && e.key !== "Enter") return;
 
   if (e.key === "Backspace") {
     slashBuffer.value = slashBuffer.value.slice(0, -1);
+  } else if (e.key === "Enter") {
+    // Enter confirms the trigger if buffer matches, otherwise clears
+    if (slashBuffer.value === TRIGGER) {
+      slashBuffer.value = "";
+      if (slashTimeout) clearTimeout(slashTimeout);
+      open();
+    } else {
+      slashBuffer.value = "";
+      if (slashTimeout) clearTimeout(slashTimeout);
+    }
+    return;
   } else {
     slashBuffer.value += e.key;
   }
 
   if (slashTimeout) clearTimeout(slashTimeout);
   slashTimeout = setTimeout(() => (slashBuffer.value = ""), 2500);
-
-  if (slashBuffer.value === TRIGGER) {
-    slashBuffer.value = "";
-    if (slashTimeout) clearTimeout(slashTimeout);
-    open();
-  }
 };
 
 // ─────────────────────────────────────────────
-//  Resize drag
+//  Resize drag (panel size)
 // ─────────────────────────────────────────────
 
 const startResize = (e: MouseEvent | TouchEvent) => {
@@ -431,7 +443,7 @@ const startResize = (e: MouseEvent | TouchEvent) => {
 };
 
 const focusInput = () => {
-  if (bootPhase.value === 2 && !isExecuting.value) inputRef.value?.focus();
+  if (bootPhase.value === 2) inputRef.value?.focus();
 };
 
 // ─────────────────────────────────────────────
@@ -480,20 +492,23 @@ onUnmounted(() => {
 
 <template>
   <ClientOnly>
+    <!-- Slash command ghost text (bottom center, non-blocking) -->
     <Transition name="slash-hint">
       <div v-if="slashVisible && !isOpen" class="slash-hint" aria-hidden="true">
         {{ slashBuffer }}<span class="slash-cursor">▋</span>
       </div>
     </Transition>
 
+    <!-- Non-blocking docked panel -->
     <Transition :name="dockPosition === 'bottom' ? 'slide-up' : 'slide-right'">
       <div
         v-if="isOpen"
         class="console-panel"
-        :class="[`dock-${dockPosition}`, { 'is-resizing': isResizing }]"
+        :class="`dock-${dockPosition}`"
         :style="panelStyle"
         @click="focusInput"
       >
+        <!-- Resize handle -->
         <div
           class="resize-handle"
           :class="`resize-${dockPosition}`"
@@ -501,6 +516,7 @@ onUnmounted(() => {
           @touchstart.prevent="startResize"
         ></div>
 
+        <!-- Title bar -->
         <div class="console-titlebar">
           <div class="titlebar-dots">
             <span class="dot dot-red" @click.stop="close" title="Close"></span>
@@ -521,25 +537,26 @@ onUnmounted(() => {
           </div>
         </div>
 
+        <!-- Scanlines -->
         <div class="scanlines" aria-hidden="true"></div>
 
+        <!-- Output -->
         <div ref="outputRef" class="console-output">
           <div v-for="line in lines" :key="line.id" :class="['console-line', `line-${line.type}`]">
             {{ line.text }}
           </div>
 
-          <div v-if="bootPhase === 2" class="console-input-row" :class="{ 'is-busy': isExecuting }">
+          <div v-if="bootPhase === 2" class="console-input-row">
             <span class="prompt">$&nbsp;</span>
             <input
               ref="inputRef"
               v-model="input"
               class="console-input"
-              :disabled="isExecuting"
               autocomplete="off"
               autocorrect="off"
               autocapitalize="off"
               spellcheck="false"
-              :placeholder="isExecuting ? 'processing...' : 'type a command…'"
+              placeholder="type a command…"
               @keydown="handleInputKey"
             />
           </div>
@@ -596,7 +613,7 @@ onUnmounted(() => {
   transform: translateX(-50%) translateY(4px);
 }
 
-/* ── Panel ─────────────────────────────────── */
+/* ── Panel — NON-BLOCKING (pointer-events only on panel itself) ── */
 .console-panel {
   position: fixed;
   z-index: 9000;
@@ -604,6 +621,7 @@ onUnmounted(() => {
   flex-direction: column;
   background: #0a0e14;
   font-family: "IBM Plex Mono", "Cascadia Code", "Fira Code", monospace;
+  /* pointer-events scoped to the panel — page behind is fully clickable */
   pointer-events: auto;
   overflow: hidden;
 }
@@ -841,12 +859,6 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   margin-top: 0.2rem;
-  transition: opacity 0.2s ease;
-}
-
-.console-input-row.is-busy {
-  opacity: 0.5;
-  pointer-events: none;
 }
 
 .prompt {
@@ -868,10 +880,6 @@ onUnmounted(() => {
   caret-color: #00c2a8;
   padding: 0;
   line-height: 1.6;
-}
-
-.console-input:disabled {
-  cursor: wait;
 }
 
 .console-input::placeholder {
