@@ -117,22 +117,22 @@ const COMMANDS: Record<
     description: "List commands",
     fn: () => [
       "  AVAILABLE COMMANDS",
-      "  ─────────────────────────────────────────────────",
-      "  chat <message>   — Send a message to Advocado",
-      "  play             — Open & play SoundCloud",
-      "  pause            — Pause SoundCloud playback",
-      "  shader <n>       — Switch background shader",
-      "  goto <page>      — Navigate to a page",
-      "  dock             — Toggle bottom/right panel",
-      "  clear            — Clear terminal",
-      "  whoami           — About this site",
-      "  skills           — Steve's skills",
-      "  contact          — Get contact info",
-      "  help             — Show this message",
-      "  ─────────────────────────────────────────────────",
-      "  Shaders: aurora · velodrome · keys · signal · topology",
-      "  Pages:   home · resume · projects · milestones",
-      "           recommendations · ama · stack · gear · loops · skyline",
+      "  ────────────────────────────────────────────────────────",
+      "  chat <message>            — Send a message to Advocado",
+      "  soundcloud <subcommand>   — Control SoundCloud Player",
+      "  shader <n>                — Switch background shader",
+      "  goto <page>               — Navigate to a page",
+      "  dock                      — Toggle bottom/right panel",
+      "  clear                     — Clear terminal",
+      "  whoami                    — About this site",
+      "  skills                    — Steve's skills",
+      "  contact                   — Get contact info",
+      "  help                      — Show this message",
+      "  ────────────────────────────────────────────────────────",
+      "  SoundCloud:  play · pause · next · prev",
+      "  Shaders:     aurora · velodrome · keys · signal · topology",
+      "  Pages:       home · resume · projects · milestones · ama",
+      "               recommendations · stack · gear · loops · skyline",
     ],
   },
 
@@ -151,35 +151,49 @@ const COMMANDS: Record<
     },
   },
 
-  play: {
-    description: "Open SoundCloud player and start playing",
-    fn: async () => {
-      window.dispatchEvent(new CustomEvent("openSoundCloud"));
+  soundcloud: {
+    description: "Control the SoundCloud player",
+    fn: async args => {
+      const sub = args[0]?.toLowerCase();
+      const SUBS = ["play", "pause", "next", "prev"];
+      if (!sub || !SUBS.includes(sub)) {
+        return [`  Usage: soundcloud <subcommand>`, `  Subcommands: ${SUBS.join(" · ")}`];
+      }
 
-      // Wait for the player to signal it's ready, with a 5s timeout fallback
-      await new Promise<void>(resolve => {
-        const onReady = () => {
-          window.removeEventListener("soundCloudReady", onReady);
-          clearTimeout(timer);
-          resolve();
-        };
-        const timer = setTimeout(() => {
-          window.removeEventListener("soundCloudReady", onReady);
-          resolve(); // give up waiting, try play anyway
-        }, 5000);
-        window.addEventListener("soundCloudReady", onReady);
-      });
+      if (sub === "play") {
+        window.dispatchEvent(new CustomEvent("openSoundCloud"));
+        await new Promise<void>(resolve => {
+          const onReady = () => {
+            window.removeEventListener("soundCloudReady", onReady);
+            clearTimeout(timer);
+            resolve();
+          };
+          const timer = setTimeout(() => {
+            window.removeEventListener("soundCloudReady", onReady);
+            resolve();
+          }, 5000);
+          window.addEventListener("soundCloudReady", onReady);
+        });
+        window.dispatchEvent(new CustomEvent("playSoundCloud"));
+        return ["> SoundCloud opened.", "> Playback started — 30 piano covers 🎹"];
+      }
 
-      window.dispatchEvent(new CustomEvent("playSoundCloud"));
-      return ["> SoundCloud player opened.", "> Playback started — 30 piano covers 🎹"];
-    },
-  },
+      if (sub === "pause") {
+        window.dispatchEvent(new CustomEvent("pauseSoundCloud"));
+        return ["> Playback paused."];
+      }
 
-  pause: {
-    description: "Pause SoundCloud playback",
-    fn: () => {
-      window.dispatchEvent(new CustomEvent("pauseSoundCloud"));
-      return ["> SoundCloud paused."];
+      if (sub === "next") {
+        window.dispatchEvent(new CustomEvent("nextSoundCloud"));
+        return ["> Skipped to next track."];
+      }
+
+      if (sub === "prev") {
+        window.dispatchEvent(new CustomEvent("prevSoundCloud"));
+        return ["> Went back to previous track."];
+      }
+
+      return [];
     },
   },
 
