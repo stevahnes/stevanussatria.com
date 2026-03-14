@@ -216,7 +216,11 @@ const stopPositionTracking = (): void => {
 const togglePlay = (): void => {
   if (!widget || !isWidgetReady.value) return;
   widget.isPaused((paused: boolean) => {
-    paused ? widget!.play() : widget!.pause();
+    if (paused) {
+      widget!.play();
+    } else {
+      widget!.pause();
+    }
   });
 };
 
@@ -254,7 +258,7 @@ const toggleExpanded = (): void => {
   if (isExpanded.value) {
     if (!iframeLoaded.value) {
       iframeLoaded.value = true;
-      nextTick(() => initializeWidget());
+      void nextTick(() => initializeWidget());
     }
     setTimeout(checkTextOverflow, 100);
   }
@@ -277,7 +281,7 @@ const applyScrollingIfOverflowing = (element: HTMLElement | null): void => {
 
 const checkTextOverflow = (): void => {
   if (!isClient.value) return;
-  nextTick(() => {
+  void nextTick(() => {
     applyScrollingIfOverflowing(titleRef.value);
     applyScrollingIfOverflowing(artistRef.value);
   });
@@ -296,7 +300,7 @@ const handlePlaySoundCloud = () => {
     });
   } else if (widget) {
     isWidgetReady.value = true;
-    widget!.pause();
+    widget.pause();
     handlePlaySoundCloud();
   }
 };
@@ -385,7 +389,7 @@ onUnmounted(() => {
             <div ref="artistRef" class="sc-artist">{{ currentTrackArtist }}</div>
           </div>
           <div class="sc-header-controls">
-            <button @click="toggleExpanded" class="sc-header-btn">
+            <button class="sc-header-btn" @click="toggleExpanded">
               <svg class="sc-icon-small" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                 <path
                   stroke-linecap="round"
@@ -400,16 +404,16 @@ onUnmounted(() => {
 
         <div class="sc-controls">
           <button
-            @click="prevTrack"
             class="sc-nav-btn"
             :disabled="isLoading || !isWidgetReady"
             title="Previous track"
+            @click="prevTrack"
           >
             <svg class="sc-icon-small" viewBox="0 0 24 24" fill="currentColor">
               <path d="M6 6h2v12H6zm3.5 6l8.5 6V6z" />
             </svg>
           </button>
-          <button @click="togglePlay" class="sc-play-btn" :disabled="isLoading || !isWidgetReady">
+          <button class="sc-play-btn" :disabled="isLoading || !isWidgetReady" @click="togglePlay">
             <svg v-if="isLoading || !isWidgetReady" class="sc-spinner" viewBox="0 0 24 24">
               <circle
                 cx="12"
@@ -434,10 +438,10 @@ onUnmounted(() => {
             </svg>
           </button>
           <button
-            @click="nextTrack"
             class="sc-nav-btn"
             :disabled="isLoading || !isWidgetReady"
             title="Next track"
+            @click="nextTrack"
           >
             <svg class="sc-icon-small" viewBox="0 0 24 24" fill="currentColor">
               <path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z" />
