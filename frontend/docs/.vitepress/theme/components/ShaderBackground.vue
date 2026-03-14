@@ -547,7 +547,7 @@ function buildProgram(g: WebGLRenderingContext, fragSrc: string): WebGLProgram |
   const vs = createShader(g, g.VERTEX_SHADER, VERT);
   const fs = createShader(g, g.FRAGMENT_SHADER, fragSrc);
   if (!vs || !fs) return null;
-  const prog = g.createProgram()!;
+  const prog = g.createProgram();
   g.attachShader(prog, vs);
   g.attachShader(prog, fs);
   g.linkProgram(prog);
@@ -685,7 +685,7 @@ onMounted(() => {
   };
 
   if ("requestIdleCallback" in window) {
-    (window as any).requestIdleCallback(initGL, { timeout: 3000 });
+    window.requestIdleCallback(initGL, { timeout: 3000 });
   } else {
     setTimeout(initGL, 100);
   }
@@ -718,8 +718,8 @@ onUnmounted(() => {
       <button
         class="picker-toggle"
         :title="`Current: ${SHADERS.find(s => s.id === activeShader)?.label}`"
-        @click="showPicker = !showPicker"
         aria-label="Switch background"
+        @click="showPicker = !showPicker"
       >
         <span class="toggle-icon">{{ SHADERS.find(s => s.id === activeShader)?.icon }}</span>
         <span class="toggle-chevron" :class="{ rotated: showPicker }">›</span>
