@@ -52,8 +52,8 @@ const observeGiscus = () => {
     entries => {
       entries.forEach(entry => {
         if (entry.isIntersecting) {
-          loadGiscus();
-          observer.disconnect(); // Stop observing once loaded
+          void loadGiscus();
+          observer.disconnect();
         }
       });
     },

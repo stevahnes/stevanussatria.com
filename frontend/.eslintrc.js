@@ -8,6 +8,8 @@ module.exports = {
     ".cache/",
     ".temp/",
     ".vitepress/cache/",
+    "tsconfig.json",
+    "tsconfig.*.json",
   ],
   env: {
     node: true,

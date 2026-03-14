@@ -10,7 +10,7 @@ export enum FontStyle {
 }
 
 export function splitTextToSize(jsPDFInstance: jsPDF, text: string, maxWidth: number): string[] {
-  return jsPDFInstance.splitTextToSize(text, maxWidth);
+  return jsPDFInstance.splitTextToSize(text, maxWidth) as string[];
 }
 
 export function writeCenter(jsPDFInstance: jsPDF, text: string | string[], cursor: Cursor): void {
