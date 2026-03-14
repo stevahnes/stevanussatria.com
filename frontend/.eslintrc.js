@@ -12,49 +12,64 @@ module.exports = {
   env: {
     node: true,
     browser: true,
-    es2023: true, // Using the latest fully supported ECMAScript version
+    es2023: true,
   },
   extends: [
     "eslint:recommended",
-    "plugin:vue/recommended", // Updated for Vue 3 which VitePress uses
-    "plugin:@typescript-eslint/recommended", // For TypeScript support
-    "prettier", // Should always be last in the extends array
+    "plugin:vue/recommended",
+    "plugin:@typescript-eslint/recommended-type-checked",
+    "prettier",
   ],
   parser: "vue-eslint-parser",
   parserOptions: {
     parser: "@typescript-eslint/parser",
-    ecmaVersion: "latest", // Using "latest" to align with esnext in TypeScript
+    ecmaVersion: "latest",
     sourceType: "module",
+    project: "./tsconfig.json",
+    tsconfigRootDir: __dirname,
+    extraFileExtensions: [".vue"],
   },
   plugins: ["vue", "@typescript-eslint", "markdown"],
   rules: {
-    // Vue specific rules
-    "vue/require-default-prop": "off", // Optional if you don't want to require default values for props
-    "vue/multi-word-component-names": "off", // VitePress often uses single-word component names
-
-    // General rules
+    "vue/require-default-prop": "off",
+    "vue/multi-word-component-names": "off",
+    "@typescript-eslint/no-unused-vars": "error",
     "no-console": process.env.NODE_ENV === "production" ? "warn" : "off",
     "no-debugger": process.env.NODE_ENV === "production" ? "warn" : "off",
   },
   overrides: [
     {
+      files: ["*.js", "*.mjs", "*.cjs"],
+      extends: ["plugin:@typescript-eslint/disable-type-checked"],
+    },
+    {
+      files: ["tailwind.config.ts"],
+      extends: ["plugin:@typescript-eslint/disable-type-checked"],
+    },
+    {
+      files: ["**/__tests__/**/*.ts"],
+      rules: {
+        "vue/one-component-per-file": "off",
+      },
+    },
+    {
       files: ["**/*.md"],
       processor: "markdown/markdown",
     },
     {
-      // For code blocks inside markdown files
       files: ["**/*.md/**/*.{js,ts,vue}"],
+      extends: ["plugin:@typescript-eslint/disable-type-checked"],
       parserOptions: {
         ecmaFeatures: {
           impliedStrict: true,
         },
       },
       rules: {
-        "vue/html-self-closing": "off", // Markdown sometimes has issues with self-closing tags
-        "vue/max-attributes-per-line": "off", // Allow multiple attributes per line in Markdown examples
-        "@typescript-eslint/no-unused-vars": "off", // Ignore unused vars in code examples
-        "no-undef": "off", // Code snippets might not include all variable declarations
-        "no-unused-vars": "off", // Code snippets might not use all declared variables
+        "vue/html-self-closing": "off",
+        "vue/max-attributes-per-line": "off",
+        "@typescript-eslint/no-unused-vars": "off",
+        "no-undef": "off",
+        "no-unused-vars": "off",
       },
     },
   ],
