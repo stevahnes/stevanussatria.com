@@ -1,4 +1,4 @@
-# Stevanus Satria's Portfolio (VitePress)
+# Stevanus Satria's Portfolio (VitePress) [![codecov](https://codecov.io/github/stevahnes/stevanussatria.com/graph/badge.svg?token=RDV3MO5SCK)](https://codecov.io/github/stevahnes/stevanussatria.com)
 
 A modern JAM-stack personal website built with [VitePress](https://vitepress.dev/), [Vue 3](https://vuejs.org/), and [Tailwind CSS v4](https://tailwindcss.com/).
 Home page is manned by GPT-powered advocate agent built using Vercel's AI SDK and hosted on a [Next.js](https://nextjs.org/) backend.
