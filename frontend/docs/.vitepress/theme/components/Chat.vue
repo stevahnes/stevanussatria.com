@@ -114,18 +114,18 @@ const resizeTextarea = (): void => {
 const expandToFullMode = async (): Promise<void> => {
   isCompactMode.value = false;
   await nextTick();
-  scrollToBottom();
+  void scrollToBottom();
 };
 
 const toggleMiniChat = (): void => {
   isMiniChat.value = !isMiniChat.value;
   localStorage.setItem("miniChatExpanded", isMiniChat.value.toString());
   if (isMiniChat.value) {
-    nextTick(() => {
+    void nextTick(() => {
       if (!isMobileDevice()) {
         inputRef.value?.focus({ preventScroll: true });
       }
-      if (!isCompactMode.value) scrollToBottom();
+      if (!isCompactMode.value) void scrollToBottom();
     });
   }
 };
@@ -133,7 +133,7 @@ const toggleMiniChat = (): void => {
 const toggleFullHeight = (): void => {
   isFullHeight.value = !isFullHeight.value;
   localStorage.setItem("chatFullHeight", isFullHeight.value.toString());
-  nextTick(() => scrollToBottom());
+  void nextTick(() => scrollToBottom());
 };
 
 const resetChat = (): void => {
@@ -150,7 +150,7 @@ const resetChat = (): void => {
 const handleKeyDown = (e: KeyboardEvent): void => {
   if (e.key === "Enter" && !e.shiftKey) {
     e.preventDefault();
-    if (userInput.value.trim()) sendMessage();
+    if (userInput.value.trim()) void sendMessage();
   }
 };
 
@@ -181,7 +181,7 @@ const retryLastMessage = (): void => {
   messages.value.pop();
   userInput.value = lastFailedMessage.value;
   lastFailedMessage.value = null;
-  sendMessage();
+  void sendMessage();
 };
 
 // --- Message Handling ---
@@ -236,6 +236,7 @@ const sendMessage = async (): Promise<void> => {
     const decoder = new TextDecoder("utf-8");
     let buffer = "";
 
+    // eslint-disable-next-line no-constant-condition
     while (true) {
       const { done, value } = await reader.read();
       if (done) break;
@@ -247,7 +248,7 @@ const sendMessage = async (): Promise<void> => {
       for (const line of lines) {
         if (!line.startsWith("0:")) continue;
         try {
-          const text = JSON.parse(line.slice(2));
+          const text = JSON.parse(line.slice(2)) as string;
           if (!assistantMessageAdded) {
             messages.value.push({ role: "assistant", content: "", timestamp: Date.now() });
             assistantMessageAdded = true;
@@ -256,7 +257,7 @@ const sendMessage = async (): Promise<void> => {
           messages.value[messages.value.length - 1].content = currentAssistantContent;
           messages.value = [...messages.value];
           await scrollToBottom();
-        } catch {}
+        } catch { /* parse error, skip line */ }
       }
     }
   } catch (error) {
@@ -289,11 +290,10 @@ const handleChatActivation = (event: ChatActivationEvent): void => {
 
   if (message && typeof message === "string") {
     userInput.value = message;
-    nextTick(() => {
+    void nextTick(() => {
       resizeTextarea();
-      // ← ADD THIS: auto-submit if requested
       if (autoSend) {
-        sendMessage();
+        void sendMessage();
       } else if (!isMobileDevice()) {
         inputRef.value?.focus({ preventScroll: true });
       }
@@ -312,7 +312,7 @@ const setSuggestion = (suggestion: string, event?: MouseEvent | PointerEvent): v
     });
   }
 
-  nextTick(() => {
+  void nextTick(() => {
     resizeTextarea();
     if (!isMobileDevice()) {
       inputRef.value?.focus({ preventScroll: true });
@@ -328,7 +328,7 @@ onMounted(async () => {
   const savedMessages = sessionStorage.getItem("chatMessages");
   if (savedMessages) {
     try {
-      const parsed = JSON.parse(savedMessages);
+      const parsed = JSON.parse(savedMessages) as ChatMessage[];
       if (Array.isArray(parsed) && parsed.length > 0) {
         messages.value = parsed;
         isCompactMode.value = sessionStorage.getItem("chatCompactMode") === "false" ? false : true;
@@ -353,7 +353,7 @@ onMounted(async () => {
   window.addEventListener("keydown", handleGlobalKeydown);
 
   await nextTick();
-  scrollToBottom();
+  void scrollToBottom();
   if (inputRef.value) {
     resizeTextarea();
     if (!isMobileDevice()) {
@@ -385,7 +385,7 @@ watch(userInput, () => nextTick(resizeTextarea));
 watch(
   messages,
   newMessages => {
-    scrollToBottom();
+    void scrollToBottom();
     if (isClient.value && newMessages.length > 0) {
       sessionStorage.setItem("chatMessages", JSON.stringify(newMessages));
       sessionStorage.setItem("chatCompactMode", isCompactMode.value.toString());
