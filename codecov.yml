@@ -1,14 +1,31 @@
 coverage:
   status:
     project:
-      default:
-        target: auto # compares against base branch
-        threshold: 2% # allows up to 2% drop before failing
+      frontend:
+        target: auto
+        flags: frontend
+      backend:
+        target: auto
+        flags: backend
     patch:
-      default:
-        target: auto # coverage of just the changed lines
+      frontend:
+        target: auto
+        flags: frontend
+      backend:
+        target: auto
+        flags: backend
+
+flags:
+  frontend:
+    paths:
+      - frontend/
+    carryforward: true
+  backend:
+    paths:
+      - backend/
+    carryforward: true
 
 comment:
   layout: "reach,diff,flags,files"
-  behavior: default # updates existing comment rather than posting new ones
-  require_changes: true # only comments if coverage changed
+  behavior: default
+  require_changes: false
