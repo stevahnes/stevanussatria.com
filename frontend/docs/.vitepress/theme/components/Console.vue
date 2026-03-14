@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, nextTick, computed } from "vue";
-import { useRouter } from "vitepress";
+import { useRouter, useData } from "vitepress";
 
 // ─────────────────────────────────────────────
 //  Types
