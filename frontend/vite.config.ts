@@ -12,6 +12,10 @@ export default defineConfig({
     },
   },
   test: {
+    coverage: {
+      provider: "v8",
+      reporter: ["text", "lcov"],
+    },
     environment: "happy-dom",
     include: [
       "docs/.vitepress/**/__tests__/**/*.test.ts",
