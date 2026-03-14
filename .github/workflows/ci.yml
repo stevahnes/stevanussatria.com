@@ -46,7 +46,6 @@ jobs:
       - uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-      - run: rm -rf coverage
 
   build:
     name: Build
