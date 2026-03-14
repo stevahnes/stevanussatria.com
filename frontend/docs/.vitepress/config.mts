@@ -576,6 +576,7 @@ export default defineConfig({
   },
 
   vite: {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     plugins: [
       tailwindcss(),
       ViteImageOptimizer({
@@ -585,6 +586,7 @@ export default defineConfig({
         avif: { quality: 50 },
         includePublic: true,
       }),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     ] as any,
     build: {
       cssMinify: true,
