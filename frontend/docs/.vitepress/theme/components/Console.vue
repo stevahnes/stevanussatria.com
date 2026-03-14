@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, nextTick, computed } from "vue";
-import { useRouter } from "vitepress";
+import { useRouter, useData } from "vitepress";
 
 // ─────────────────────────────────────────────
 //  Types
@@ -39,11 +39,17 @@ const floatH = ref(420);
 const isDragging = ref(false);
 const isResizing = ref(false);
 
+// Glitch mode
+const isGlitching = ref(false);
+let glitchIntervals: ReturnType<typeof setInterval>[] = [];
+let glitchTimeouts: ReturnType<typeof setTimeout>[] = [];
+
 // Slash command buffer
 const slashBuffer = ref("");
 let slashTimeout: ReturnType<typeof setTimeout> | null = null;
 
 const router = useRouter();
+const { isDark } = useData();
 
 const SHADERS = ["aurora", "velodrome", "keys", "signal", "topology"] as const;
 type ShaderId = (typeof SHADERS)[number];
@@ -144,6 +150,140 @@ const popOut = async () => {
 };
 
 // ─────────────────────────────────────────────
+//  Glitch mode
+// ─────────────────────────────────────────────
+
+const GLITCH_CHARS = [
+  "▋",
+  "$",
+  ">",
+  "_",
+  "░",
+  "▒",
+  "▓",
+  "//",
+  "01",
+  ">>",
+  "<<",
+  "!!",
+  "??",
+  "##",
+  "~~",
+];
+const GLITCH_SHADERS = ["aurora", "velodrome", "keys", "signal", "topology"];
+const GLITCH_COLORS = ["#ff5f57", "#febc2e", "#28c840", "#00c2a8", "#7ab5e5", "#ff79c6", "#bd93f9"];
+
+const stopGlitch = () => {
+  isGlitching.value = false;
+  glitchIntervals.forEach(clearInterval);
+  glitchTimeouts.forEach(clearTimeout);
+  glitchIntervals = [];
+  glitchTimeouts = [];
+  // Restore body
+  document.body.style.animation = "";
+  document.body.style.transform = "";
+  // Restore banner color
+  const banners = document.querySelectorAll<HTMLElement>(".line-banner");
+  banners.forEach(el => {
+    el.style.color = "";
+    el.style.transform = "";
+    el.style.opacity = "";
+    el.style.textShadow = "";
+  });
+  // Restore prompt
+  const prompts = document.querySelectorAll<HTMLElement>(".prompt");
+  prompts.forEach(el => {
+    el.style.color = "";
+    el.style.textShadow = "";
+  });
+};
+
+const startGlitch = () => {
+  isGlitching.value = true;
+
+  // ── 1. Shader rapid-cycle ──
+  let shaderIdx = 0;
+  glitchIntervals.push(
+    setInterval(() => {
+      shaderIdx = (shaderIdx + 1) % GLITCH_SHADERS.length;
+      const id = GLITCH_SHADERS[shaderIdx];
+      sessionStorage.setItem("activeShader", id);
+      window.dispatchEvent(new CustomEvent("switchShader", { detail: { id } }));
+    }, 800),
+  );
+
+  // ── 2. Banner flicker + color + glitch ──
+  glitchIntervals.push(
+    setInterval(() => {
+      const banners = document.querySelectorAll<HTMLElement>(".line-banner");
+      const color = GLITCH_COLORS[Math.floor(Math.random() * GLITCH_COLORS.length)];
+      const offsetX = (Math.random() - 0.5) * 12;
+      const opacity = Math.random() > 0.15 ? 1 : 0;
+      banners.forEach(el => {
+        el.style.color = color;
+        el.style.transform = `translateX(${offsetX}px)`;
+        el.style.opacity = String(opacity);
+        el.style.textShadow = `0 0 16px ${color}`;
+      });
+    }, 80),
+  );
+
+  // ── 3. Prompt color cycle ──
+  let promptColorIdx = 0;
+  glitchIntervals.push(
+    setInterval(() => {
+      const prompts = document.querySelectorAll<HTMLElement>(".prompt");
+      const color = GLITCH_COLORS[promptColorIdx % GLITCH_COLORS.length];
+      prompts.forEach(el => {
+        el.style.color = color;
+        el.style.textShadow = `0 0 8px ${color}`;
+      });
+      promptColorIdx++;
+    }, 120),
+  );
+
+  // ── 4. Body shake ──
+  glitchIntervals.push(
+    setInterval(() => {
+      const x = (Math.random() - 0.5) * 6;
+      const y = (Math.random() - 0.5) * 4;
+      document.body.style.transform = `translate(${x}px, ${y}px)`;
+    }, 50),
+  );
+
+  // ── 5. ASCII confetti rain into terminal ──
+  glitchIntervals.push(
+    setInterval(() => {
+      if (!isGlitching.value) return;
+      const chars = Array.from(
+        { length: 6 },
+        () => GLITCH_CHARS[Math.floor(Math.random() * GLITCH_CHARS.length)],
+      ).join(" ");
+      addLine("banner", "  " + chars);
+      scrollToBottom();
+    }, 300),
+  );
+
+  // ── 6. Auto-play SoundCloud ──
+  window.dispatchEvent(new CustomEvent("openSoundCloud"));
+  const scTimer = setTimeout(() => {
+    window.dispatchEvent(new CustomEvent("playSoundCloud"));
+  }, 1000);
+  glitchTimeouts.push(scTimer);
+
+  // ── 7. Auto-stop after 15s ──
+  const autoStop = setTimeout(() => {
+    if (isGlitching.value) {
+      stopGlitch();
+      addLine("system", "> Glitch mode terminated. Systems restored.");
+      addLine("output", "");
+      scrollToBottom();
+    }
+  }, 15000);
+  glitchTimeouts.push(autoStop);
+};
+
+// ─────────────────────────────────────────────
 //  Commands
 // ─────────────────────────────────────────────
 
@@ -156,21 +296,23 @@ const COMMANDS: Record<
     fn: () => [
       "  AVAILABLE COMMANDS",
       "  ────────────────────────────────────────────────────────",
-      "  goto <page>               — Navigate to a page",
       "  chat <message>            — Send a message to Advocado",
       "  soundcloud <subcommand>   — Control SoundCloud Player",
       "  shader <n>                — Switch background shader",
+      "  goto <page>               — Navigate to a page",
       "  dock                      — Cycle bottom → right → float",
       "  clear                     — Clear terminal",
       "  whoami                    — About this site",
       "  skills                    — Steve's skills",
       "  contact                   — Get contact info",
       "  help                      — Show this message",
+      "  theme [light|dark]        — Toggle or set site theme",
+      "  glitch                    — 👾 Unleash chaos (type again to stop)",
       "  ────────────────────────────────────────────────────────",
-      "  Pages:       home · resume · projects · milestones · ama",
-      "               recommendations · stack · gear · loops · skyline",
       "  SoundCloud:  play · pause · next · prev",
       "  Shaders:     aurora · velodrome · keys · signal · topology",
+      "  Pages:       home · resume · projects · milestones · ama",
+      "               recommendations · stack · gear · loops · skyline",
     ],
   },
 
@@ -316,6 +458,39 @@ const COMMANDS: Record<
       "  GitHub    → github.com/stevanussatria",
       '  Or type:  chat "hi Steve!"',
     ],
+  },
+
+  theme: {
+    description: "Toggle or set light/dark mode",
+    fn: args => {
+      const sub = args[0]?.toLowerCase();
+      if (sub === "light") {
+        isDark.value = false;
+        return ["> Switched to light mode."];
+      }
+      if (sub === "dark") {
+        isDark.value = true;
+        return ["> Switched to dark mode."];
+      }
+      isDark.value = !isDark.value;
+      return [`> Switched to ${isDark.value ? "dark" : "light"} mode.`];
+    },
+  },
+
+  glitch: {
+    description: "👾 Toggle glitch mode — chaos ensues",
+    fn: () => {
+      if (isGlitching.value) {
+        stopGlitch();
+        return ["> Glitch mode terminated. Systems restored."];
+      }
+      startGlitch();
+      return [
+        "> ⚠ INITIATING GLITCH SEQUENCE ⚠",
+        "> Reality destabilising…",
+        '> Type "glitch" again to stop.',
+      ];
+    },
   },
 };
 
@@ -592,6 +767,7 @@ onMounted(() => {
 onUnmounted(() => {
   window.removeEventListener("keydown", handleGlobalKey);
   if (slashTimeout) clearTimeout(slashTimeout);
+  if (isGlitching.value) stopGlitch();
 });
 </script>
 
