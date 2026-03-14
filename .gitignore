@@ -38,3 +38,6 @@ Desktop.ini
 
 # Advocado private knowledge
 advocado/private/
+
+#Codecov files
+**/frontend/coverage/

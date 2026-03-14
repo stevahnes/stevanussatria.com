@@ -1,0 +1,14 @@
+coverage:
+  status:
+    project:
+      default:
+        target: auto # compares against base branch
+        threshold: 2% # allows up to 2% drop before failing
+    patch:
+      default:
+        target: auto # coverage of just the changed lines
+
+comment:
+  layout: "reach,diff,flags,files"
+  behavior: default # updates existing comment rather than posting new ones
+  require_changes: true # only comments if coverage changed
