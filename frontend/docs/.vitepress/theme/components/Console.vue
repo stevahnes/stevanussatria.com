@@ -404,7 +404,9 @@ const COMMANDS: Record<
           `  Error: unknown page "${dest || ""}"`,
           `  Available: ${Object.keys(PAGE_MAP).join(" · ")}`,
         ];
-      void router.go(path).then(() => nextTick(() => inputRef.value?.focus({ preventScroll: true })));
+      void router
+        .go(path)
+        .then(() => nextTick(() => inputRef.value?.focus({ preventScroll: true })));
       return [`> Navigating to ${path}…`];
     },
   },
@@ -652,8 +654,8 @@ const startResize = (e: MouseEvent | TouchEvent, dir: ResizeDir) => {
     MIN_H = 200;
 
   const onMove = (ev: MouseEvent | TouchEvent) => {
-    const mx = "touches" in ev ? ev.touches[0].clientX : (ev).clientX;
-    const my = "touches" in ev ? ev.touches[0].clientY : (ev).clientY;
+    const mx = "touches" in ev ? ev.touches[0].clientX : ev.clientX;
+    const my = "touches" in ev ? ev.touches[0].clientY : ev.clientY;
     const dx = mx - startMX;
     const dy = my - startMY;
 

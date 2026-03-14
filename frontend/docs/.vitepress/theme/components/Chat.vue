@@ -257,7 +257,9 @@ const sendMessage = async (): Promise<void> => {
           messages.value[messages.value.length - 1].content = currentAssistantContent;
           messages.value = [...messages.value];
           await scrollToBottom();
-        } catch { /* parse error, skip line */ }
+        } catch {
+          /* parse error, skip line */
+        }
       }
     }
   } catch (error) {
