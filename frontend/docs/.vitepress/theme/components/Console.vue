@@ -131,14 +131,14 @@ const cycleDock = async () => {
     dockPosition.value = "bottom";
   }
   await nextTick();
-  scrollToBottom();
+  void scrollToBottom();
 };
 
 // Green dot: toggle float ↔ last docked position
 const prevDock = ref<"bottom" | "right">("bottom");
 const popOut = async () => {
   if (dockPosition.value !== "float") {
-    prevDock.value = dockPosition.value as "bottom" | "right";
+    prevDock.value = dockPosition.value;
     floatX.value = Math.round((window.innerWidth - floatW.value) / 2);
     floatY.value = Math.round((window.innerHeight - floatH.value) / 2);
     dockPosition.value = "float";
@@ -146,7 +146,7 @@ const popOut = async () => {
     dockPosition.value = prevDock.value;
   }
   await nextTick();
-  scrollToBottom();
+  void scrollToBottom();
 };
 
 // ─────────────────────────────────────────────
@@ -260,7 +260,7 @@ const startGlitch = () => {
         () => GLITCH_CHARS[Math.floor(Math.random() * GLITCH_CHARS.length)],
       ).join(" ");
       addLine("banner", "  " + chars);
-      scrollToBottom();
+      void scrollToBottom();
     }, 300),
   );
 
@@ -277,7 +277,7 @@ const startGlitch = () => {
       stopGlitch();
       addLine("system", "> Glitch mode terminated. Systems restored.");
       addLine("output", "");
-      scrollToBottom();
+      void scrollToBottom();
     }
   }, 15000);
   glitchTimeouts.push(autoStop);
@@ -404,7 +404,9 @@ const COMMANDS: Record<
           `  Error: unknown page "${dest || ""}"`,
           `  Available: ${Object.keys(PAGE_MAP).join(" · ")}`,
         ];
-      router.go(path).then(() => nextTick(() => inputRef.value?.focus({ preventScroll: true })));
+      void router
+        .go(path)
+        .then(() => nextTick(() => inputRef.value?.focus({ preventScroll: true })));
       return [`> Navigating to ${path}…`];
     },
   },
@@ -412,7 +414,7 @@ const COMMANDS: Record<
   dock: {
     description: "Cycle panel: bottom → right → float",
     fn: () => {
-      cycleDock();
+      void cycleDock();
       return [
         `> Mode: ${dockPosition.value === "float" ? "floating" : "docked " + dockPosition.value}.`,
       ];
@@ -524,7 +526,7 @@ const execute = async (raw: string) => {
 const submit = () => {
   const val = input.value;
   input.value = "";
-  execute(val);
+  void execute(val);
 };
 
 // ─────────────────────────────────────────────
@@ -589,7 +591,7 @@ const handleGlobalKey = (e: KeyboardEvent) => {
     if (slashBuffer.value === TRIGGER) {
       slashBuffer.value = "";
       if (slashTimeout) clearTimeout(slashTimeout);
-      open();
+      void open();
     } else {
       slashBuffer.value = "";
       if (slashTimeout) clearTimeout(slashTimeout);
@@ -652,8 +654,8 @@ const startResize = (e: MouseEvent | TouchEvent, dir: ResizeDir) => {
     MIN_H = 200;
 
   const onMove = (ev: MouseEvent | TouchEvent) => {
-    const mx = "touches" in ev ? ev.touches[0].clientX : (ev as MouseEvent).clientX;
-    const my = "touches" in ev ? ev.touches[0].clientY : (ev as MouseEvent).clientY;
+    const mx = "touches" in ev ? ev.touches[0].clientX : ev.clientX;
+    const my = "touches" in ev ? ev.touches[0].clientY : ev.clientY;
     const dx = mx - startMX;
     const dy = my - startMY;
 
@@ -821,15 +823,15 @@ onUnmounted(() => {
           @mousedown="startDrag"
         >
           <div class="titlebar-dots">
-            <span class="dot dot-red" @click.stop="close" title="Close" />
+            <span class="dot dot-red" title="Close" @click.stop="close" />
             <!-- Yellow: cycle dock mode -->
             <span
               class="dot dot-yellow"
-              @click.stop="cycleDock"
               title="Cycle dock (bottom → right → float)"
+              @click.stop="cycleDock"
             />
             <!-- Green: pop out to float / back to docked -->
-            <span class="dot dot-green" @click.stop="popOut" title="Float / dock" />
+            <span class="dot dot-green" title="Float / dock" @click.stop="popOut" />
           </div>
           <span class="titlebar-title">
             stevanussatria.com — terminal
@@ -838,12 +840,12 @@ onUnmounted(() => {
           <div class="titlebar-actions">
             <button
               class="titlebar-btn"
-              @click.stop="cycleDock"
               :title="`Cycle dock: ${dockPosition === 'bottom' ? 'bottom → right' : dockPosition === 'right' ? 'right → float' : 'float → bottom'}`"
+              @click.stop="cycleDock"
             >
               {{ dockCycleIcon }}
             </button>
-            <button class="titlebar-btn" @click.stop="close" title="Close (Esc)">✕</button>
+            <button class="titlebar-btn" title="Close (Esc)" @click.stop="close">✕</button>
           </div>
         </div>
 

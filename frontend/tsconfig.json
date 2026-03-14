@@ -13,6 +13,6 @@
     "noEmit": true,
     "isolatedModules": true
   },
-  "include": ["docs/.vitepress/**/*"],
+  "include": ["docs/.vitepress/**/*", "docs/components/**/*", "vite.config.ts", "vitest.config.ts"],
   "exclude": ["node_modules"]
 }

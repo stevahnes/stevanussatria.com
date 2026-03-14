@@ -1,2 +1,2 @@
 cd frontend
-npx tsc -p ./tsconfig.json --noEmit && lint-staged
+npm run format && npm run lint && npx tsc -p ./tsconfig.json --noEmit

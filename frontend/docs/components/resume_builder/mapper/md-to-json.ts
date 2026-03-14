@@ -70,7 +70,7 @@ function processMarkdownLinks(text: string, preferLabel: boolean = true): string
   text = text.replace(/\[\]\(([^)]+)\)/g, "");
 
   // Handle regular links [label](link)
-  text = text.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (match, label, url) => {
+  text = text.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_match: string, label: string, url: string) => {
     return preferLabel ? label : url;
   });
 
