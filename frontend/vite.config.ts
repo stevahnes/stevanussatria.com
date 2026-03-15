@@ -15,6 +15,9 @@ export default defineConfig({
     coverage: {
       provider: "v8",
       reporter: ["text", "lcov"],
+      reportsDirectory: "./coverage",
+      // Modern way to 'include' files for coverage calculation
+      include: ["docs/.vitepress/theme/components/**/*.{ts,vue}", "docs/components/**/*.{ts,vue}"],
     },
     environment: "happy-dom",
     include: [
