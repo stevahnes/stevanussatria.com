@@ -1,19 +1,20 @@
 coverage:
   status:
     project:
+      default:
+        target: auto
+        threshold: 2%
       frontend:
         target: auto
-        flags: frontend
+        flags:
+          - frontend
       backend:
         target: auto
-        flags: backend
+        flags:
+          - backend
     patch:
-      frontend:
+      default:
         target: auto
-        flags: frontend
-      backend:
-        target: auto
-        flags: backend
 
 flags:
   frontend:
