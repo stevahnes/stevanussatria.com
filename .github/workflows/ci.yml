@@ -48,6 +48,7 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./frontend/coverage/lcov.info
           flags: frontend
+          fail_ci_if_error: true
 
   build:
     name: Build
