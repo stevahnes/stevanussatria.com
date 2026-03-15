@@ -1,6 +1,3 @@
-fixes:
-  - "::frontend/"
-
 coverage:
   status:
     project:
@@ -11,10 +8,6 @@ coverage:
         target: auto
         flags:
           - frontend
-      backend:
-        target: auto
-        flags:
-          - backend
     patch:
       default:
         target: auto
@@ -24,11 +17,7 @@ flags:
     paths:
       - frontend/docs/components/
       - frontend/docs/.vitepress/theme/components/
-    carryforward: true
-  backend:
-    paths:
-      - backend/
-    carryforward: true
+    carryforward: false
 
 comment:
   layout: "reach,diff,flags,files"
