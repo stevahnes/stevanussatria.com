@@ -50,7 +50,6 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./coverage/lcov.info
           flags: frontend
-          verbose: true
 
   build:
     name: Build
