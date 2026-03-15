@@ -22,7 +22,7 @@ coverage:
 flags:
   frontend:
     paths:
-      - frontend/
+      - docs/
     carryforward: true
   backend:
     paths:
