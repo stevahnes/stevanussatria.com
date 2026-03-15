@@ -22,7 +22,8 @@ coverage:
 flags:
   frontend:
     paths:
-      - docs/
+      - frontend/docs/components/
+      - frontend/docs/.vitepress/theme/components/
     carryforward: true
   backend:
     paths:
