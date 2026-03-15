@@ -43,6 +43,8 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
       - run: npm ci
       - run: npx vitest run --coverage
+      - name: Fix coverage paths for monorepo
+        run: sed -i 's|^SF:|SF:frontend/|' coverage/lcov.info
       - uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
