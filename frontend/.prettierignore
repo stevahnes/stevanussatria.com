@@ -29,3 +29,6 @@ yarn.lock
 *.svg
 *.min.css
 *.min.js
+
+# Ignore test coverage reports
+coverage/

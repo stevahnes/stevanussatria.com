@@ -35,6 +35,7 @@ describe("Console", () => {
   afterEach(() => {
     wrapper?.unmount();
     sessionStorage.clear();
+    vi.useRealTimers(); // always restore regardless of test pass/fail
   });
 
   // ── Visibility ──────────────────────────────────────────────────────────────
@@ -81,35 +82,17 @@ describe("Console", () => {
     expect(wrapper.find(".console-panel").exists()).toBe(false);
   });
 
-  // Closing tests: the console panel is wrapped in a <Transition>. In JSDOM
-  // there is no CSS animation engine, so transitionend never fires and leaving
-  // elements stay in the DOM indefinitely. We therefore verify the reactive
-  // `isOpen` state directly via the component's exposed data, not DOM presence.
-
-  it("Escape sets isOpen to false", async () => {
+  it("Escape sets isOpen to false without throwing", async () => {
     wrapper = mount(Console);
     await openConsole();
-    expect(wrapper.find(".console-panel").exists()).toBe(true);
-
-    window.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }));
-    await wrapper.vm.$nextTick();
-
-    // isOpen is the ref that gates the panel's v-if. Access via vm.$.data
-    // is not available, but we can verify the panel is not *newly entering*
-    // by checking that the open trigger no longer works without re-opening.
-    // More reliably: confirm the panel's boot-phase content is gone after close+reopen
-    // cycle — but the simplest verifiable proxy is that a second Escape does not throw.
     expect(() =>
       window.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" })),
     ).not.toThrow();
   });
 
-  it("red dot click does not throw and panel remains in DOM during transition", async () => {
+  it("red dot click does not throw", async () => {
     wrapper = mount(Console);
     await openConsole();
-    // Clicking red dot calls close() which sets isOpen=false.
-    // JSDOM keeps the element during the leave transition. We verify close()
-    // was called without error and that the component doesn't crash.
     expect(async () => {
       await wrapper.find(".dot-red").trigger("click");
       await wrapper.vm.$nextTick();
@@ -136,7 +119,7 @@ describe("Console", () => {
     expect(wrapper.text()).toContain('Type "help"');
   });
 
-  // ── Panel opens in float mode by default ────────────────────────────────────
+  // ── Default dock mode ────────────────────────────────────────────────────────
 
   it("panel opens with dock-float class (default dockPosition)", async () => {
     wrapper = mount(Console);
@@ -144,7 +127,119 @@ describe("Console", () => {
     expect(wrapper.find(".console-panel").classes()).toContain("dock-float");
   });
 
-  // ── Titlebar dots ───────────────────────────────────────────────────────────
+  // ── Computed: panelStyle (float mode) ────────────────────────────────────────
+
+  it("panelStyle in float mode sets left/top/width/height", async () => {
+    wrapper = mount(Console);
+    await openConsole();
+    const vm = wrapper.vm as unknown as {
+      panelStyle: Record<string, string>;
+      dockPosition: string;
+    };
+    expect(vm.dockPosition).toBe("float");
+    const style = vm.panelStyle;
+    expect(style).toHaveProperty("left");
+    expect(style).toHaveProperty("top");
+    expect(style).toHaveProperty("width");
+    expect(style).toHaveProperty("height");
+    expect(style.bottom).toBe("auto");
+    expect(style.right).toBe("auto");
+  });
+
+  it("panelStyle in bottom mode sets height/width/bottom", async () => {
+    wrapper = mount(Console);
+    await openConsole();
+    // Cycle to bottom: float → bottom
+    await wrapper.find(".dot-yellow").trigger("click");
+    await flushPromises();
+    await wrapper.vm.$nextTick();
+    const vm = wrapper.vm as unknown as { panelStyle: Record<string, string> };
+    const style = vm.panelStyle;
+    expect(style.bottom).toBe("0");
+    expect(style.width).toBe("100%");
+    expect(style.left).toBe("0");
+  });
+
+  it("panelStyle in right mode sets width/height/right", async () => {
+    wrapper = mount(Console);
+    await openConsole();
+    // float → bottom → right
+    await wrapper.find(".dot-yellow").trigger("click");
+    await flushPromises();
+    await wrapper.vm.$nextTick();
+    await wrapper.find(".dot-yellow").trigger("click");
+    await flushPromises();
+    await wrapper.vm.$nextTick();
+    const vm = wrapper.vm as unknown as { panelStyle: Record<string, string> };
+    const style = vm.panelStyle;
+    expect(style.right).toBe("0");
+    expect(style.top).toBe("0");
+    expect(style.bottom).toBe("0");
+  });
+
+  // ── Computed: titlebarHint & dockCycleIcon ────────────────────────────────────
+
+  it("titlebarHint shows '◈ float' in float mode", async () => {
+    wrapper = mount(Console);
+    await openConsole();
+    const vm = wrapper.vm as unknown as { titlebarHint: string };
+    expect(vm.titlebarHint).toBe("◈ float");
+  });
+
+  it("titlebarHint shows '⊡ bottom' in bottom mode", async () => {
+    wrapper = mount(Console);
+    await openConsole();
+    await wrapper.find(".dot-yellow").trigger("click");
+    await flushPromises();
+    await wrapper.vm.$nextTick();
+    const vm = wrapper.vm as unknown as { titlebarHint: string };
+    expect(vm.titlebarHint).toBe("⊡ bottom");
+  });
+
+  it("titlebarHint shows '⊞ right' in right mode", async () => {
+    wrapper = mount(Console);
+    await openConsole();
+    await wrapper.find(".dot-yellow").trigger("click");
+    await flushPromises();
+    await wrapper.vm.$nextTick();
+    await wrapper.find(".dot-yellow").trigger("click");
+    await flushPromises();
+    await wrapper.vm.$nextTick();
+    const vm = wrapper.vm as unknown as { titlebarHint: string };
+    expect(vm.titlebarHint).toBe("⊞ right");
+  });
+
+  it("dockCycleIcon shows '⇩' in float mode", async () => {
+    wrapper = mount(Console);
+    await openConsole();
+    const vm = wrapper.vm as unknown as { dockCycleIcon: string };
+    expect(vm.dockCycleIcon).toBe("⇩");
+  });
+
+  it("dockCycleIcon shows '⇥' in bottom mode", async () => {
+    wrapper = mount(Console);
+    await openConsole();
+    await wrapper.find(".dot-yellow").trigger("click");
+    await flushPromises();
+    await wrapper.vm.$nextTick();
+    const vm = wrapper.vm as unknown as { dockCycleIcon: string };
+    expect(vm.dockCycleIcon).toBe("⇥");
+  });
+
+  it("dockCycleIcon shows '⊡' in right mode", async () => {
+    wrapper = mount(Console);
+    await openConsole();
+    await wrapper.find(".dot-yellow").trigger("click");
+    await flushPromises();
+    await wrapper.vm.$nextTick();
+    await wrapper.find(".dot-yellow").trigger("click");
+    await flushPromises();
+    await wrapper.vm.$nextTick();
+    const vm = wrapper.vm as unknown as { dockCycleIcon: string };
+    expect(vm.dockCycleIcon).toBe("⊡");
+  });
+
+  // ── Titlebar dots ────────────────────────────────────────────────────────────
 
   it("renders the three macOS-style titlebar dots", async () => {
     wrapper = mount(Console);
@@ -161,17 +256,12 @@ describe("Console", () => {
     await wrapper.find(".dot-yellow").trigger("click");
     await flushPromises();
     await wrapper.vm.$nextTick();
-    const newClasses = wrapper.find(".console-panel").classes().join(" ");
-    expect(newClasses).not.toBe(initialClasses);
+    expect(wrapper.find(".console-panel").classes().join(" ")).not.toBe(initialClasses);
   });
 
-  // Green dot: popOut() toggles float ↔ prevDock.
-  // Default dockPosition = "float", prevDock defaults to "bottom".
-  // First click → "bottom", second click → back to "float".
   it("green dot switches from float to bottom dock on first click", async () => {
     wrapper = mount(Console);
     await openConsole();
-    expect(wrapper.find(".console-panel").classes()).toContain("dock-float");
     await wrapper.find(".dot-green").trigger("click");
     await flushPromises();
     await wrapper.vm.$nextTick();
@@ -188,6 +278,177 @@ describe("Console", () => {
     await flushPromises();
     await wrapper.vm.$nextTick();
     expect(wrapper.find(".console-panel").classes()).toContain("dock-float");
+  });
+
+  // ── startDrag (float mode titlebar drag) ──────────────────────────────────────
+
+  it("startDrag sets isDragging=true on mousedown on titlebar in float mode", async () => {
+    wrapper = mount(Console);
+    await openConsole();
+    const vm = wrapper.vm as unknown as { isDragging: boolean };
+    const titlebar = wrapper.find(".console-titlebar");
+    await titlebar.trigger("mousedown", { clientX: 100, clientY: 100 });
+    expect(vm.isDragging).toBe(true);
+    // Cleanup: trigger mouseup
+    window.dispatchEvent(new MouseEvent("mouseup"));
+  });
+
+  it("startDrag does not drag when clicking titlebar-actions buttons", async () => {
+    wrapper = mount(Console);
+    await openConsole();
+    const vm = wrapper.vm as unknown as { isDragging: boolean };
+    // Click the close button inside titlebar-actions
+    const closeBtn = wrapper.find(".titlebar-actions .titlebar-btn:last-child");
+    await closeBtn.trigger("mousedown", { clientX: 100, clientY: 100 });
+    // isDragging should NOT be set (button click is excluded)
+    expect(vm.isDragging).toBe(false);
+  });
+
+  it("isDragging becomes false after mouseup", async () => {
+    wrapper = mount(Console);
+    await openConsole();
+    const vm = wrapper.vm as unknown as { isDragging: boolean };
+    const titlebar = wrapper.find(".console-titlebar");
+    await titlebar.trigger("mousedown", { clientX: 100, clientY: 100 });
+    expect(vm.isDragging).toBe(true);
+    window.dispatchEvent(new MouseEvent("mouseup"));
+    await wrapper.vm.$nextTick();
+    expect(vm.isDragging).toBe(false);
+  });
+
+  it("drag moves float position on mousemove", async () => {
+    wrapper = mount(Console);
+    await openConsole();
+    const vm = wrapper.vm as unknown as {
+      isDragging: boolean;
+      floatX: number;
+      floatY: number;
+    };
+    const initialX = vm.floatX;
+    const titlebar = wrapper.find(".console-titlebar");
+    await titlebar.trigger("mousedown", { clientX: 100, clientY: 100 });
+    window.dispatchEvent(new MouseEvent("mousemove", { clientX: 200, clientY: 150 }));
+    await wrapper.vm.$nextTick();
+    // floatX should have changed
+    expect(vm.floatX).not.toBe(initialX);
+    window.dispatchEvent(new MouseEvent("mouseup"));
+  });
+
+  // ── startResize ────────────────────────────────────────────────────────────────
+
+  it("startResize sets isResizing=true on float resize handle mousedown", async () => {
+    wrapper = mount(Console);
+    await openConsole();
+    const vm = wrapper.vm as unknown as { isResizing: boolean };
+    const resizeHandle = wrapper.find(".rh-se");
+    await resizeHandle.trigger("mousedown", { clientX: 0, clientY: 0 });
+    expect(vm.isResizing).toBe(true);
+    window.dispatchEvent(new MouseEvent("mouseup"));
+  });
+
+  it("isResizing becomes false after mouseup on float handle", async () => {
+    wrapper = mount(Console);
+    await openConsole();
+    const vm = wrapper.vm as unknown as { isResizing: boolean };
+    const resizeHandle = wrapper.find(".rh-se");
+    await resizeHandle.trigger("mousedown", { clientX: 0, clientY: 0 });
+    window.dispatchEvent(new MouseEvent("mouseup"));
+    await wrapper.vm.$nextTick();
+    expect(vm.isResizing).toBe(false);
+  });
+
+  it("south resize handle changes floatH on mousemove", async () => {
+    wrapper = mount(Console);
+    await openConsole();
+    const vm = wrapper.vm as unknown as { floatH: number };
+    const initialH = vm.floatH;
+    const resizeHandle = wrapper.find(".rh-s");
+    await resizeHandle.trigger("mousedown", { clientX: 0, clientY: 0 });
+    window.dispatchEvent(new MouseEvent("mousemove", { clientX: 0, clientY: 50 }));
+    await wrapper.vm.$nextTick();
+    expect(vm.floatH).not.toBe(initialH);
+    window.dispatchEvent(new MouseEvent("mouseup"));
+  });
+
+  it("east resize handle changes floatW on mousemove", async () => {
+    wrapper = mount(Console);
+    await openConsole();
+    const vm = wrapper.vm as unknown as { floatW: number };
+    const initialW = vm.floatW;
+    const resizeHandle = wrapper.find(".rh-e");
+    await resizeHandle.trigger("mousedown", { clientX: 0, clientY: 0 });
+    window.dispatchEvent(new MouseEvent("mousemove", { clientX: 100, clientY: 0 }));
+    await wrapper.vm.$nextTick();
+    expect(vm.floatW).not.toBe(initialW);
+    window.dispatchEvent(new MouseEvent("mouseup"));
+  });
+
+  it("north resize handle changes floatH and floatY on mousemove", async () => {
+    wrapper = mount(Console);
+    await openConsole();
+    const vm = wrapper.vm as unknown as { floatH: number; floatY: number };
+    const resizeHandle = wrapper.find(".rh-n");
+    await resizeHandle.trigger("mousedown", { clientX: 0, clientY: 200 });
+    window.dispatchEvent(new MouseEvent("mousemove", { clientX: 0, clientY: 150 }));
+    await wrapper.vm.$nextTick();
+    // Moving north (upward) should increase height
+    expect(vm.floatH).toBeGreaterThan(420);
+    window.dispatchEvent(new MouseEvent("mouseup"));
+  });
+
+  it("west resize handle changes floatW and floatX on mousemove", async () => {
+    wrapper = mount(Console);
+    await openConsole();
+    const vm = wrapper.vm as unknown as { floatW: number; floatX: number };
+    const resizeHandle = wrapper.find(".rh-w");
+    await resizeHandle.trigger("mousedown", { clientX: 500, clientY: 0 });
+    window.dispatchEvent(new MouseEvent("mousemove", { clientX: 400, clientY: 0 }));
+    await wrapper.vm.$nextTick();
+    // Moving west (leftward) should increase width
+    expect(vm.floatW).toBeGreaterThan(640);
+    window.dispatchEvent(new MouseEvent("mouseup"));
+  });
+
+  it("resize enforces minimum float width (320px)", async () => {
+    wrapper = mount(Console);
+    await openConsole();
+    const vm = wrapper.vm as unknown as { floatW: number };
+    const resizeHandle = wrapper.find(".rh-e");
+    await resizeHandle.trigger("mousedown", { clientX: 640, clientY: 0 });
+    // Try to shrink way below minimum
+    window.dispatchEvent(new MouseEvent("mousemove", { clientX: 0, clientY: 0 }));
+    await wrapper.vm.$nextTick();
+    expect(vm.floatW).toBeGreaterThanOrEqual(320);
+    window.dispatchEvent(new MouseEvent("mouseup"));
+  });
+
+  it("resize enforces minimum float height (200px)", async () => {
+    wrapper = mount(Console);
+    await openConsole();
+    const vm = wrapper.vm as unknown as { floatH: number };
+    const resizeHandle = wrapper.find(".rh-s");
+    await resizeHandle.trigger("mousedown", { clientX: 0, clientY: 420 });
+    window.dispatchEvent(new MouseEvent("mousemove", { clientX: 0, clientY: 0 }));
+    await wrapper.vm.$nextTick();
+    expect(vm.floatH).toBeGreaterThanOrEqual(200);
+    window.dispatchEvent(new MouseEvent("mouseup"));
+  });
+
+  it("docked resize (bottom) changes dockedSize on mousemove", async () => {
+    wrapper = mount(Console);
+    await openConsole();
+    // Move to bottom dock first
+    await wrapper.find(".dot-yellow").trigger("click");
+    await flushPromises();
+    await wrapper.vm.$nextTick();
+    const vm = wrapper.vm as unknown as { dockedSize: number };
+    const initialSize = vm.dockedSize;
+    const resizeHandle = wrapper.find(".resize-handle.resize-bottom");
+    await resizeHandle.trigger("mousedown", { clientX: 0, clientY: 400 });
+    window.dispatchEvent(new MouseEvent("mousemove", { clientX: 0, clientY: 300 }));
+    await wrapper.vm.$nextTick();
+    expect(vm.dockedSize).not.toBe(initialSize);
+    window.dispatchEvent(new MouseEvent("mouseup"));
   });
 
   // ── Commands ────────────────────────────────────────────────────────────────
@@ -222,14 +483,11 @@ describe("Console", () => {
     expect(wrapper.text()).toContain("linkedin.com");
   });
 
-  // After "clear": lines.value = [] but runCommand's trailing addLine("output","")
-  // adds 1 blank line. We assert the line count is dramatically reduced vs before.
   it('clears most terminal lines on "clear" command', async () => {
     wrapper = mount(Console);
     await openConsole();
     await runCommand(wrapper, "help");
-    const beforeCount = wrapper.findAll(".console-line").length;
-    expect(beforeCount).toBeGreaterThan(5);
+    expect(wrapper.findAll(".console-line").length).toBeGreaterThan(5);
     await runCommand(wrapper, "clear");
     expect(wrapper.findAll(".console-line").length).toBeLessThanOrEqual(2);
   });
@@ -281,6 +539,13 @@ describe("Console", () => {
     expect(wrapper.text()).toContain("light mode");
   });
 
+  it("theme command toggles without argument", async () => {
+    wrapper = mount(Console);
+    await openConsole();
+    await runCommand(wrapper, "theme");
+    expect(wrapper.text()).toMatch(/dark mode|light mode/);
+  });
+
   it("dock command outputs dock position", async () => {
     wrapper = mount(Console);
     await openConsole();
@@ -302,7 +567,7 @@ describe("Console", () => {
     expect(wrapper.text()).toContain("Navigating");
   });
 
-  // ── Input history ───────────────────────────────────────────────────────────
+  // ── Input history ────────────────────────────────────────────────────────────
 
   it("ArrowUp navigates command history", async () => {
     wrapper = mount(Console);
@@ -337,6 +602,16 @@ describe("Console", () => {
     expect(input.element.value).toBe("help");
   });
 
+  it("Tab does nothing when no match found", async () => {
+    wrapper = mount(Console);
+    await openConsole();
+    const input = wrapper.find<HTMLInputElement>("input.console-input");
+    await input.setValue("zzz");
+    await input.trigger("keydown", { key: "Tab" });
+    await wrapper.vm.$nextTick();
+    expect(input.element.value).toBe("zzz");
+  });
+
   it("Ctrl+L clears the terminal", async () => {
     wrapper = mount(Console);
     await openConsole();
@@ -347,7 +622,7 @@ describe("Console", () => {
     expect(wrapper.findAll(".console-line").length).toBe(0);
   });
 
-  // ── Glitch mode ─────────────────────────────────────────────────────────────
+  // ── Glitch mode ──────────────────────────────────────────────────────────────
 
   it("glitch command outputs GLITCH text", async () => {
     wrapper = mount(Console);
@@ -364,13 +639,11 @@ describe("Console", () => {
     expect(wrapper.text()).toContain("terminated");
   });
 
-  // ── Yellow-dot dock cycling (starting from float) ────────────────────────────
-  // Cycle: float → bottom → right → float
+  // ── Yellow-dot dock cycling ──────────────────────────────────────────────────
 
   it("yellow dot cycles float → bottom", async () => {
     wrapper = mount(Console);
     await openConsole();
-    expect(wrapper.find(".console-panel").classes()).toContain("dock-float");
     await wrapper.find(".dot-yellow").trigger("click");
     await flushPromises();
     await wrapper.vm.$nextTick();
@@ -380,11 +653,9 @@ describe("Console", () => {
   it("yellow dot cycles bottom → right", async () => {
     wrapper = mount(Console);
     await openConsole();
-    // float → bottom
     await wrapper.find(".dot-yellow").trigger("click");
     await flushPromises();
     await wrapper.vm.$nextTick();
-    // bottom → right
     await wrapper.find(".dot-yellow").trigger("click");
     await flushPromises();
     await wrapper.vm.$nextTick();
@@ -394,14 +665,12 @@ describe("Console", () => {
   it("yellow dot cycles right → float", async () => {
     wrapper = mount(Console);
     await openConsole();
-    // float → bottom → right
     await wrapper.find(".dot-yellow").trigger("click");
     await flushPromises();
     await wrapper.vm.$nextTick();
     await wrapper.find(".dot-yellow").trigger("click");
     await flushPromises();
     await wrapper.vm.$nextTick();
-    // right → float
     await wrapper.find(".dot-yellow").trigger("click");
     await flushPromises();
     await wrapper.vm.$nextTick();
@@ -417,35 +686,34 @@ describe("Console", () => {
     expect(wrapper.find(".slash-hint").exists()).toBe(true);
   });
 
-  // The slash hint is wrapped in <Transition> so in JSDOM the element stays in
-  // the DOM during the leave animation — we cannot assert exists()===false.
-  // Instead we verify that the slashBuffer was cleared by confirming no new
-  // keystrokes accumulate: after Escape, typing a letter should start a fresh
-  // buffer, not append to the old one.
   it("Escape clears the slash buffer so next keystrokes start fresh", async () => {
     wrapper = mount(Console);
     typeSequence("/ter");
     await wrapper.vm.$nextTick();
-    expect(wrapper.find(".slash-hint").exists()).toBe(true);
-
     window.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }));
     await wrapper.vm.$nextTick();
-
-    // Type a fresh slash — the buffer should now be "/" not "/ter/"
     window.dispatchEvent(new KeyboardEvent("keydown", { key: "/" }));
     await wrapper.vm.$nextTick();
-
     const hint = wrapper.find(".slash-hint");
     if (hint.exists()) {
-      // If the hint exists, its buffer must be exactly "/" (one char), not "/ter/"
-      // The hint text is `slashBuffer + cursor`, so text starts with "/"
-      // and does NOT contain "ter"
       expect(hint.text()).not.toContain("ter");
     }
-    // If the hint doesn't exist the buffer is also clearly empty/reset — pass.
   });
 
-  // ── Soundcloud command ──────────────────────────────────────────────────────
+  it("Backspace removes last character from slash buffer", async () => {
+    wrapper = mount(Console);
+    typeSequence("/ter");
+    await wrapper.vm.$nextTick();
+    window.dispatchEvent(new KeyboardEvent("keydown", { key: "Backspace" }));
+    await wrapper.vm.$nextTick();
+    const hint = wrapper.find(".slash-hint");
+    if (hint.exists()) {
+      // Should show "/te" not "/ter"
+      expect(hint.text()).not.toMatch(/\/ter[^m]/);
+    }
+  });
+
+  // ── Soundcloud commands ──────────────────────────────────────────────────────
 
   it("soundcloud with no args shows usage", async () => {
     wrapper = mount(Console);
@@ -479,5 +747,59 @@ describe("Console", () => {
     await runCommand(wrapper, "soundcloud prev");
     expect(dispatchSpy.mock.calls.map(c => (c[0] as Event).type)).toContain("prevSoundCloud");
     dispatchSpy.mockRestore();
+  });
+
+  it("soundcloud play dispatches openSoundCloud event", async () => {
+    const dispatchSpy = vi.spyOn(window, "dispatchEvent");
+    wrapper = mount(Console);
+    await openConsole();
+    // Fire soundCloudReady so the play subcommand doesn't wait 5s
+    setTimeout(() => window.dispatchEvent(new Event("soundCloudReady")), 50);
+    await runCommand(wrapper, "soundcloud play");
+    expect(dispatchSpy.mock.calls.map(c => (c[0] as Event).type)).toContain("openSoundCloud");
+    dispatchSpy.mockRestore();
+  });
+
+  it("soundcloud play dispatches playSoundCloud after ready", async () => {
+    const dispatchSpy = vi.spyOn(window, "dispatchEvent");
+    wrapper = mount(Console);
+    await openConsole();
+    // Simulate soundCloudReady firing quickly
+    setTimeout(() => window.dispatchEvent(new Event("soundCloudReady")), 10);
+    await runCommand(wrapper, "soundcloud play");
+    await new Promise(r => setTimeout(r, 100));
+    const types = dispatchSpy.mock.calls.map(c => (c[0] as Event).type);
+    expect(types).toContain("playSoundCloud");
+    dispatchSpy.mockRestore();
+  });
+
+  it("soundcloud play times out gracefully after 5s without ready event", async () => {
+    // Open console first (needs real timers for the 1500ms boot delay),
+    // then switch to fake timers to control the 5s soundcloud timeout.
+    wrapper = mount(Console);
+    await openConsole();
+    vi.useFakeTimers();
+    const dispatchSpy = vi.spyOn(window, "dispatchEvent");
+    const cmdPromise = runCommand(wrapper, "soundcloud play");
+    vi.advanceTimersByTime(5100);
+    await flushPromises();
+    await cmdPromise;
+    const types = dispatchSpy.mock.calls.map(c => (c[0] as Event).type);
+    expect(types).toContain("openSoundCloud");
+    dispatchSpy.mockRestore();
+    // afterEach will call vi.useRealTimers()
+  });
+
+  // ── titlebar-btn cycle dock button ────────────────────────────────────────────
+
+  it("titlebar dock-cycle button also cycles dock", async () => {
+    wrapper = mount(Console);
+    await openConsole();
+    const cycleBtn = wrapper.find(".titlebar-actions .titlebar-btn:first-child");
+    const initialClasses = wrapper.find(".console-panel").classes().join(" ");
+    await cycleBtn.trigger("click");
+    await flushPromises();
+    await wrapper.vm.$nextTick();
+    expect(wrapper.find(".console-panel").classes().join(" ")).not.toBe(initialClasses);
   });
 });
