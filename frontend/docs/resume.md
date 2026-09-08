@@ -98,10 +98,10 @@ SQL • NodeJS • Angular • Vue • Typescript • HTML • CSS • Git • J
 **Senior Product Manager** | Singapore | October 2025 – Present
 
 - Expanded payment plugin platform coverage from 5 to 7 integrations, boosting competitiveness against key competitors.
+- Scaled Airwallex Additional Payments for Shopify from 0 to 5,000 merchants and $2M volume processed in 4 months.
+- Scaled Airwallex Global Payments for PrestaShop from 0 to $400K volume processed in 4 months.
 - Launched Salesforce Commerce Cloud cartridge, opening a new enterprise channel of 700+ large merchants.
-- Shipped PrestaShop plugin with French localization, targeting France's 33,000+ merchants.
-- Delivered first standalone Wero app on Shopify, establishing first-mover advantage as EPI Principal Partner.
-- Built Shopify Payments Fee Calculator adopted by 69 active users across 5 regions, directly driving merchant acquisition.
+- Delivered Airwallex Wero Payments for Shopify, establishing first-mover advantage as EPI Principal Partner.
 
 ### Workato
 
@@ -136,14 +136,12 @@ SQL • NodeJS • Angular • Vue • Typescript • HTML • CSS • Git • J
 **Software Engineer** | Singapore | October 2017 – June 2018
 
 - Implemented new features of a mobile application for human resource management in plain JavaScript.
-- Designed various ways to improve application usability and reduce user input using InVision.
 
 ### Singapore University of Technology and Design (SUTD)
 
 **Research Officer** | Singapore | October 2016 – Sep 2017
 
 - Published an IEEE paper on novel open-loop algorithm to control the locomotion and behavior of spherical rolling robots.
-- Incorporated a wireless First Person View (FPV) camera onto VIRGO without increasing its overall 60mm footprint.
 
 ## Education
 
@@ -163,6 +161,5 @@ University Admission Score (UAS): 90/90, H3: Physics (Merit)
 
 - Professional Certificate: Strategic Management by Wharton Online | October 2025
 - Executive Education: Product Strategy by Northwestern Kellogg Executive Education | May 2024
-- Shopee Value Star Award - "We Serve" (Marketplace Product Manager) | May 2022
 - IES Gold Medal (Top Cohort Graduate) & Keppel Award of Excellence (Senior & Junior Years) | September 2016
 - ASEAN Undergraduate Scholarship & Tay Chen Hui Memorial Award (Top Science Student) | July 2013
