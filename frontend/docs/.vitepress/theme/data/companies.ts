@@ -86,6 +86,13 @@ export const companies: Company[] = [
     logo: "/worksap.webp",
     logoHeight: 1.81,
   },
+  {
+    id: "sutd",
+    name: "SUTD",
+    href: "https://www.sutd.edu.sg/",
+    logo: { dark: "/sutd-dark.webp", light: "/sutd-light.webp" },
+    logoHeight: 2.13,
+  },
 
   // Communities and non-profits.
   {
