@@ -82,7 +82,7 @@ onMounted(() => {
 
 I'm a **product manager**, **frontend developer**, **avid cyclist**, and **casual pianist**.
 
-I'm currently a **Senior Product Manager** at [Airwallex](https://airwallex.com), where I expand platform coverage and scale the global adoption of our in-house payment plugins.
+I'm currently a **Senior Product Manager** at [Airwallex](https://airwallex.com), where I expand platform coverage and scale the global adoption of our in-house payment plugins. Beyond delivering product capabilities, I also advocate and write about [checkout optimization](https://www.airwallex.com/global/blog/airwallex-additional-payments-shopify-local-payment-methods) to empower merchants and elevate our product positioning.
 
 Previously, I was a **Senior Product Manager** at [Workato](https://www.workato.com), where I manage a suite of platform connectors and stateful data storage solutions, modernizing legacy systems and guiding cross-functional teams from vision to execution. Prior to that, I was a **Product Manager** at [Shopee](https://shopee.sg), improving the buyer-seller chat experience across mobile and web platforms. Before moving into product management, I spent three years as a **Software Engineer** at [Amadeus](https://www.amadeus.com), where I modernized the Airport Management System’s dashboard and reporting module, improved the stability of its messaging system, and built productivity tools including [Figma Plugins](https://www.figma.com/@stevahnes) that reached more than 40,000 users and 250 likes.
 
