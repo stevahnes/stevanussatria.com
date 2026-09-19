@@ -9,19 +9,32 @@ updates:
     schedule:
       interval: weekly
 
+    # Keep routine dependency PRs under control.
+    # Security updates are not constrained by this limit.
     open-pull-requests-limit: 3
 
     versioning-strategy: increase-if-necessary
 
     groups:
-      patch-updates:
+      # Routine minor + patch updates → one PR
+      minor-and-patch:
+        applies-to: version-updates
         update-types:
+          - minor
           - patch
 
+      # Security updates → grouped separately
+      security-updates:
+        applies-to: security-updates
+        patterns:
+          - "*"
+
+    # Don't automatically take major-version upgrades.
+    # Security updates are still created even when this is ignored.
     ignore:
       - dependency-name: "*"
         update-types:
-          - version-update:semver-major
+          - "version-update:semver-major"
 
   # ─────────────────────────────────────────────
   # API / Next.js
@@ -36,14 +49,23 @@ updates:
     versioning-strategy: increase-if-necessary
 
     groups:
-      patch-updates:
+      # Routine minor + patch updates → one PR
+      minor-and-patch:
+        applies-to: version-updates
         update-types:
+          - minor
           - patch
+
+      # Security updates → grouped separately
+      security-updates:
+        applies-to: security-updates
+        patterns:
+          - "*"
 
     ignore:
       - dependency-name: "*"
         update-types:
-          - version-update:semver-major
+          - "version-update:semver-major"
 
   # ─────────────────────────────────────────────
   # GitHub Actions
@@ -56,11 +78,20 @@ updates:
     open-pull-requests-limit: 3
 
     groups:
-      patch-updates:
+      # Routine action updates → one PR
+      minor-and-patch:
+        applies-to: version-updates
         update-types:
+          - minor
           - patch
+
+      # Security updates → grouped separately
+      security-updates:
+        applies-to: security-updates
+        patterns:
+          - "*"
 
     ignore:
       - dependency-name: "*"
         update-types:
-          - version-update:semver-major
+          - "version-update:semver-major"
