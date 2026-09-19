@@ -382,7 +382,7 @@ const activities = [
 
 import { defineAsyncComponent } from 'vue'
 const StravaRideVisualizer = defineAsyncComponent(() =>
-  import('./components/StravaRideVisualizer.vue')
+  import('../components/StravaRideVisualizer.vue')
 )
 </script>
 

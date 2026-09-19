@@ -8,11 +8,11 @@ import { openai } from "@ai-sdk/openai";
 
 // Files to summarize via AI instead of ingesting raw
 const SUMMARIZE_FILES = [
-  "loops.md",
-  "skyline.md",
-  "milestones.md",
-  "recommendations.md",
-  "bookshelf.md",
+  "/adventures/loops.md",
+  "/adventures/skyline.md",
+  "/milestones.md",
+  "/recommendations.md",
+  "/bookshelf.md",
 ];
 
 function stripNoise(content: string): string {
