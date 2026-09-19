@@ -16,8 +16,8 @@
   },
   "lint-staged": {
     "*.{ts,mts,css,vue,md,json}": [
-      "npm run format",
-      "npm run lint"
+      "prettier --write",
+      "eslint --fix"
     ]
   },
   "devDependencies": {
