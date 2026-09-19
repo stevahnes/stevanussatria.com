@@ -1,17 +1,66 @@
 version: 2
+
 updates:
+  # ─────────────────────────────────────────────
+  # Frontend / VitePress
+  # ─────────────────────────────────────────────
   - package-ecosystem: npm
     directory: /frontend
     schedule:
       interval: weekly
-    open-pull-requests-limit: 10
-    groups:
-      dev-dependencies:
-        dependency-type: development
-      production-dependencies:
-        dependency-type: production
 
+    open-pull-requests-limit: 3
+
+    versioning-strategy: increase-if-necessary
+
+    groups:
+      patch-updates:
+        update-types:
+          - patch
+
+    ignore:
+      - dependency-name: "*"
+        update-types:
+          - version-update:semver-major
+
+  # ─────────────────────────────────────────────
+  # API / Next.js
+  # ─────────────────────────────────────────────
+  - package-ecosystem: npm
+    directory: /api
+    schedule:
+      interval: weekly
+
+    open-pull-requests-limit: 3
+
+    versioning-strategy: increase-if-necessary
+
+    groups:
+      patch-updates:
+        update-types:
+          - patch
+
+    ignore:
+      - dependency-name: "*"
+        update-types:
+          - version-update:semver-major
+
+  # ─────────────────────────────────────────────
+  # GitHub Actions
+  # ─────────────────────────────────────────────
   - package-ecosystem: github-actions
     directory: /
     schedule:
       interval: weekly
+
+    open-pull-requests-limit: 3
+
+    groups:
+      patch-updates:
+        update-types:
+          - patch
+
+    ignore:
+      - dependency-name: "*"
+        update-types:
+          - version-update:semver-major
