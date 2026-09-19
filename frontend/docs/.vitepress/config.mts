@@ -165,12 +165,22 @@ export default defineConfig({
       { text: "Projects", link: "/projects" },
       { text: "Milestones", link: "/milestones" },
       { text: "Recommendations", link: "/recommendations" },
+      {
+        text: "Setup",
+        items: [
+          { text: "Stack", link: "/setup/stack" },
+          { text: "Gear", link: "/setup/gear" },
+        ],
+      },
+      {
+        text: "Adventures",
+        items: [
+          { text: "Loops", link: "/adventures/loops" },
+          { text: "Skyline", link: "/adventures/skyline" },
+        ],
+      },
       { text: "Bookshelf", link: "/bookshelf" },
       { text: "AMA", link: "/ama" },
-      { text: "Stack", link: "/stack" },
-      { text: "Gear", link: "/gear" },
-      { text: "Loops", link: "/loops" },
-      { text: "Skyline", link: "/skyline" },
     ],
 
     sidebar: {
