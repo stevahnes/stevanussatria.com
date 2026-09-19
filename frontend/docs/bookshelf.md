@@ -263,7 +263,7 @@ const bookshelfData = [
     "type": "book",
     "title": "The Heroes of Olympus (Series)",
     "authorOrHost": "Rick Riordan",
-    "status": "consuming",
+    "status": "completed",
     "link": "https://www.goodreads.com/search?q=The+Heroes+of+Olympus",
     "coverImage": "https://books.google.com/books/content?id=zQd7DwAAQBAJ&printsec=frontcover&img=1&zoom=1&edge=curl&source=gbs_api"
   },
