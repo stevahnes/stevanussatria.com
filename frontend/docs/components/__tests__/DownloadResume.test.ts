@@ -318,9 +318,8 @@ describe("DownloadResume", () => {
   // ── Error handling ───────────────────────────────────────────────────────────
 
   it("does not throw when generateOnePageStandardPDF throws", async () => {
-    const { generateOnePageStandardPDF } = await import(
-      "../resume_builder/templates/one-page-standard/logic"
-    );
+    const { generateOnePageStandardPDF } =
+      await import("../resume_builder/templates/one-page-standard/logic");
     (generateOnePageStandardPDF as ReturnType<typeof vi.fn>).mockImplementationOnce(() => {
       throw new Error("PDF generation failed");
     });
