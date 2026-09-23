@@ -47,7 +47,7 @@ hero:
 features:
   - title: ⌛ 8+
     details: Years of Experience
-  - title: 💸 Fintech
+  - title: 💳 Fintech
     details: Primary Domain Expertise
   - title: ☁️ SaaS/Cloud
     details: Primary Architecture Expertise
