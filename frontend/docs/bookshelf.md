@@ -331,6 +331,69 @@ const bookshelfData = [
     "coverImage": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts126/v4/f1/13/71/f113715f-56e4-f542-a08c-b5890c0841bc/mza_18228009703397905678.jpg/600x600bb.jpg"
   },
   {
+    "id": "movie-memento",
+    "type": "movie",
+    "title": "Memento",
+    "authorOrHost": "Christopher Nolan",
+    "status": "completed",
+    "link": "https://www.google.com/search?q=Memento+movie",
+    "coverImage": "https://upload.wikimedia.org/wikipedia/en/c/c7/Memento_poster.jpg"
+  },
+  {
+    "id": "movie-inception",
+    "type": "movie",
+    "title": "Inception",
+    "authorOrHost": "Christopher Nolan",
+    "status": "completed",
+    "link": "https://www.google.com/search?q=Inception+movie",
+    "coverImage": "https://m.media-amazon.com/images/M/MV5BMjAxMzY3NjcxNF5BMl5BanBnXkFtZTcwNTI5OTM0Mw@@._V1_.jpg"
+  },
+  {
+    "id": "movie-f1",
+    "type": "movie",
+    "title": "F1",
+    "authorOrHost": "Joseph Kosinski",
+    "status": "completed",
+    "link": "https://www.google.com/search?q=F1+movie",
+    "coverImage": "https://posterhubstudio.com/cdn/shop/files/F1LEFILM.jpg"
+  },
+  {
+    "id": "movie-minority-report",
+    "type": "movie",
+    "title": "Minority Report",
+    "authorOrHost": "Steven Spielberg",
+    "status": "completed",
+    "link": "https://www.google.com/search?q=Minority+Report+movie",
+    "coverImage": "https://upload.wikimedia.org/wikipedia/en/4/44/Minority_Report_Poster.jpg?utm_source=en.wikipedia.org&utm_campaign=parser&utm_content=thumbnail_unscaled"
+  },
+  {
+    "id": "show-how-i-met-your-mother",
+    "type": "show",
+    "title": "How I Met Your Mother",
+    "authorOrHost": "Carter Bays & Craig Thomas",
+    "status": "completed",
+    "link": "https://www.google.com/search?q=How+I+Met+Your+Mother",
+    "coverImage": "https://static.wikia.nocookie.net/himym/images/4/46/HIMYM_poster.jpg/revision/latest?cb=20220215204714"
+  },
+  {
+    "id": "show-the-good-place",
+    "type": "show",
+    "title": "The Good Place",
+    "authorOrHost": "Michael Schur",
+    "status": "completed",
+    "link": "https://www.google.com/search?q=The+Good+Place",
+    "coverImage": "https://upload.wikimedia.org/wikipedia/en/8/84/The_Good_Place_season_1.jpg?utm_source=en.wikipedia.org&utm_campaign=index&utm_content=original"
+  },
+  {
+    "id": "show-the-residence",
+    "type": "show",
+    "title": "The Residence",
+    "authorOrHost": "Paul William Davies",
+    "status": "completed",
+    "link": "https://www.google.com/search?q=The+Residence+Netflix",
+    "coverImage": "https://thumb.wikimedia.org/wikipedia/en/thumb/7/7b/The_Residence_%28TV_series%29.jpg/250px-The_Residence_%28TV_series%29.jpg?utm_source=en.wikipedia.org&utm_campaign=parser&utm_content=thumbnail"
+  },
+  {
     "id": "podcast-p1-matt-and-tommy",
     "type": "podcast",
     "title": "P1 with Matt & Tommy",

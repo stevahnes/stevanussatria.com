@@ -4,7 +4,7 @@ import { useData } from "vitepress";
 
 interface MediaItem {
   id: string; // e.g., "book-escaping-build-trap"
-  type: "book" | "podcast" | "article";
+  type: "book" | "podcast" | "movie" | "show" | "article"; // Media type
   title: string;
   authorOrHost: string;
   status: "consuming" | "completed" | "queued" | "paused";
@@ -39,6 +39,8 @@ const filterOptions: Array<{ id: MediaFilter; label: string }> = [
   { id: "all", label: "All" },
   { id: "book", label: "Books" },
   { id: "podcast", label: "Podcasts" },
+  { id: "movie", label: "Movies" },
+  { id: "show", label: "Shows" },
   { id: "article", label: "Articles" },
 ];
 const sortOptions: Array<{ id: SortKey; label: string }> = [
@@ -105,10 +107,13 @@ function isMediaItem(value: unknown): value is MediaItem {
   const item = value as Partial<MediaItem>;
   return (
     typeof item.id === "string" &&
-    (item.type === "book" || item.type === "podcast" || item.type === "article") &&
+    (item.type === "book" || item.type === "podcast" || item.type === "movie" || item.type === "show" || item.type === "article") &&
     typeof item.title === "string" &&
     typeof item.authorOrHost === "string" &&
-    (item.status === "consuming" || item.status === "completed" || item.status === "queued" || item.status === "paused") &&
+    (item.status === "consuming" ||
+      item.status === "completed" ||
+      item.status === "queued" ||
+      item.status === "paused") &&
     typeof item.link === "string"
   );
 }
@@ -124,7 +129,9 @@ function setSort(sortKey: SortKey) {
 function typeLabel(type: MediaItem["type"]) {
   if (type === "book") return "Book";
   if (type === "podcast") return "Podcast";
-  return "Article";
+  if (type === "movie") return "Movie";
+  if (type === "show") return "Show";
+  if (type === "article") return "Article";
 }
 
 function statusLabel(status: MediaItem["status"]) {
@@ -141,7 +148,7 @@ function statusLabel(status: MediaItem["status"]) {
       <p class="eyebrow">Steve's Library</p>
       <h2 class="title">Bookshelf</h2>
       <p class="subtitle">
-        What I am reading and listening to for self improvement or just pure entertainment.
+        A curated archive of the media feeding my mind and filling my downtime.
       </p>
     </header>
 
