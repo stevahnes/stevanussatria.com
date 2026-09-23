@@ -60,7 +60,7 @@ describe("Bookshelf", () => {
   it("renders all filter buttons after mount", async () => {
     const wrapper = await mountBookshelf();
     const labels = wrapper.findAll("button.filter-button").map(b => b.text());
-    expect(labels).toEqual(["All", "Books", "Podcasts", "Articles"]);
+    expect(labels).toEqual(["All", "Books", "Podcasts", "Movies", "Shows", "Articles"]);
   });
 
   it("sorts cards by status by default", async () => {
@@ -107,7 +107,15 @@ describe("Bookshelf", () => {
     await flushPromises();
     expect(wrapper.findAll(".media-card")).toHaveLength(1);
 
-    await wrapper.findAll("button.filter-button")[3].trigger("click"); // Articles
+    await wrapper.findAll("button.filter-button")[3].trigger("click"); // Movies
+    await flushPromises();
+    expect(wrapper.findAll(".media-card")).toHaveLength(0);
+
+    await wrapper.findAll("button.filter-button")[4].trigger("click"); // Shows
+    await flushPromises();
+    expect(wrapper.findAll(".media-card")).toHaveLength(0);
+
+    await wrapper.findAll("button.filter-button")[5].trigger("click"); // Articles
     await flushPromises();
     expect(wrapper.findAll(".media-card")).toHaveLength(1);
   });
