@@ -85,9 +85,9 @@ features:
   - icon: { src: /google.webp }
     title: Puck
     details: Google Home Mini
-  - icon: { src: /xiaomi.webp }
-    title: Vortex
-    details: Mi Robot Vacuum-Mop 2
+  - icon: { src: /dreame.webp }
+    title: D20
+    details: Dreame D20 Ultra
   - icon: { dark: "/braun-dark.webp", light: "/braun-light.webp" }
     title: Crispr
     details: Braun Series 9 Pro+ 9510S

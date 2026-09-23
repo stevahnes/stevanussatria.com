@@ -308,7 +308,7 @@ const bookshelfData = [
     "type": "podcast",
     "title": "The AI Daily Brief",
     "authorOrHost": "NLW",
-    "status": "completed",
+    "status": "paused",
     "link": "https://open.spotify.com/show/4Yh6P6nQ2I6f8NQjXk8qFQ",
     "coverImage": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts211/v4/9c/78/d8/9c78d82d-a2d1-a026-6ca2-f92ea61be9ae/mza_18421328158594577747.jpg/600x600bb.jpg"
   },
@@ -317,7 +317,7 @@ const bookshelfData = [
     "type": "podcast",
     "title": "Start Here",
     "authorOrHost": "ABC News",
-    "status": "completed",
+    "status": "paused",
     "link": "https://open.spotify.com/show/2T7j0S8mLqf6Sk8y7D1v5K",
     "coverImage": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts122/v4/2e/b5/e2/2eb5e266-1312-4e77-565d-5f7c28f61b24/mza_4079247101203743703.jpg/600x600bb.jpg"
   },
@@ -326,9 +326,72 @@ const bookshelfData = [
     "type": "podcast",
     "title": "Today in Focus",
     "authorOrHost": "The Guardian",
-    "status": "completed",
+    "status": "paused",
     "link": "https://open.spotify.com/show/4vQfD7DkQxVYwVj5X2kG1f",
     "coverImage": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts126/v4/f1/13/71/f113715f-56e4-f542-a08c-b5890c0841bc/mza_18228009703397905678.jpg/600x600bb.jpg"
+  },
+  {
+    "id": "movie-memento",
+    "type": "movie",
+    "title": "Memento",
+    "authorOrHost": "Christopher Nolan",
+    "status": "completed",
+    "link": "https://www.google.com/search?q=Memento+movie",
+    "coverImage": "https://upload.wikimedia.org/wikipedia/en/c/c7/Memento_poster.jpg"
+  },
+  {
+    "id": "movie-inception",
+    "type": "movie",
+    "title": "Inception",
+    "authorOrHost": "Christopher Nolan",
+    "status": "completed",
+    "link": "https://www.google.com/search?q=Inception+movie",
+    "coverImage": "https://m.media-amazon.com/images/M/MV5BMjAxMzY3NjcxNF5BMl5BanBnXkFtZTcwNTI5OTM0Mw@@._V1_.jpg"
+  },
+  {
+    "id": "movie-f1",
+    "type": "movie",
+    "title": "F1",
+    "authorOrHost": "Joseph Kosinski",
+    "status": "completed",
+    "link": "https://www.google.com/search?q=F1+movie",
+    "coverImage": "https://posterhubstudio.com/cdn/shop/files/F1LEFILM.jpg"
+  },
+  {
+    "id": "movie-minority-report",
+    "type": "movie",
+    "title": "Minority Report",
+    "authorOrHost": "Steven Spielberg",
+    "status": "completed",
+    "link": "https://www.google.com/search?q=Minority+Report+movie",
+    "coverImage": "https://upload.wikimedia.org/wikipedia/en/4/44/Minority_Report_Poster.jpg?utm_source=en.wikipedia.org&utm_campaign=parser&utm_content=thumbnail_unscaled"
+  },
+  {
+    "id": "show-how-i-met-your-mother",
+    "type": "show",
+    "title": "How I Met Your Mother",
+    "authorOrHost": "Carter Bays & Craig Thomas",
+    "status": "completed",
+    "link": "https://www.google.com/search?q=How+I+Met+Your+Mother",
+    "coverImage": "https://static.wikia.nocookie.net/himym/images/4/46/HIMYM_poster.jpg/revision/latest?cb=20220215204714"
+  },
+  {
+    "id": "show-the-good-place",
+    "type": "show",
+    "title": "The Good Place",
+    "authorOrHost": "Michael Schur",
+    "status": "completed",
+    "link": "https://www.google.com/search?q=The+Good+Place",
+    "coverImage": "https://upload.wikimedia.org/wikipedia/en/8/84/The_Good_Place_season_1.jpg?utm_source=en.wikipedia.org&utm_campaign=index&utm_content=original"
+  },
+  {
+    "id": "show-the-residence",
+    "type": "show",
+    "title": "The Residence",
+    "authorOrHost": "Paul William Davies",
+    "status": "completed",
+    "link": "https://www.google.com/search?q=The+Residence+Netflix",
+    "coverImage": "https://thumb.wikimedia.org/wikipedia/en/thumb/7/7b/The_Residence_%28TV_series%29.jpg/250px-The_Residence_%28TV_series%29.jpg?utm_source=en.wikipedia.org&utm_campaign=parser&utm_content=thumbnail"
   },
   {
     "id": "podcast-p1-matt-and-tommy",
@@ -347,6 +410,15 @@ const bookshelfData = [
     "status": "consuming",
     "link": "https://open.spotify.com/show/1wU7Vd3Jwq1M6Wm4w3hL7r",
     "coverImage": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts211/v4/21/b1/8c/21b18c51-3734-7fdd-8113-b05631c38dc6/mza_3436610707193666304.jpeg/600x600bb.jpg"
+  },
+  {
+    "id": "book-project-hail-mary",
+    "type": "book",
+    "title": "Project Hail Mary",
+    "authorOrHost": "Andy Weir",
+    "status": "consuming",
+    "link": "https://www.goodreads.com/search?q=Project+Hail+Mary",
+    "coverImage": "https://books.google.com/books/content?id=GrYsEAAAQBAJ&printsec=frontcover&img=1&zoom=1&edge=curl&source=gbs_api"
   }
 ];
 
