@@ -7,7 +7,7 @@ interface MediaItem {
   type: "book" | "podcast" | "article";
   title: string;
   authorOrHost: string;
-  status: "consuming" | "completed" | "queued";
+  status: "consuming" | "completed" | "queued" | "paused";
   coverImage?: string; // URL or local path
   link: string; // External link to Spotify, Goodreads, or SG Library (NLB)
 }
@@ -32,6 +32,7 @@ const statusPriority: Record<MediaItem["status"], number> = {
   consuming: 0,
   queued: 1,
   completed: 2,
+  paused: 2,
 };
 
 const filterOptions: Array<{ id: MediaFilter; label: string }> = [
@@ -107,7 +108,7 @@ function isMediaItem(value: unknown): value is MediaItem {
     (item.type === "book" || item.type === "podcast" || item.type === "article") &&
     typeof item.title === "string" &&
     typeof item.authorOrHost === "string" &&
-    (item.status === "consuming" || item.status === "completed" || item.status === "queued") &&
+    (item.status === "consuming" || item.status === "completed" || item.status === "queued" || item.status === "paused") &&
     typeof item.link === "string"
   );
 }
@@ -129,6 +130,7 @@ function typeLabel(type: MediaItem["type"]) {
 function statusLabel(status: MediaItem["status"]) {
   if (status === "consuming") return "Consuming";
   if (status === "completed") return "Completed";
+  if (status === "paused") return "Paused";
   return "Queued";
 }
 </script>
@@ -145,14 +147,8 @@ function statusLabel(status: MediaItem["status"]) {
 
     <div class="filter-row" aria-label="Media filters">
       <template v-if="isMounted">
-        <button
-          v-for="filter in filterOptions"
-          :key="filter.id"
-          class="filter-button"
-          :class="{ active: activeFilter === filter.id }"
-          type="button"
-          @click="setFilter(filter.id)"
-        >
+        <button v-for="filter in filterOptions" :key="filter.id" class="filter-button"
+          :class="{ active: activeFilter === filter.id }" type="button" @click="setFilter(filter.id)">
           {{ filter.label }}
         </button>
       </template>
@@ -163,29 +159,18 @@ function statusLabel(status: MediaItem["status"]) {
 
     <div class="sort-row" aria-label="Sort books">
       <span class="sort-label">Sort by:</span>
-      <button
-        v-for="sort in sortOptions"
-        :key="sort.id"
-        class="sort-button"
-        :class="{ active: activeSort === sort.id }"
-        type="button"
-        @click="setSort(sort.id)"
-      >
+      <button v-for="sort in sortOptions" :key="sort.id" class="sort-button" :class="{ active: activeSort === sort.id }"
+        type="button" @click="setSort(sort.id)">
         {{ sort.label }}
       </button>
     </div>
 
     <div v-if="filteredItems.length > 0" class="bento-grid">
-      <article
-        v-for="item in filteredItems"
-        :key="item.id"
-        class="media-card"
-        :class="[
-          `type-${item.type}`,
-          `status-${item.status}`,
-          { 'is-featured': item.status === 'consuming' },
-        ]"
-      >
+      <article v-for="item in filteredItems" :key="item.id" class="media-card" :class="[
+        `type-${item.type}`,
+        `status-${item.status}`,
+        { 'is-featured': item.status === 'consuming' },
+      ]">
         <div class="card-top">
           <span class="type-tag">{{ typeLabel(item.type) }}</span>
           <span class="status-tag">{{ statusLabel(item.status) }}</span>

@@ -308,7 +308,7 @@ const bookshelfData = [
     "type": "podcast",
     "title": "The AI Daily Brief",
     "authorOrHost": "NLW",
-    "status": "completed",
+    "status": "paused",
     "link": "https://open.spotify.com/show/4Yh6P6nQ2I6f8NQjXk8qFQ",
     "coverImage": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts211/v4/9c/78/d8/9c78d82d-a2d1-a026-6ca2-f92ea61be9ae/mza_18421328158594577747.jpg/600x600bb.jpg"
   },
@@ -317,7 +317,7 @@ const bookshelfData = [
     "type": "podcast",
     "title": "Start Here",
     "authorOrHost": "ABC News",
-    "status": "completed",
+    "status": "paused",
     "link": "https://open.spotify.com/show/2T7j0S8mLqf6Sk8y7D1v5K",
     "coverImage": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts122/v4/2e/b5/e2/2eb5e266-1312-4e77-565d-5f7c28f61b24/mza_4079247101203743703.jpg/600x600bb.jpg"
   },
@@ -326,7 +326,7 @@ const bookshelfData = [
     "type": "podcast",
     "title": "Today in Focus",
     "authorOrHost": "The Guardian",
-    "status": "completed",
+    "status": "paused",
     "link": "https://open.spotify.com/show/4vQfD7DkQxVYwVj5X2kG1f",
     "coverImage": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts126/v4/f1/13/71/f113715f-56e4-f542-a08c-b5890c0841bc/mza_18228009703397905678.jpg/600x600bb.jpg"
   },
@@ -347,6 +347,15 @@ const bookshelfData = [
     "status": "consuming",
     "link": "https://open.spotify.com/show/1wU7Vd3Jwq1M6Wm4w3hL7r",
     "coverImage": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts211/v4/21/b1/8c/21b18c51-3734-7fdd-8113-b05631c38dc6/mza_3436610707193666304.jpeg/600x600bb.jpg"
+  },
+  {
+    "id": "book-project-hail-mary",
+    "type": "book",
+    "title": "Project Hail Mary",
+    "authorOrHost": "Andy Weir",
+    "status": "consuming",
+    "link": "https://www.goodreads.com/search?q=Project+Hail+Mary",
+    "coverImage": "https://books.google.com/books/content?id=GrYsEAAAQBAJ&printsec=frontcover&img=1&zoom=1&edge=curl&source=gbs_api"
   }
 ];
 
