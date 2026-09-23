@@ -107,7 +107,11 @@ function isMediaItem(value: unknown): value is MediaItem {
   const item = value as Partial<MediaItem>;
   return (
     typeof item.id === "string" &&
-    (item.type === "book" || item.type === "podcast" || item.type === "movie" || item.type === "show" || item.type === "article") &&
+    (item.type === "book" ||
+      item.type === "podcast" ||
+      item.type === "movie" ||
+      item.type === "show" ||
+      item.type === "article") &&
     typeof item.title === "string" &&
     typeof item.authorOrHost === "string" &&
     (item.status === "consuming" ||
@@ -154,8 +158,14 @@ function statusLabel(status: MediaItem["status"]) {
 
     <div class="filter-row" aria-label="Media filters">
       <template v-if="isMounted">
-        <button v-for="filter in filterOptions" :key="filter.id" class="filter-button"
-          :class="{ active: activeFilter === filter.id }" type="button" @click="setFilter(filter.id)">
+        <button
+          v-for="filter in filterOptions"
+          :key="filter.id"
+          class="filter-button"
+          :class="{ active: activeFilter === filter.id }"
+          type="button"
+          @click="setFilter(filter.id)"
+        >
           {{ filter.label }}
         </button>
       </template>
@@ -166,18 +176,29 @@ function statusLabel(status: MediaItem["status"]) {
 
     <div class="sort-row" aria-label="Sort books">
       <span class="sort-label">Sort by:</span>
-      <button v-for="sort in sortOptions" :key="sort.id" class="sort-button" :class="{ active: activeSort === sort.id }"
-        type="button" @click="setSort(sort.id)">
+      <button
+        v-for="sort in sortOptions"
+        :key="sort.id"
+        class="sort-button"
+        :class="{ active: activeSort === sort.id }"
+        type="button"
+        @click="setSort(sort.id)"
+      >
         {{ sort.label }}
       </button>
     </div>
 
     <div v-if="filteredItems.length > 0" class="bento-grid">
-      <article v-for="item in filteredItems" :key="item.id" class="media-card" :class="[
-        `type-${item.type}`,
-        `status-${item.status}`,
-        { 'is-featured': item.status === 'consuming' },
-      ]">
+      <article
+        v-for="item in filteredItems"
+        :key="item.id"
+        class="media-card"
+        :class="[
+          `type-${item.type}`,
+          `status-${item.status}`,
+          { 'is-featured': item.status === 'consuming' },
+        ]"
+      >
         <div class="card-top">
           <span class="type-tag">{{ typeLabel(item.type) }}</span>
           <span class="status-tag">{{ statusLabel(item.status) }}</span>

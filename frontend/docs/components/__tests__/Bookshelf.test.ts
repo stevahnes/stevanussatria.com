@@ -4,10 +4,10 @@ import Bookshelf from "../Bookshelf.vue";
 
 interface MediaItem {
   id: string; // e.g., "book-escaping-build-trap"
-  type: "book" | "podcast" | "article";
+  type: "book" | "podcast" | "movie" | "show" | "article"; // Media type
   title: string;
   authorOrHost: string;
-  status: "consuming" | "completed" | "queued";
+  status: "consuming" | "completed" | "queued" | "paused";
   coverImage?: string; // URL or local path
   link: string; // External link to Spotify, Goodreads, or SG Library (NLB)
 }
