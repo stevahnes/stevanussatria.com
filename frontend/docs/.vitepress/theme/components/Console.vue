@@ -313,8 +313,9 @@ const COMMANDS: Record<
       "  ────────────────────────────────────────────────────────",
       "  SoundCloud:  play · pause · next · prev",
       "  Shaders:     aurora · velodrome · keys · signal · topology",
-      "  Pages:       home · resume · projects · milestones · ama",
-      "               recommendations · bookshelf · stack · gear · loops · skyline",
+      "  Pages:       home · resume · projects · milestones",
+      "               recommendations · bookshelf · setup/stack · setup/gear",
+      "               adventures/loops · adventures/skyline · ama",
     ],
   },
 
@@ -395,10 +396,10 @@ const COMMANDS: Record<
         recommendations: "/recommendations",
         bookshelf: "/bookshelf",
         ama: "/ama",
-        stack: "/stack",
-        gear: "/gear",
-        loops: "/loops",
-        skyline: "/skyline",
+        "setup/stack": "/setup/stack",
+        "setup/gear": "/setup/gear",
+        "adventures/loops": "/adventures/loops",
+        "adventures/skyline": "/adventures/skyline",
       };
       const dest = args[0]?.toLowerCase();
       const path = PAGE_MAP[dest];
