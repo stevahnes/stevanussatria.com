@@ -99,7 +99,7 @@ SQL • NodeJS • Angular • Vue • Typescript • HTML • CSS • Git • J
 
 - Expanded e-commerce platform integrations coverage from 5 to 7, boosting competitiveness against key competitors.
 - Scaled Airwallex Additional Payments for Shopify from 0 to 5,000 merchants and $2M volume processed in 4 months.
-- Pioneered Airwallex's payments ecosystem model through OpenTable, establishing a reusable blueprint for future similar platform partnerships.
+- Pioneered Airwallex's payments ecosystem model through OpenTable, establishing reusable blueprint for future partnerships.
 - Scaled Airwallex Global Payments for PrestaShop from 0 to $500K volume processed in 6 months.
 - Launched Salesforce Commerce Cloud cartridge, opening a new enterprise channel of 700+ large merchants.
 
