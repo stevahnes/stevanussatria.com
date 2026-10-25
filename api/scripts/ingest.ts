@@ -52,7 +52,7 @@ async function summarizeFile(
   content: string,
 ): Promise<string> {
   const { text } = await generateText({
-    model: openai("gpt-5.4-mini"),
+    model: openai(process.env.OPENAI_INGEST_MODEL || "gpt-5.4-mini"),
     prompt: `You are helping build context for a personal portfolio chatbot about Stevanus Satria (Steve).
 
 Below is the raw content of the file "${filename}" from his portfolio site.

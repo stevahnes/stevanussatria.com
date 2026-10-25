@@ -66,11 +66,14 @@ export async function POST(req: NextRequest) {
   const { messages } = await req.json();
 
   const result = streamText({
-    model: openai("gpt-5.4-mini"),
+    model: openai(process.env.OPENAI_MODEL || "gpt-5.4-mini"),
     system: SYSTEM_PROMPT,
     messages,
     tools: { send_email: sendEmailTool },
     maxSteps: 5,
+    onError: (err) => {
+      console.error("Error in Advocado chat:", err);
+    },
   });
 
   return result.toDataStreamResponse();
