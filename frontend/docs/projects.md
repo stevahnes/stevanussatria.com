@@ -23,6 +23,12 @@ head:
 
 features:
   - icon:
+      src: /kiapmoolah.webp
+      alt: AI-powered Telegram Bot to help me keep track of my monthly budget
+    title: Kiap Moolah
+    details: AI-powered Telegram Bot to help me keep track of my monthly budget
+    link: https://github.com/stevahnes/kiapmoolah
+  - icon:
       src: /plate.webp
       alt: AI meal tracker to keep my macros in check
     title: Plate
