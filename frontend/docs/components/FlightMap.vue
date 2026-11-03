@@ -15,6 +15,8 @@ import type { Map as LeafletMap } from "leaflet";
 import type * as LeafletTypes from "leaflet";
 
 // --- Types ---
+type TransportMode = "flight" | "train";
+
 interface FlightData {
   date: string;
   time: string;
@@ -29,29 +31,59 @@ interface FlightData {
   seat?: string | null;
 }
 
+interface TrainData {
+  date: string;
+  time: string;
+  origin: string; // station code, must exist in STATIONS
+  destination: string; // station code, must exist in STATIONS
+  operator: string;
+  trainNumber?: string | null;
+  departureDateTime?: string;
+  arrivalDateTime?: string;
+  class?: string | null;
+  seat?: string | null;
+}
+
+// Internal normalized shape for both modes
+interface Trip {
+  mode: TransportMode;
+  date: string;
+  time: string;
+  origin: string;
+  destination: string;
+  number: string;
+  operator: string;
+}
+
 interface Route {
   key: string;
+  mode: TransportMode;
   from: string;
   to: string;
   count: number;
-  flights: FlightData[];
+  flights: Trip[];
   coordinates: [number, number][];
   opacity: number;
 }
 
-interface Airport {
+interface Place {
   code: string;
-  displayCode: string;
   lat: number;
   lng: number;
   name: string;
   city: string;
   country: string;
-  flightCount: number;
+}
+
+interface Location extends Place {
+  mode: TransportMode;
+  displayCode: string;
+  visitCount: number;
 }
 
 interface Props {
   flights?: FlightData[];
+  trains?: TrainData[];
   height?: string;
 }
 
@@ -60,9 +92,9 @@ interface MapRef {
 }
 
 interface Statistics {
-  totalFlights: number;
+  totalTrips: number;
   uniqueRoutes: number;
-  airportsVisited: number;
+  locationsVisited: number;
   countriesVisited: number;
 }
 
@@ -86,7 +118,27 @@ const TILE_CONFIG = {
   },
 } as const;
 
-const AIRPORT_COORDINATES: Record<string, Omit<Airport, "flightCount" | "displayCode">> = {
+// Per-mode visuals: flights = blue routes + amber pins, trains = green routes + emerald pins
+const MODE_STYLE = {
+  flight: {
+    noun: "flight",
+    routeLabel: "Flight Routes",
+    placeLabel: "Airports",
+    light: { route: "#3b82f6", pin: "#d97706", pinStroke: "#78350f", dotStroke: "#92400e" },
+    dark: { route: "#60a5fa", pin: "#f59e0b", pinStroke: "#92400e", dotStroke: "#fbbf24" },
+  },
+  train: {
+    noun: "train",
+    routeLabel: "Train Routes",
+    placeLabel: "Stations",
+    light: { route: "#16a34a", pin: "#059669", pinStroke: "#064e3b", dotStroke: "#064e3b" },
+    dark: { route: "#4ade80", pin: "#10b981", pinStroke: "#065f46", dotStroke: "#34d399" },
+  },
+} as const;
+
+const MODES: TransportMode[] = ["flight", "train"];
+
+const AIRPORTS: Record<string, Place> = {
   SIN: {
     code: "SIN",
     lat: 1.3644,
@@ -353,9 +405,294 @@ const AIRPORT_COORDINATES: Record<string, Omit<Airport, "flightCount" | "display
   },
 };
 
+// Codes are your own identifiers, they only need to match TrainData.origin/destination.
+const STATIONS: Record<string, Place> = {
+  // Belgium / UK
+  LOM: {
+    code: "LOM",
+    lat: 51.2294,
+    lng: 5.3119,
+    name: "Lommel Station",
+    city: "Lommel",
+    country: "Belgium",
+  },
+  BRM: {
+    code: "BRM",
+    lat: 50.8355,
+    lng: 4.3367,
+    name: "Brussels-Midi (Zuid) Station",
+    city: "Brussels",
+    country: "Belgium",
+  },
+  ANR: {
+    code: "ANR",
+    lat: 51.2172,
+    lng: 4.4212,
+    name: "Antwerpen-Centraal",
+    city: "Antwerp",
+    country: "Belgium",
+  },
+  BRG: {
+    code: "BRG",
+    lat: 51.1972,
+    lng: 3.2169,
+    name: "Brugge Station",
+    city: "Bruges",
+    country: "Belgium",
+  },
+  SPX: {
+    code: "SPX",
+    lat: 51.5322,
+    lng: -0.1263,
+    name: "London St Pancras International",
+    city: "London",
+    country: "United Kingdom",
+  },
+  EUS: {
+    code: "EUS",
+    lat: 51.5282,
+    lng: -0.1337,
+    name: "London Euston",
+    city: "London",
+    country: "United Kingdom",
+  },
+  KGX: {
+    code: "KGX",
+    lat: 51.5309,
+    lng: -0.1233,
+    name: "London King's Cross",
+    city: "London",
+    country: "United Kingdom",
+  },
+  EDB: {
+    code: "EDB",
+    lat: 55.952,
+    lng: -3.1895,
+    name: "Edinburgh Waverley",
+    city: "Edinburgh",
+    country: "United Kingdom",
+  },
+  YRK: {
+    code: "YRK",
+    lat: 53.958,
+    lng: -1.0931,
+    name: "York Station",
+    city: "York",
+    country: "United Kingdom",
+  },
+  MCV: {
+    code: "MCV",
+    lat: 53.477,
+    lng: -2.2309,
+    name: "Manchester Piccadilly",
+    city: "Manchester",
+    country: "United Kingdom",
+  },
+
+  // France / Riviera
+  ANT: {
+    code: "ANT",
+    lat: 43.5811,
+    lng: 7.1251,
+    name: "Antibes Station",
+    city: "Antibes",
+    country: "France",
+  },
+  MRS: {
+    code: "MRS",
+    lat: 43.3028,
+    lng: 5.3806,
+    name: "Marseille Saint-Charles",
+    city: "Marseille",
+    country: "France",
+  },
+  CNS: {
+    code: "CNS",
+    lat: 43.5535,
+    lng: 7.0195,
+    name: "Cannes Station",
+    city: "Cannes",
+    country: "France",
+  },
+  NIC: {
+    code: "NIC",
+    lat: 43.7043,
+    lng: 7.262,
+    name: "Nice-Ville Station",
+    city: "Nice",
+    country: "France",
+  },
+  EZE: {
+    code: "EZE",
+    lat: 43.7276,
+    lng: 7.3619,
+    name: "Èze Village",
+    city: "Èze",
+    country: "France",
+  },
+  MCO: {
+    code: "MCO",
+    lat: 43.734,
+    lng: 7.4204,
+    name: "Monaco-Monte-Carlo Station",
+    city: "Monaco",
+    country: "Monaco",
+  },
+  MNT: {
+    code: "MNT",
+    lat: 43.777,
+    lng: 7.497,
+    name: "Menton Station",
+    city: "Menton",
+    country: "France",
+  },
+  VTM: {
+    code: "VTM",
+    lat: 43.7893,
+    lng: 7.607,
+    name: "Ventimiglia Station",
+    city: "Ventimiglia",
+    country: "Italy",
+  },
+  PNO: {
+    code: "PNO",
+    lat: 48.8809,
+    lng: 2.3553,
+    name: "Paris Gare du Nord",
+    city: "Paris",
+    country: "France",
+  },
+  PLY: {
+    code: "PLY",
+    lat: 48.8443,
+    lng: 2.3744,
+    name: "Paris Gare de Lyon",
+    city: "Paris",
+    country: "France",
+  },
+  VSL: {
+    code: "VSL",
+    lat: 48.8008,
+    lng: 2.1265,
+    name: "Versailles Château Rive Gauche",
+    city: "Versailles",
+    country: "France",
+  },
+
+  // Italy / Switzerland / Germany / Netherlands
+  MIL: {
+    code: "MIL",
+    lat: 45.4863,
+    lng: 9.2045,
+    name: "Milano Centrale",
+    city: "Milan",
+    country: "Italy",
+  },
+  ZER: {
+    code: "ZER",
+    lat: 46.0239,
+    lng: 7.7476,
+    name: "Zermatt Station",
+    city: "Zermatt",
+    country: "Switzerland",
+  },
+  ZRH: {
+    code: "ZRH",
+    lat: 47.3778,
+    lng: 8.5403,
+    name: "Zürich Hauptbahnhof",
+    city: "Zurich",
+    country: "Switzerland",
+  },
+  CGN: {
+    code: "CGN",
+    lat: 50.943,
+    lng: 6.9589,
+    name: "Köln Hauptbahnhof",
+    city: "Cologne",
+    country: "Germany",
+  },
+  AMC: {
+    code: "AMC",
+    lat: 52.3791,
+    lng: 4.9003,
+    name: "Amsterdam Centraal",
+    city: "Amsterdam",
+    country: "Netherlands",
+  },
+  FRH: {
+    code: "FRH",
+    lat: 50.1071,
+    lng: 8.6638,
+    name: "Frankfurt (Main) Hauptbahnhof",
+    city: "Frankfurt",
+    country: "Germany",
+  },
+  MNZ: {
+    code: "MNZ",
+    lat: 50.0013,
+    lng: 8.2589,
+    name: "Mainz Hauptbahnhof",
+    city: "Mainz",
+    country: "Germany",
+  },
+  DAR: {
+    code: "DAR",
+    lat: 49.8725,
+    lng: 8.6313,
+    name: "Darmstadt Hauptbahnhof",
+    city: "Darmstadt",
+    country: "Germany",
+  },
+
+  // India
+  SBC: {
+    code: "SBC",
+    lat: 12.9784,
+    lng: 77.5698,
+    name: "KSR Bengaluru City Junction",
+    city: "Bangalore",
+    country: "India",
+  },
+  MYS: {
+    code: "MYS",
+    lat: 12.3125,
+    lng: 76.6434,
+    name: "Mysuru Junction",
+    city: "Mysore",
+    country: "India",
+  },
+
+  // Indonesia
+  GMR: {
+    code: "GMR",
+    lat: -6.1767,
+    lng: 106.8306,
+    name: "Gambir Station",
+    city: "Jakarta",
+    country: "Indonesia",
+  },
+  YKT: {
+    code: "YKT",
+    lat: -7.7892,
+    lng: 110.3633,
+    name: "Yogyakarta Tugu Station",
+    city: "Yogyakarta",
+    country: "Indonesia",
+  },
+};
+
+const REGISTRY: Record<TransportMode, Record<string, Place>> = {
+  flight: AIRPORTS,
+  train: STATIONS,
+};
+
+const lookup = (mode: TransportMode, code: string): Place | undefined => REGISTRY[mode][code];
+
 // --- Props ---
 const props = withDefaults(defineProps<Props>(), {
   flights: () => [],
+  trains: () => [],
   height: "100%",
 });
 
@@ -377,23 +714,34 @@ const isMobile = ref<boolean>(false);
 // --- Theme & Computed ---
 const { isDark } = useData();
 
-const tileConfig = computed(() =>
-  clientSideTheme.value && isDark.value ? TILE_CONFIG.dark : TILE_CONFIG.light,
-);
+const isDarkTheme = computed(() => clientSideTheme.value && isDark.value);
 
-const createPinIcon = (isDarkMode: boolean): LeafletTypes.Icon<LeafletTypes.IconOptions> | null => {
+const tileConfig = computed(() => (isDarkTheme.value ? TILE_CONFIG.dark : TILE_CONFIG.light));
+
+const modeColors = (mode: TransportMode) => MODE_STYLE[mode][isDarkTheme.value ? "dark" : "light"];
+const routeColor = (mode: TransportMode): string => modeColors(mode).route;
+
+// Train pins get a square glyph, flight pins a circle (helps beyond color alone)
+const pinSvg = (mode: TransportMode, dark: boolean): string => {
+  const { pin, pinStroke } = MODE_STYLE[mode][dark ? "dark" : "light"];
+  const glyph =
+    mode === "train"
+      ? `<rect x="8" y="8" width="8" height="8" rx="1.5" fill="white"/>`
+      : `<circle cx="12" cy="12" r="4" fill="white"/>`;
+  return `<svg width="24" height="36" viewBox="0 0 24 36" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 0C5.373 0 0 5.373 0 12c0 9 12 24 12 24s12-15 12-24c0-6.627-5.373-12-12-12z" fill="${pin}" stroke="${pinStroke}" stroke-width="1"/>${glyph}</svg>`;
+};
+
+const pinDataUri = (mode: TransportMode): string =>
+  `url("data:image/svg+xml,${encodeURIComponent(pinSvg(mode, isDarkTheme.value))}")`;
+
+const createPinIcon = (
+  mode: TransportMode,
+  dark: boolean,
+): LeafletTypes.Icon<LeafletTypes.IconOptions> | null => {
   if (!L.value || !isLeafletLoaded.value) return null;
 
-  const color = isDarkMode ? "#f59e0b" : "#d97706";
-  const shadowColor = isDarkMode ? "#92400e" : "#78350f";
-
   return L.value.divIcon({
-    html: `
-      <svg width="24" height="36" viewBox="0 0 24 36" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M12 0C5.373 0 0 5.373 0 12c0 9 12 24 12 24s12-15 12-24c0-6.627-5.373-12-12-12z" fill="${color}" stroke="${shadowColor}" stroke-width="1"/>
-        <circle cx="12" cy="12" r="4" fill="white"/>
-      </svg>
-    `,
+    html: pinSvg(mode, dark),
     className: "custom-pin-icon",
     iconSize: [24, 36] as [number, number],
     iconAnchor: [12, 36] as [number, number],
@@ -401,12 +749,37 @@ const createPinIcon = (isDarkMode: boolean): LeafletTypes.Icon<LeafletTypes.Icon
   }) as LeafletTypes.Icon<LeafletTypes.IconOptions>;
 };
 
-const pinIcon = computed<LeafletTypes.Icon<LeafletTypes.IconOptions> | null>(() =>
-  createPinIcon(clientSideTheme.value && isDark.value),
-);
+const pinIcons = computed<
+  Record<TransportMode, LeafletTypes.Icon<LeafletTypes.IconOptions> | null>
+>(() => ({
+  flight: createPinIcon("flight", isDarkTheme.value),
+  train: createPinIcon("train", isDarkTheme.value),
+}));
 
-const routeColor = computed<string>(() =>
-  clientSideTheme.value && isDark.value ? "#60a5fa" : "#3b82f6",
+// Normalize both inputs into a single trip list
+const trips = computed<Trip[]>(() => [
+  ...props.flights.map(f => ({
+    mode: "flight" as const,
+    date: f.date,
+    time: f.time,
+    origin: f.origin,
+    destination: f.destination,
+    number: f.flightNumber,
+    operator: f.airline,
+  })),
+  ...props.trains.map(t => ({
+    mode: "train" as const,
+    date: t.date,
+    time: t.time,
+    origin: t.origin,
+    destination: t.destination,
+    number: t.trainNumber ?? "",
+    operator: t.operator,
+  })),
+]);
+
+const activeModes = computed<TransportMode[]>(() =>
+  MODES.filter(mode => trips.value.some(trip => trip.mode === mode)),
 );
 
 // Fixed curve generation that properly handles trans-Pacific routes
@@ -422,18 +795,11 @@ const createCurvedPath = (from: [number, number], to: [number, number]): [number
   let adjustedLng2 = lng2;
 
   if (shouldGoWestward) {
-    // For westward routes, always wrap the more western coordinate eastward
-    // to avoid extreme negative values that can't be rendered
+    // Wrap the more western coordinate eastward to avoid extreme negative values
     if (lng1 < lng2) {
-      // lng1 is more western (e.g., LAX -118 vs ICN +126)
-      // Wrap the western coordinate (lng1) eastward
       adjustedLng1 = lng1 + 360;
-      // Keep lng2 as is
     } else {
-      // lng2 is more western (e.g., SIN +103 vs SFO -122)
-      // Wrap the western coordinate (lng2) eastward
       adjustedLng2 = lng2 + 360;
-      // Keep lng1 as is
     }
   }
 
@@ -484,39 +850,38 @@ const createCurvedPath = (from: [number, number], to: [number, number]): [number
       ];
 };
 
-// Memoized routes computation
+// Memoized routes computation (routes are grouped per mode, so a flight and a train
+// between the same two cities remain separate lines)
 const routes = computed<Route[]>(() => {
   const routeMap = new Map<string, Route>();
 
-  for (const flight of props.flights) {
-    if (!AIRPORT_COORDINATES[flight.origin] || !AIRPORT_COORDINATES[flight.destination]) {
+  for (const trip of trips.value) {
+    const fromPlace = lookup(trip.mode, trip.origin);
+    const toPlace = lookup(trip.mode, trip.destination);
+
+    if (!fromPlace || !toPlace) {
       console.warn(
-        `Skipping flight with invalid airport codes: ${flight.origin} -> ${flight.destination}`,
+        `Skipping ${trip.mode} with unknown location code: ${trip.origin} -> ${trip.destination}`,
       );
       continue;
     }
 
-    const routeKey = `${flight.origin}-${flight.destination}`;
-    const reverseKey = `${flight.destination}-${flight.origin}`;
+    const routeKey = `${trip.mode}:${trip.origin}-${trip.destination}`;
+    const reverseKey = `${trip.mode}:${trip.destination}-${trip.origin}`;
     const existingRoute = routeMap.get(routeKey) || routeMap.get(reverseKey);
 
     if (existingRoute) {
       existingRoute.count++;
-      existingRoute.flights.push(flight);
+      existingRoute.flights.push(trip);
     } else {
-      const fromAirport = AIRPORT_COORDINATES[flight.origin];
-      const toAirport = AIRPORT_COORDINATES[flight.destination];
-
       routeMap.set(routeKey, {
         key: routeKey,
-        from: flight.origin,
-        to: flight.destination,
+        mode: trip.mode,
+        from: trip.origin,
+        to: trip.destination,
         count: 1,
-        flights: [flight],
-        coordinates: createCurvedPath(
-          [fromAirport.lat, fromAirport.lng],
-          [toAirport.lat, toAirport.lng],
-        ),
+        flights: [trip],
+        coordinates: createCurvedPath([fromPlace.lat, fromPlace.lng], [toPlace.lat, toPlace.lng]),
         opacity: 0.4,
       });
     }
@@ -533,19 +898,18 @@ const routes = computed<Route[]>(() => {
 
 const performanceConfig = computed(() => ({
   shouldShowAllRoutes: !isZooming.value && currentZoom.value >= 3,
-  shouldShowAllAirports: !isZooming.value && currentZoom.value >= 4,
+  shouldShowAllLocations: !isZooming.value && currentZoom.value >= 4,
   maxRoutes: isZooming.value ? 20 : Infinity,
-  maxAirports: isZooming.value
+  maxLocations: isZooming.value
     ? 15
     : currentZoom.value < 3
       ? 20
       : currentZoom.value < 4
         ? 30
         : Infinity,
-  minFlightCount: isZooming.value ? 2 : currentZoom.value < 3 ? 3 : currentZoom.value < 4 ? 1 : 0,
+  minVisitCount: isZooming.value ? 2 : currentZoom.value < 3 ? 3 : currentZoom.value < 4 ? 1 : 0,
 }));
 
-// Replace the existing simplifiedRoutes computed property
 const simplifiedRoutes = computed<Route[]>(() => {
   const config = performanceConfig.value;
 
@@ -555,20 +919,18 @@ const simplifiedRoutes = computed<Route[]>(() => {
   return routes.value;
 });
 
-// Replace the existing simplifiedAirports computed property
-const simplifiedAirports = computed<Airport[]>(() => {
+const simplifiedLocations = computed<Location[]>(() => {
   const config = performanceConfig.value;
 
   if (isZooming.value) {
-    return airports.value.filter(airport => airport.flightCount > 2).slice(0, 15);
+    return locations.value.filter(loc => loc.visitCount > 2).slice(0, 15);
   }
 
-  const filtered = airports.value.filter(airport => airport.flightCount > config.minFlightCount);
-  return config.maxAirports === Infinity ? filtered : filtered.slice(0, config.maxAirports);
+  const filtered = locations.value.filter(loc => loc.visitCount > config.minVisitCount);
+  return config.maxLocations === Infinity ? filtered : filtered.slice(0, config.maxLocations);
 });
 
-// Optimized airports computation with better filtering
-const getAirportBounds = () => {
+const getBounds = () => {
   if (routes.value.length === 0) return null;
 
   const routeEndpoints = routes.value.flatMap(route =>
@@ -605,123 +967,96 @@ const getAirportBounds = () => {
   ] as [[number, number], [number, number]];
 };
 
-const mapBounds = computed(() => getAirportBounds());
+const mapBounds = computed(() => getBounds());
 
-const airports = computed<Airport[]>(() => {
-  const airportMap = new Map<string, Airport>();
-  const connectedAirports = new Set<string>();
-  const wrappedAirports = new Set<string>();
+const locations = computed<Location[]>(() => {
+  const locationMap = new Map<string, Location>();
+  const wrappedKeys = new Set<string>();
 
-  // Process flights and identify connections
-  for (const flight of props.flights) {
-    if (!AIRPORT_COORDINATES[flight.origin] || !AIRPORT_COORDINATES[flight.destination]) continue;
+  for (const trip of trips.value) {
+    const fromPlace = lookup(trip.mode, trip.origin);
+    const toPlace = lookup(trip.mode, trip.destination);
+    if (!fromPlace || !toPlace) continue;
 
-    connectedAirports.add(flight.origin);
-    connectedAirports.add(flight.destination);
-
-    const processAirport = (code: string) => {
-      if (!AIRPORT_COORDINATES[code]) return;
-
-      const existing = airportMap.get(code);
+    for (const place of [fromPlace, toPlace]) {
+      const key = `${trip.mode}:${place.code}`;
+      const existing = locationMap.get(key);
       if (existing) {
-        existing.flightCount++;
+        existing.visitCount++;
       } else {
-        airportMap.set(code, {
-          ...AIRPORT_COORDINATES[code],
-          displayCode: code,
-          flightCount: 1,
+        locationMap.set(key, {
+          ...place,
+          mode: trip.mode,
+          displayCode: place.code,
+          visitCount: 1,
         });
       }
-    };
+    }
 
-    processAirport(flight.origin);
-    processAirport(flight.destination);
-
-    // Check for wrapped coordinates
-    const [, lng1] = [
-      AIRPORT_COORDINATES[flight.origin].lat,
-      AIRPORT_COORDINATES[flight.origin].lng,
-    ];
-    const [, lng2] = [
-      AIRPORT_COORDINATES[flight.destination].lat,
-      AIRPORT_COORDINATES[flight.destination].lng,
-    ];
-
-    const eastwardDistance = Math.abs(lng2 - lng1);
+    const eastwardDistance = Math.abs(toPlace.lng - fromPlace.lng);
     const westwardDistance = 360 - eastwardDistance;
 
     if (westwardDistance < eastwardDistance) {
-      wrappedAirports.add(flight.destination);
-      wrappedAirports.add(flight.origin);
+      wrappedKeys.add(`${trip.mode}:${fromPlace.code}`);
+      wrappedKeys.add(`${trip.mode}:${toPlace.code}`);
     }
   }
 
   const bounds = mapBounds.value;
-  const wrappedAirportData: Airport[] = [];
+  const wrappedData: Location[] = [];
 
   if (bounds) {
     const [minLng, maxLng] = [bounds[0][1], bounds[1][1]];
 
-    for (const airportCode of wrappedAirports) {
-      const originalAirport = airportMap.get(airportCode);
-      if (!originalAirport || !connectedAirports.has(airportCode)) continue;
+    for (const key of wrappedKeys) {
+      const original = locationMap.get(key);
+      if (!original) continue;
 
-      const wrappedLng =
-        originalAirport.lng < 0 ? originalAirport.lng + 360 : originalAirport.lng - 360;
+      const wrappedLng = original.lng < 0 ? original.lng + 360 : original.lng - 360;
 
       if (wrappedLng >= minLng && wrappedLng <= maxLng) {
-        wrappedAirportData.push({
-          ...originalAirport,
-          code: `${originalAirport.code}-wrapped`,
-          displayCode: originalAirport.code,
+        wrappedData.push({
+          ...original,
+          code: `${original.code}-wrapped`,
+          displayCode: original.code,
           lng: wrappedLng,
         });
       }
     }
   }
 
-  const filteredOriginalAirports = Array.from(airportMap.values()).filter(airport => {
-    if (!connectedAirports.has(airport.code)) return false;
+  const filteredOriginals = Array.from(locationMap.entries())
+    .filter(([key, loc]) => {
+      if (bounds) {
+        const [minLng, maxLng] = [bounds[0][1], bounds[1][1]];
+        if (loc.lng < minLng || loc.lng > maxLng) return false;
 
-    if (bounds) {
-      const [minLng, maxLng] = [bounds[0][1], bounds[1][1]];
-      if (airport.lng < minLng || airport.lng > maxLng) return false;
-
-      // FIXED: Don't exclude original airports just because they have wrapped versions
-      // Only exclude if the original is outside normal longitude bounds AND wrapped is in bounds
-      if (wrappedAirports.has(airport.code)) {
-        const wrappedLng = airport.lng < 0 ? airport.lng + 360 : airport.lng - 360;
-        // Only exclude original if it's way outside normal range and wrapped version exists in bounds
-        if (
-          (airport.lng < -200 || airport.lng > 200) &&
-          wrappedLng >= minLng &&
-          wrappedLng <= maxLng
-        ) {
-          return false;
+        // Only exclude the original if it's way outside normal range and its wrapped copy is in bounds
+        if (wrappedKeys.has(key)) {
+          const wrappedLng = loc.lng < 0 ? loc.lng + 360 : loc.lng - 360;
+          if ((loc.lng < -200 || loc.lng > 200) && wrappedLng >= minLng && wrappedLng <= maxLng) {
+            return false;
+          }
         }
       }
-    }
+      return true;
+    })
+    .map(([, loc]) => loc);
 
-    return true;
-  });
-
-  return [...filteredOriginalAirports, ...wrappedAirportData];
+  return [...filteredOriginals, ...wrappedData];
 });
 
-// Optimized zoom level calculation
-const zoomLevels = computed<ZoomLevels>(() => {
-  return {
-    minZoom: 3,
-    maxZoom: 8,
-    initialZoom: 4, // Fixed zoom level as requested
-  };
-});
+const zoomLevels = computed<ZoomLevels>(() => ({
+  minZoom: 3,
+  maxZoom: 8,
+  initialZoom: 4,
+}));
 
 const statistics = computed<Statistics>(() => ({
-  totalFlights: props.flights.length,
+  totalTrips: trips.value.length,
   uniqueRoutes: routes.value.length,
-  airportsVisited: airports.value.length,
-  countriesVisited: new Set(airports.value.map(a => a.country)).size,
+  locationsVisited: locations.value.length,
+  countriesVisited: new Set(locations.value.map(l => l.country)).size,
 }));
 
 // --- Event Handlers ---
@@ -751,7 +1086,6 @@ const createZoomDebouncer = (fn: () => void, delay: number) => {
   };
 };
 
-// Then use it like this:
 const handleZoomEnd = createZoomDebouncer(() => {
   isZooming.value = false;
 }, 150);
@@ -765,15 +1099,12 @@ const onMapReady = async (): Promise<void> => {
   const map = mapRef.value.leafletObject as LeafletMap;
   const { minZoom, maxZoom, initialZoom: fixedInitialZoom } = zoomLevels.value;
 
-  // Configure map
   map.setMinZoom(minZoom);
   map.setMaxZoom(maxZoom);
   initialZoom.value = fixedInitialZoom;
 
-  // Set to your desired center and zoom
   map.setView([10, 103.9915], fixedInitialZoom, { animate: false });
 
-  // Performance optimizations
   if (map.options) {
     Object.assign(map.options, {
       fadeAnimation: false,
@@ -783,7 +1114,6 @@ const onMapReady = async (): Promise<void> => {
     });
   }
 
-  // Event handlers
   map.on("zoomstart", () => {
     isZooming.value = true;
   });
@@ -795,7 +1125,6 @@ const onMapReady = async (): Promise<void> => {
     currentZoom.value = map.getZoom();
   });
 
-  // Remove the fitBounds logic entirely since you want fixed positioning
   currentZoom.value = fixedInitialZoom;
 };
 
@@ -886,13 +1215,13 @@ onMounted(async () => {
       <!-- Zoom Control -->
       <LControlZoom position="topright" />
 
-      <!-- Flight Routes -->
+      <!-- Routes (color depends on mode) -->
       <template v-if="isMapReady && !isZooming">
         <LPolyline
           v-for="route in simplifiedRoutes"
           :key="route.key"
           :lat-lngs="route.coordinates"
-          :color="routeColor"
+          :color="routeColor(route.mode)"
           :weight="2"
           :opacity="route.opacity"
           :options="{
@@ -907,74 +1236,72 @@ onMounted(async () => {
         />
       </template>
 
-      <!-- Airport Pins (zoomed in) -->
-      <template v-if="isMapReady && !isZooming && currentZoom > 4 && pinIcon && isLeafletLoaded">
-        <LMarker
-          v-for="airport in simplifiedAirports"
-          :key="`pin-${airport.code}`"
-          :lat-lng="[airport.lat, airport.lng]"
-          :icon="pinIcon"
-          :options="{
-            className: 'airport-pin',
-            interactive: !isZooming,
-            bubblingMouseEvents: false,
-            riseOnHover: true,
-          }"
-        >
-          <LPopup
+      <!-- Location Pins (zoomed in) -->
+      <template v-if="isMapReady && !isZooming && currentZoom > 4 && isLeafletLoaded">
+        <template v-for="loc in simplifiedLocations" :key="`pin-${loc.mode}-${loc.code}`">
+          <LMarker
+            v-if="pinIcons[loc.mode]"
+            :lat-lng="[loc.lat, loc.lng]"
+            :icon="pinIcons[loc.mode]!"
             :options="{
-              className: 'custom-popup',
-              closeButton: true,
-              autoClose: true,
-              closeOnEscapeKey: true,
-              keepInView: true,
-              autoPan: false,
+              className: 'airport-pin',
+              interactive: !isZooming,
+              bubblingMouseEvents: false,
+              riseOnHover: true,
             }"
           >
-            <div
-              class="popup-content"
-              :class="clientSideTheme && isDark ? '!text-gray-100' : '!text-gray-800'"
+            <LPopup
+              :options="{
+                className: 'custom-popup',
+                closeButton: true,
+                autoClose: true,
+                closeOnEscapeKey: true,
+                keepInView: true,
+                autoPan: false,
+              }"
             >
-              <div class="!mb-2">
-                <h3
-                  class="!text-sm !font-bold !leading-none !my-1"
-                  :class="clientSideTheme && isDark ? '!text-blue-400' : '!text-blue-600'"
-                >
-                  {{ airport.displayCode }}
-                </h3>
-              </div>
-              <div class="!space-y-1 !text-xs">
-                <p class="!font-medium !leading-tight">{{ airport.name }}</p>
-                <p class="!opacity-75 !leading-tight">{{ airport.city }}, {{ airport.country }}</p>
-                <div
-                  class="!pt-1 !border-t !border-opacity-20"
-                  :class="clientSideTheme && isDark ? '!border-gray-600' : '!border-gray-300'"
-                >
-                  <p class="!text-xs !opacity-70 !leading-tight !my-1">
-                    <span
-                      class="!font-medium"
-                      :class="clientSideTheme && isDark ? '!text-orange-400' : '!text-orange-600'"
-                    >
-                      {{ airport.flightCount }}
-                    </span>
-                    flights
-                  </p>
+              <div
+                class="popup-content"
+                :class="clientSideTheme && isDark ? '!text-gray-100' : '!text-gray-800'"
+              >
+                <div class="!mb-2">
+                  <h3
+                    class="!text-sm !font-bold !leading-none !my-1"
+                    :style="{ color: modeColors(loc.mode).pin }"
+                  >
+                    {{ loc.displayCode }}
+                  </h3>
+                </div>
+                <div class="!space-y-1 !text-xs">
+                  <p class="!font-medium !leading-tight">{{ loc.name }}</p>
+                  <p class="!opacity-75 !leading-tight">{{ loc.city }}, {{ loc.country }}</p>
+                  <div
+                    class="!pt-1 !border-t !border-opacity-20"
+                    :class="clientSideTheme && isDark ? '!border-gray-600' : '!border-gray-300'"
+                  >
+                    <p class="!text-xs !opacity-70 !leading-tight !my-1">
+                      <span class="!font-medium" :style="{ color: modeColors(loc.mode).pin }">
+                        {{ loc.visitCount }}
+                      </span>
+                      {{ MODE_STYLE[loc.mode].noun }}{{ loc.visitCount === 1 ? "" : "s" }}
+                    </p>
+                  </div>
                 </div>
               </div>
-            </div>
-          </LPopup>
-        </LMarker>
+            </LPopup>
+          </LMarker>
+        </template>
       </template>
 
-      <!-- Airport Dots (zoomed out) -->
+      <!-- Location Dots (zoomed out) -->
       <template v-if="isMapReady && !isZooming && currentZoom <= 4">
         <LCircleMarker
-          v-for="airport in simplifiedAirports"
-          :key="`dot-${airport.code}`"
-          :lat-lng="[airport.lat, airport.lng]"
+          v-for="loc in simplifiedLocations"
+          :key="`dot-${loc.mode}-${loc.code}`"
+          :lat-lng="[loc.lat, loc.lng]"
           :radius="4"
-          :color="clientSideTheme && isDark ? '#fbbf24' : '#92400e'"
-          :fill-color="clientSideTheme && isDark ? '#f59e0b' : '#d97706'"
+          :color="modeColors(loc.mode).dotStroke"
+          :fill-color="modeColors(loc.mode).pin"
           :weight="1"
           :opacity="1"
           :fill-opacity="0.8"
@@ -1002,26 +1329,23 @@ onMounted(async () => {
               <div class="!mb-2">
                 <h3
                   class="!text-sm !font-bold !leading-none !my-1"
-                  :class="clientSideTheme && isDark ? '!text-blue-400' : '!text-blue-600'"
+                  :style="{ color: modeColors(loc.mode).pin }"
                 >
-                  {{ airport.displayCode }}
+                  {{ loc.displayCode }}
                 </h3>
               </div>
               <div class="!space-y-1 !text-xs">
-                <p class="!font-medium !leading-tight">{{ airport.name }}</p>
-                <p class="!opacity-75 !leading-tight">{{ airport.city }}, {{ airport.country }}</p>
+                <p class="!font-medium !leading-tight">{{ loc.name }}</p>
+                <p class="!opacity-75 !leading-tight">{{ loc.city }}, {{ loc.country }}</p>
                 <div
                   class="!pt-1 !border-t !border-opacity-20"
                   :class="clientSideTheme && isDark ? '!border-gray-600' : '!border-gray-300'"
                 >
                   <p class="!text-xs !opacity-70 !leading-tight !my-1">
-                    <span
-                      class="!font-medium"
-                      :class="clientSideTheme && isDark ? '!text-orange-400' : '!text-orange-600'"
-                    >
-                      {{ airport.flightCount }}
+                    <span class="!font-medium" :style="{ color: modeColors(loc.mode).pin }">
+                      {{ loc.visitCount }}
                     </span>
-                    flights
+                    {{ MODE_STYLE[loc.mode].noun }}{{ loc.visitCount === 1 ? "" : "s" }}
                   </p>
                 </div>
               </div>
@@ -1075,7 +1399,7 @@ onMounted(async () => {
                 : '!bg-gradient-to-r !from-blue-600 !to-purple-600'
             "
           >
-            Flight Statistics
+            Travel Statistics
           </h3>
         </div>
         <div class="stats-grid !grid !grid-cols-2 !gap-2 !text-xs">
@@ -1084,9 +1408,9 @@ onMounted(async () => {
               class="!text-base !font-bold !mb-0.5"
               :class="clientSideTheme && isDark ? '!text-blue-400' : '!text-blue-600'"
             >
-              {{ statistics.totalFlights }}
+              {{ statistics.totalTrips }}
             </div>
-            <div class="!opacity-75 !text-xs">Total Flights</div>
+            <div class="!opacity-75 !text-xs">Total Trips</div>
           </div>
           <div class="!text-center">
             <div
@@ -1102,9 +1426,9 @@ onMounted(async () => {
               class="!text-base !font-bold !mb-0.5"
               :class="clientSideTheme && isDark ? '!text-orange-400' : '!text-orange-600'"
             >
-              {{ statistics.airportsVisited }}
+              {{ statistics.locationsVisited }}
             </div>
-            <div class="!opacity-75 !text-xs">Airports</div>
+            <div class="!opacity-75 !text-xs">Locations</div>
           </div>
           <div class="!text-center">
             <div
@@ -1129,22 +1453,24 @@ onMounted(async () => {
             Legend
           </h4>
           <div class="!space-y-1.5 !text-xs">
-            <div class="!flex !items-center !gap-2">
-              <div
-                class="!w-4 !h-0.5 !rounded-full !opacity-80"
-                :class="clientSideTheme && isDark ? '!bg-blue-400' : '!bg-blue-500'"
-              ></div>
-              <span class="!font-medium !text-xs">Flight Routes</span>
-            </div>
-            <div class="!flex !items-center !gap-2">
-              <div
-                class="!w-2.5 !h-4 airport-pin-legend !flex-shrink-0"
-                :class="clientSideTheme && isDark ? 'pin-dark' : 'pin-light'"
-              ></div>
-              <span class="!font-medium !text-xs">Airports</span>
-            </div>
+            <template v-for="mode in activeModes" :key="`m-legend-${mode}`">
+              <div class="!flex !items-center !gap-2">
+                <div
+                  class="!w-4 !h-0.5 !rounded-full !opacity-80"
+                  :style="{ backgroundColor: routeColor(mode) }"
+                ></div>
+                <span class="!font-medium !text-xs">{{ MODE_STYLE[mode].routeLabel }}</span>
+              </div>
+              <div class="!flex !items-center !gap-2">
+                <div
+                  class="!w-2.5 !h-4 location-pin-legend !flex-shrink-0"
+                  :style="{ backgroundImage: pinDataUri(mode) }"
+                ></div>
+                <span class="!font-medium !text-xs">{{ MODE_STYLE[mode].placeLabel }}</span>
+              </div>
+            </template>
             <p class="!text-xs !opacity-70 !leading-tight !italic">
-              Route opacity indicates flight frequency
+              Route opacity indicates trip frequency
             </p>
           </div>
         </div>
@@ -1183,26 +1509,28 @@ onMounted(async () => {
         </h4>
       </div>
       <div class="!space-y-1.5 !text-xs">
-        <div class="!flex !items-center !gap-2.5">
-          <div
-            class="!w-5 !h-0.5 !rounded-full !opacity-80"
-            :class="clientSideTheme && isDark ? '!bg-blue-400' : '!bg-blue-500'"
-          ></div>
-          <span class="!font-medium">Flight Routes</span>
-        </div>
-        <div class="!flex !items-center !gap-2.5">
-          <div
-            class="!w-3 !h-5 airport-pin-legend !flex-shrink-0"
-            :class="clientSideTheme && isDark ? 'pin-dark' : 'pin-light'"
-          ></div>
-          <span class="!font-medium">Airports</span>
-        </div>
+        <template v-for="mode in activeModes" :key="`d-legend-${mode}`">
+          <div class="!flex !items-center !gap-2.5">
+            <div
+              class="!w-5 !h-0.5 !rounded-full !opacity-80"
+              :style="{ backgroundColor: routeColor(mode) }"
+            ></div>
+            <span class="!font-medium">{{ MODE_STYLE[mode].routeLabel }}</span>
+          </div>
+          <div class="!flex !items-center !gap-2.5">
+            <div
+              class="!w-3 !h-5 location-pin-legend !flex-shrink-0"
+              :style="{ backgroundImage: pinDataUri(mode) }"
+            ></div>
+            <span class="!font-medium">{{ MODE_STYLE[mode].placeLabel }}</span>
+          </div>
+        </template>
         <div
           class="!pt-1 !border-t !border-opacity-20"
           :class="clientSideTheme && isDark ? '!border-gray-600' : '!border-gray-300'"
         >
           <p class="!text-xs !opacity-70 !leading-tight !italic !my-1">
-            Route opacity indicates flight frequency
+            Route opacity indicates trip frequency
           </p>
         </div>
       </div>
@@ -1225,7 +1553,13 @@ onMounted(async () => {
         @click.stop
       >
         <div class="!flex !justify-between !items-center !mb-4">
-          <h3 class="!text-lg !font-semibold">{{ selectedRoute.from }} → {{ selectedRoute.to }}</h3>
+          <h3 class="!text-lg !font-semibold">
+            <span
+              class="!inline-block !w-2.5 !h-2.5 !rounded-full !mr-2"
+              :style="{ backgroundColor: routeColor(selectedRoute.mode) }"
+            ></span>
+            {{ selectedRoute.from }} → {{ selectedRoute.to }}
+          </h3>
           <button
             class="!text-gray-500 hover:!text-gray-700 dark:!text-gray-400 dark:hover:!text-gray-200 !transition-colors"
             @click="closeRouteDetails"
@@ -1243,55 +1577,57 @@ onMounted(async () => {
 
         <div class="!mb-4">
           <p class="!text-sm !mb-2">
-            <strong>{{ selectedRoute.count }}</strong> flights on this route
+            <strong>{{ selectedRoute.count }}</strong>
+            {{ MODE_STYLE[selectedRoute.mode].noun }}{{ selectedRoute.count === 1 ? "" : "s" }} on
+            this route
           </p>
           <div class="!text-xs !space-y-1">
-            <p><strong>From:</strong> {{ AIRPORT_COORDINATES[selectedRoute.from]?.name }}</p>
-            <p><strong>To:</strong> {{ AIRPORT_COORDINATES[selectedRoute.to]?.name }}</p>
+            <p><strong>From:</strong> {{ lookup(selectedRoute.mode, selectedRoute.from)?.name }}</p>
+            <p><strong>To:</strong> {{ lookup(selectedRoute.mode, selectedRoute.to)?.name }}</p>
           </div>
         </div>
 
         <div class="!space-y-2">
-          <h4 class="!text-sm !font-medium">Flight History:</h4>
+          <h4 class="!text-sm !font-medium">Trip History:</h4>
           <div class="!space-y-1 !max-h-48 !overflow-y-auto">
             <div
-              v-for="(flight, index) in selectedRoute.flights.slice(0, 10)"
+              v-for="(trip, index) in selectedRoute.flights.slice(0, 10)"
               :key="index"
               class="!text-xs !p-2 !rounded !transition-colors"
               :class="clientSideTheme && isDark ? '!bg-gray-700' : '!bg-gray-50'"
             >
               <div class="!flex !justify-between !items-center">
-                <span class="!font-medium">{{ flight.flightNumber }}</span>
-                <span>{{ formatDate(flight.date) }}</span>
+                <span class="!font-medium">{{ trip.number || trip.operator }}</span>
+                <span>{{ formatDate(trip.date) }}</span>
               </div>
               <div class="!flex !justify-between !text-xs !opacity-75">
-                <span>{{ formatTime(flight.time) }}</span>
-                <span>{{ flight.airline }}</span>
+                <span>{{ formatTime(trip.time) }}</span>
+                <span>{{ trip.operator }}</span>
               </div>
             </div>
             <div
               v-if="selectedRoute.flights.length > 10"
               class="!text-xs !text-center !opacity-75 !py-2"
             >
-              ... and {{ selectedRoute.flights.length - 10 }} more flights
+              ... and {{ selectedRoute.flights.length - 10 }} more trips
             </div>
           </div>
         </div>
       </div>
     </div>
+  </div>
 
-    <!-- SSR Fallback -->
-    <div
-      v-else
-      class="flight-map-container !flex !items-center !justify-center !bg-gray-100 dark:!bg-gray-800"
-      :style="{ height: props.height }"
-    >
-      <div class="!text-center !p-8">
-        <div
-          class="!w-8 !h-8 !border-4 !border-blue-600 !border-t-transparent !rounded-full !animate-spin !mx-auto !mb-4"
-        ></div>
-        <p class="!text-gray-600 dark:!text-gray-400">Loading flight map...</p>
-      </div>
+  <!-- SSR Fallback -->
+  <div
+    v-else
+    class="flight-map-container !flex !items-center !justify-center !bg-gray-100 dark:!bg-gray-800"
+    :style="{ height: props.height }"
+  >
+    <div class="!text-center !p-8">
+      <div
+        class="!w-8 !h-8 !border-4 !border-blue-600 !border-t-transparent !rounded-full !animate-spin !mx-auto !mb-4"
+      ></div>
+      <p class="!text-gray-600 dark:!text-gray-400">Loading map...</p>
     </div>
   </div>
 </template>
@@ -1374,15 +1710,11 @@ onMounted(async () => {
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18);
 }
 
-.airport-pin-legend {
-  background-image: url("data:image/svg+xml,%3Csvg width='12' height='18' viewBox='0 0 24 36' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M12 0C5.373 0 0 5.373 0 12c0 9 12 24 12 24s12-15 12-24c0-6.627-5.373-12-12-12z' fill='%23d97706' stroke='%2378350f' stroke-width='1'/%3E%3Ccircle cx='12' cy='12' r='4' fill='white'/%3E%3C/svg%3E");
+/* background-image is set inline per mode/theme */
+.location-pin-legend {
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
-}
-
-.airport-pin-legend.pin-dark {
-  background-image: url("data:image/svg+xml,%3Csvg width='12' height='18' viewBox='0 0 24 36' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M12 0C5.373 0 0 5.373 0 12c0 9 12 24 12 24s12-15 12-24c0-6.627-5.373-12-12-12z' fill='%23f59e0b' stroke='%2392400e' stroke-width='1'/%3E%3Ccircle cx='12' cy='12' r='4' fill='white'/%3E%3C/svg%3E");
 }
 
 :deep(.custom-popup .leaflet-popup-content-wrapper) {

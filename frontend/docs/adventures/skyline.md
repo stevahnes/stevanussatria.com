@@ -248,6 +248,73 @@ const flightData: FlightRecord[] = [
   ["2026-08-25", "23:55:00", "SIN", "BRU", "SQ304", "SQ"],
   ["2026-09-15", "10:35:00", "MAN", "SIN", "SQ301", "SQ"],
 ].map(createFlight);
+
+const D = "2025-01-01"; // TODO: real dates
+const T = "09:00"; // TODO: real times
+
+const trainData = [
+  // Belgium → UK
+  { date: D, time: T, origin: "LOM", destination: "BRM", operator: "SNCB" },
+  { date: D, time: T, origin: "BRM", destination: "SPX", operator: "Eurostar" },
+
+  // UK
+  { date: D, time: T, origin: "EUS", destination: "EDB", operator: "Avanti West Coast" },
+  { date: D, time: T, origin: "EDB", destination: "YRK", operator: "LNER" },
+  { date: D, time: T, origin: "YRK", destination: "KGX", operator: "LNER" },
+  { date: D, time: T, origin: "EUS", destination: "MCV", operator: "Avanti West Coast" },
+
+  // Antibes ↔ Marseille
+  { date: D, time: T, origin: "ANT", destination: "MRS", operator: "SNCF" },
+  { date: D, time: T, origin: "MRS", destination: "ANT", operator: "SNCF" },
+
+  // Antibes ↔ Cannes
+  { date: D, time: T, origin: "ANT", destination: "CNS", operator: "SNCF" },
+  { date: D, time: T, origin: "CNS", destination: "ANT", operator: "SNCF" },
+
+  // Antibes → Nice → Èze → Monaco → Menton → Ventimiglia → Antibes
+  { date: D, time: T, origin: "ANT", destination: "NIC", operator: "SNCF" },
+  { date: D, time: T, origin: "NIC", destination: "EZE", operator: "SNCF" },
+  { date: D, time: T, origin: "EZE", destination: "MCO", operator: "SNCF" },
+  { date: D, time: T, origin: "MCO", destination: "MNT", operator: "SNCF" },
+  { date: D, time: T, origin: "MNT", destination: "VTM", operator: "SNCF" },
+  { date: D, time: T, origin: "VTM", destination: "ANT", operator: "SNCF" },
+
+  // Milan → Zermatt → Zurich → Paris → Cologne → Amsterdam
+  { date: D, time: T, origin: "MIL", destination: "ZER", operator: "Trenitalia / SBB" },
+  { date: D, time: T, origin: "ZER", destination: "ZRH", operator: "SBB" },
+  { date: D, time: T, origin: "ZRH", destination: "PLY", operator: "TGV Lyria" },
+  { date: D, time: T, origin: "PNO", destination: "CGN", operator: "Thalys" },
+  { date: D, time: T, origin: "CGN", destination: "AMC", operator: "NS / DB" },
+
+  // Paris ↔ Versailles
+  { date: D, time: T, origin: "PNO", destination: "VSL", operator: "SNCF" },
+  { date: D, time: T, origin: "VSL", destination: "PNO", operator: "SNCF" },
+
+  // Frankfurt ↔ Mainz
+  { date: D, time: T, origin: "FRH", destination: "MNZ", operator: "DB" },
+  { date: D, time: T, origin: "MNZ", destination: "FRH", operator: "DB" },
+
+  // Frankfurt ↔ Darmstadt
+  { date: D, time: T, origin: "FRH", destination: "DAR", operator: "DB" },
+  { date: D, time: T, origin: "DAR", destination: "FRH", operator: "DB" },
+
+  // Brussels ↔ Antwerp
+  { date: D, time: T, origin: "BRM", destination: "ANR", operator: "SNCB" },
+  { date: D, time: T, origin: "ANR", destination: "BRM", operator: "SNCB" },
+
+  // Brussels ↔ Bruges
+  { date: D, time: T, origin: "BRM", destination: "BRG", operator: "SNCB" },
+  { date: D, time: T, origin: "BRG", destination: "BRM", operator: "SNCB" },
+
+  // Bangalore ↔ Mysore
+  { date: D, time: T, origin: "SBC", destination: "MYS", operator: "Indian Railways" },
+  { date: D, time: T, origin: "MYS", destination: "SBC", operator: "Indian Railways" },
+
+  // Jakarta ↔ Yogyakarta
+  { date: D, time: T, origin: "GMR", destination: "YKT", operator: "KAI" },
+  { date: D, time: T, origin: "YKT", destination: "GMR", operator: "KAI" },
+];
+
 </script>
 
-<FlightMap :flights="flightData" height="80vh" />
+<FlightMap :flights="flightData" :trains="trainData" height="80vh" />
