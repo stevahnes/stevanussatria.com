@@ -98,7 +98,7 @@ SQL • NodeJS • Angular • Vue • Typescript • HTML • CSS • Git • J
 **Senior Product Manager** | Singapore | October 2025 – Present
 
 - Expanded e-commerce platform integrations coverage from 5 to 7, boosting competitiveness against key competitors.
-- Scaled Airwallex Additional Payments for Shopify from 0 to 5,000 merchants and $2M volume processed in 4 months.
+- Scaled Airwallex Additional Payments adoption to $2M volume processed across 150 merchants in 6 months.
 - Pioneered Airwallex's payments ecosystem model through OpenTable, establishing reusable blueprint for future partnerships.
 - Scaled Airwallex Global Payments for PrestaShop from 0 to $500K volume processed in 6 months.
 - Launched Salesforce Commerce Cloud cartridge, opening a new enterprise channel of 700+ large merchants.
